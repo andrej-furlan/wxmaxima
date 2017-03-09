@@ -1,6 +1,11 @@
 # -*- mode: c++; c-file-style: "linux"; c-basic-offset: 2; indent-tabs-mode: nil -*-
 
 TEMPLATE = app
+CONFIG += c++14
+CONFIG -= qt
+qt:DEFINES += \
+  QT_NO_KEYWORDS \
+  Q_FORWARD_DECLARE_OBJC_CLASS=DECLARE_WXCOCOA_OBJC_CLASS # Workaround for clash with WxWidgets defs.h
 
 macx {
   # port install wxWidgets-3.0
