@@ -104,6 +104,7 @@ There are a few other coding-style rules, as well:
 #include <wx/fileconf.h>
 #include "Dirstructure.h"
 #include <iostream>
+#include <memory>
 
 #include "wxMaxima.h"
 #include "Setup.h"
@@ -129,6 +130,10 @@ void MyApp::Cleanup_Static()
 
 bool MyApp::OnInit()
 {
+  // Prime the Qt event loop
+  app = std::make_unique<QApplication>(argc, argv);
+  QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);
+  app->exec();
   m_frame = NULL;
 //  atexit(Cleanup_Static);
   int lang = wxLANGUAGE_UNKNOWN;
@@ -268,18 +273,18 @@ bool MyApp::OnInit()
   return true;
 }
 
-#if defined (__WXMSW__)
 int MyApp::OnExit()
 {
+#if defined (__WXMSW__)
   if (wxFileExists("fonts/jsMath-cmex10.ttf")) RemoveFontResource(wxT("fonts/jsMath-cmex10.ttf"));
   if (wxFileExists("fonts/jsMath-cmsy10.ttf")) RemoveFontResource(wxT("fonts/jsMath-cmsy10.ttf"));
   if (wxFileExists("fonts/jsMath-cmr10.ttf"))  RemoveFontResource(wxT("fonts/jsMath-cmr10.ttf"));
   if (wxFileExists("fonts/jsMath-cmmi10.ttf")) RemoveFontResource(wxT("fonts/jsMath-cmmi10.ttf"));
   if (wxFileExists("fonts/jsMath-cmti10.ttf")) RemoveFontResource(wxT("fonts/jsMath-cmti10.ttf"));
-
+#endif
+  app.reset();
   return true;
 }
-#endif
 
 #if defined __WXMAC__
 int window_counter = 0;

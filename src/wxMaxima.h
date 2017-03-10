@@ -40,6 +40,8 @@
 #include <wx/html/htmlwin.h>
 #include <wx/dnd.h>
 
+#include <QtWidgets>
+
 #if defined (__WXMSW__)
  #include <wx/msw/helpchm.h>
 #endif
@@ -473,11 +475,10 @@ private:
 
 class MyApp : public wxApp
 {
+  std::unique_ptr<QApplication> app;
 public:
   virtual bool OnInit();
-#if defined (__WXMSW__)
   virtual int OnExit();
-#endif
   wxLocale m_locale;
   /*! Create a new window
 
