@@ -7,7 +7,9 @@ qt:DEFINES += \
   QT_NO_KEYWORDS \
   Q_FORWARD_DECLARE_OBJC_CLASS=DECLARE_WXCOCOA_OBJC_CLASS # Workaround for clash with WxWidgets defs.h
 
+
 macx {
+  lessThan(QT_MINOR_VERSION, 8): QMAKE_MAC_SDK = macosx10.12
   # port install wxWidgets-3.0
   WX_CONFIG=/opt/local/Library/Frameworks/wxWidgets.framework/Versions/wxWidgets/3.0/bin/wx-config
   QMAKE_CXXFLAGS += $$system($$WX_CONFIG --cxxflags)
@@ -29,13 +31,16 @@ macx {
   ART_TOOLBAR.files = $$files(art/toolbar/*.png)
   ART_TOOLBAR.path = Contents/Resources/toolbar
   DATA.files = \
+    data/wxmaxima.png
+  DATA.path = Contents/Resources/data
+  ROOT.files = \
     data/autocomplete.txt \
     data/tips.txt \
     data/wxmathml.lisp
-  DATA.path = Contents/Resources
+  ROOT.path = Contents/Resources
   INFO.files = $$files(info/*.jpg) $$files(info/*.png) $$files(info/wxmaxima.h*)
   INFO.path = Contents/Resources/help
-  QMAKE_BUNDLE_DATA += ART_CONFIG ART_STATUSBAR ART_TOOLBAR DATA INFO
+  QMAKE_BUNDLE_DATA += ART_CONFIG ART_STATUSBAR ART_TOOLBAR DATA ROOT INFO
   ICON = art/wxmac.icns
 }
 
@@ -105,6 +110,7 @@ HEADERS += \
     src/TextCell.h \
     src/TextStyle.h \
     src/ToolBar.h \
+    src/Utilities.h \
     src/wxMaxima.h \
     src/wxMaximaFrame.h \
     src/XmlInspector.h
@@ -168,6 +174,7 @@ SOURCES += \
     src/TableOfContents.cpp \
     src/TextCell.cpp \
     src/ToolBar.cpp \
+    src/Utilities.cpp \
     src/wxMaxima.cpp \
     src/wxMaximaFrame.cpp \
     src/XmlInspector.cpp

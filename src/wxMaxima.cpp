@@ -51,6 +51,7 @@
 #include "SlideShowCell.h"
 #include "PlotFormatWiz.h"
 #include "Dirstructure.h"
+#include "Utilities.h"
 
 #include <wx/clipbrd.h>
 #include <wx/filedlg.h>
@@ -4511,148 +4512,127 @@ void wxMaxima::NumericalMenu(wxCommandEvent& event)
   }
 }
 
-#ifndef __WXGTK__
-MyAboutDialog::MyAboutDialog(wxWindow *parent, int id, const wxString title, wxString description) :
-  wxDialog(parent, id, title)
+
+MyAboutDialog::MyAboutDialog(const QString & title, const QString & description, QWidget * parent) :
+  QDialog(parent)
 {
-
-  wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
-
-  wxHtmlWindow* html_top = new wxHtmlWindow(this, -1, wxDefaultPosition, wxSize(380, 250), wxHW_SCROLLBAR_NEVER);
-  html_top->SetBorders(5);
-
-  wxHtmlWindow* html_bottom = new wxHtmlWindow(this, -1, wxDefaultPosition, wxSize(380, 280));
-  html_bottom->SetBorders(5);
-
-  wxString cwd = wxGetCwd();
-#if defined __WXMAC__
-  cwd = cwd + wxT("/") + wxT(MACPREFIX);
-#else
-  cwd.Replace(wxT("\\"), wxT("/"));
-  cwd = cwd + wxT("/data/");
+  setWindowTitle(title);
+  m_layout.addWidget(&m_top);
+  m_layout.addWidget(&m_bottom);
+  m_layout.addWidget(&m_buttons);
+  auto ok = m_buttons.addButton(QDialogButtonBox::Ok);
+  connect(ok, &QPushButton::clicked, this, &QDialog::accept);
+  auto path = QCoreApplication::applicationDirPath();
+#ifdef Q_OS_MAC
+  path += "/../Resources";
 #endif
+  path += "/data/";
 
-  wxString page_top = wxString::Format(
-    wxT("<html>"
-        "<head>"
-        "</head>"
-        "<body>"
-        "<center>"
-        "<p>"
-        "<img src=\"%s/wxmaxima.png\">"
-        "</p>"
-        "<h1>wxMaxima</h1>"
-        "<p>%s</p>"
-        "<p><small>(C) 2004 - 2017 Andrej Vodopivec</small><br></p>"
-        "</center>"
-        "</body>"
-        "</html>"),
-    cwd,
-    wxT(GITVERSION));
+  auto page_top = QStringLiteral(
+    "<html>"
+    "<head>"
+    "</head>"
+    "<body>"
+    "<center>"
+    "<p>"
+    "<img src=\"%1/wxmaxima.png\">"
+    "</p>"
+    "<h1>wxMaxima</h1>"
+    "<p>%2</p>"
+    "<p><small>© 2004 - 2017 Andrej Vodopivec</small><br></p>"
+    "</center>"
+    "</body>"
+    "</html>")
+      .arg(path)
+      .arg(GITVERSION);
   
-  wxString page_bottom = wxString::Format(
-    wxT("<html>"
-        "<head>"
-        "</head>"
-        "<body>"
-        "<center>"
-        "<p>"
-        "%s"
-        "</p>"
-        "<p><a href=\"http://andrejv.github.io/wxmaxima/\">wxMaxima</a><br>"
-        "   <a href=\"http://maxima.sourceforge.net/\">Maxima</a></p>"
-        "<h4>%s</h4>"
-        "<p>"
-        "wxWidgets: %d.%d.%d<br>"
-        "%s: %s<br>"
-        "%s"
-        "</p>"
-        "<h4>%s</h4>"
-        "<p>"
-        "Andrej Vodopivec<br>"
-        "Ziga Lenarcic<br>"
-        "Doug Ilijev<br>"
-        "Gunter Königsmann<br>"
-        "</p>"
-        "<h4>Patches</h4>"
-        "Sandro Montanar (SF-patch 2537150)"
-        "Wolfgang Dautermann"
-        "</p>"
-        "<h4>%s</h4>"
-        "<p>"
-        "%s: <a href=\"http://4pple.de/index.php/maxima-ein-opensource-computer-algebra-system-cas/\">Sven Hodapp</a><br>"
-        "%s: <a href=\"http://tango.freedesktop.org/Tango_Desktop_Project\">TANGO project</a>"
-        "</p>"
-        "<h4>%s</h4>"
-        "<p>"
-        "Innocent De Marchi (ca)<br>"
-        "Josef Barak (cs)<br>"
-        "Robert Marik (cs)<br>"
-        "Jens Thostrup (da)<br>"
-        "Harald Geyer (de)<br>"
-        "Dieter Kaiser (de)<br>"
-        "Gunter Königsmann (de)<br>"
-        "Alkis Akritas (el)<br>"
-        "Evgenia Kelepesi-Akritas (el)<br>"
-        "Kostantinos Derekas (el)<br>"
-        "Mario Rodriguez Riotorto (es)<br>"
-        "Antonio Ullan (es)<br>"
-        "Eric Delevaux (fr)<br>"
-        "Michele Gosse (fr)<br>"
-        "Marco Ciampa (it)<br>"
-        "Blahota István (hu)<br>"
-        "Asbjørn Apeland (nb)<br>"
-        "Rafal Topolnicki (pl)<br>"
-        "Eduardo M. Kalinowski (pt_br)<br>"
-        "Alexey Beshenov (ru)<br>"
-        "Vadim V. Zhytnikov (ru)<br>"
-        "Sergey Semerikov (uk)<br>"
-        "Tufan Şirin (tr)<br>"
-        "Frank Weng (zh_TW)<br>"
-        "cw.ahbong (zh_TW)"
-        "  </p>"
-        "</center>"
-        "</body>"
-        "</html>"),
-    _("wxMaxima is a graphical user interface for the computer algebra system MAXIMA based on wxWidgets."),
-    _("System info"),
-    wxMAJOR_VERSION, wxMINOR_VERSION, wxRELEASE_NUMBER,
-    _("Unicode Support"),
-    wxT("yes"),
-    description.c_str(),
-    _("Written by"),
-    _("Artwork by"),
-    _("wxMaxima icon"),
-    _("Toolbar icons"),
-    _("Translated by"));
+  auto page_bottom = QStringLiteral(
+    "<html>"
+    "<head>"
+    "</head>"
+    "<body>"
+    "<center>"
+    "<p>"
+    "%1"
+    "</p>"
+    "<p><a href=\"http://andrejv.github.io/wxmaxima/\">wxMaxima</a><br>"
+    "   <a href=\"http://maxima.sourceforge.net/\">Maxima</a></p>"
+    "<h4>%2</h4>"
+    "<p>"
+    "Qt: %3<br>"
+    "wxWidgets: %4<br>"
+    "%5: %6<br>"
+    "%7"
+    "</p>"
+    "<h4>%8</h4>"
+    "<p>"
+    "Andrej Vodopivec<br>"
+    "Ziga Lenarcic<br>"
+    "Doug Ilijev<br>"
+    "Gunter Königsmann<br>"
+    "</p>"
+    "<h4>Qt Port</h4>"
+    "<p>"
+    "Kuba Ober"
+    "</p>"
+    "<h4>Patches</h4>"
+    "<p>"
+    "Sandro Montanar (SF-patch 2537150)"
+    "Wolfgang Dautermann"
+    "</p>"
+    "<h4>%9</h4>"
+    "<p>"
+    "%10: <a href=\"http://4pple.de/index.php/maxima-ein-opensource-computer-algebra-system-cas/\">Sven Hodapp</a><br>"
+    "%11: <a href=\"http://tango.freedesktop.org/Tango_Desktop_Project\">TANGO project</a>"
+    "</p>"
+    "<h4>%12</h4>"
+    "<p>"
+    "Innocent De Marchi (ca)<br>"
+    "Josef Barak (cs)<br>"
+    "Robert Marik (cs)<br>"
+    "Jens Thostrup (da)<br>"
+    "Harald Geyer (de)<br>"
+    "Dieter Kaiser (de)<br>"
+    "Gunter Königsmann (de)<br>"
+    "Alkis Akritas (el)<br>"
+    "Evgenia Kelepesi-Akritas (el)<br>"
+    "Kostantinos Derekas (el)<br>"
+    "Mario Rodriguez Riotorto (es)<br>"
+    "Antonio Ullan (es)<br>"
+    "Eric Delevaux (fr)<br>"
+    "Michele Gosse (fr)<br>"
+    "Marco Ciampa (it)<br>"
+    "Blahota István (hu)<br>"
+    "Asbjørn Apeland (nb)<br>"
+    "Rafal Topolnicki (pl)<br>"
+    "Eduardo M. Kalinowski (pt_br)<br>"
+    "Alexey Beshenov (ru)<br>"
+    "Vadim V. Zhytnikov (ru)<br>"
+    "Sergey Semerikov (uk)<br>"
+    "Tufan Şirin (tr)<br>"
+    "Frank Weng (zh_TW)<br>"
+    "cw.ahbong (zh_TW)"
+    "</p>"
+    "</center>"
+    "</body>"
+    "</html>")
+      .arg("wxMaxima is a graphical user interface for the computer algebra system MAXIMA based on wxWidgets.")
+      .arg("System info")
+      .arg(qVersion())
+      .arg(QStringLiteral("%1.%2.%3").arg(wxMAJOR_VERSION).arg(wxMINOR_VERSION).arg(wxRELEASE_NUMBER))
+      .arg("Unicode Support")
+      .arg("yes")
+      .arg(description)
+      .arg("Written by")
+      .arg("Artwork by")
+      .arg("wxMaxima icon")
+      .arg("Toolbar icons")
+      .arg("Translated by");
 
-  html_top->SetPage(page_top);
-  html_bottom->SetPage(page_bottom);
-
-  html_top->SetSize(wxDefaultCoord,
-                    html_top->GetInternalRepresentation()->GetHeight());
-
-  sizer->Add(html_top, 0, wxALL, 0);
-  sizer->Add(html_bottom, 0, wxALL, 0);
-
-  SetSizer(sizer);
-  sizer->Fit(this);
-  sizer->SetSizeHints(this);
-
-  SetAutoLayout(true);
-  Layout();
+  m_top.setText(page_top);
+  m_bottom.setHtml(page_bottom);
+  m_bottom.setOpenExternalLinks(true);
 }
-
-void MyAboutDialog::OnLinkClicked(wxHtmlLinkEvent& event)
-{
-  wxLaunchDefaultBrowser(event.GetLinkInfo().GetHref());
-}
-
-BEGIN_EVENT_TABLE(MyAboutDialog, wxDialog)
-EVT_HTML_LINK_CLICKED(wxID_ANY, MyAboutDialog::OnLinkClicked)
-END_EVENT_TABLE()
-
-#endif
 
 void wxMaxima::HelpMenu(wxCommandEvent& event)
 {
@@ -4670,88 +4650,6 @@ void wxMaxima::HelpMenu(wxCommandEvent& event)
   switch (event.GetId())
   {
   case wxID_ABOUT:
-#if defined __WXGTK__
-  {
-    wxAboutDialogInfo info;
-    wxString description;
-
-    description = _("wxMaxima is a graphical user interface for the computer algebra system Maxima based on wxWidgets.");
-
-    description += wxString::Format(
-      _("\n\nwxWidgets: %d.%d.%d\nUnicode support: %s"),
-      wxMAJOR_VERSION, wxMINOR_VERSION, wxRELEASE_NUMBER,
-#if wxUSE_UNICODE
-      _("yes")
-#else
-      _("no")
-#endif
-      );
-    if (m_maximaVersion != wxEmptyString)
-      description += _("\nMaxima version: ") + m_maximaVersion;
-    else
-      description += _("\nNot connected.");
-    if (m_lispVersion != wxEmptyString)
-      description += _("\nLisp: ") + m_lispVersion;
-
-    wxString iconName = wxT(PREFIX);
-    iconName += wxT("/share/wxMaxima/wxmaxima.png");
-    info.SetIcon(wxIcon(iconName,wxBITMAP_TYPE_PNG));
-    info.SetDescription(description);
-    info.SetName(_("wxMaxima"));
-    info.SetVersion(wxT(GITVERSION));
-    info.SetCopyright(wxT("(C) 2004-2017 Andrej Vodopivec"));
-    info.SetWebSite(wxT("http://andrejv.github.io/wxmaxima/"));
-
-    info.AddDeveloper(wxT("Andrej Vodopivec <andrej.vodopivec@gmail.com>"));
-    info.AddDeveloper(wxT("Ziga Lenarcic <ziga.lenarcic@gmail.com>"));
-    info.AddDeveloper(wxT("Doug Ilijev <doug.ilijev@gmail.com>"));
-    info.AddDeveloper(wxT("Gunter Königsmann <wxMaxima@physikbuch.de>"));
-
-    info.AddTranslator(wxT("Innocent de Marchi (ca)"));
-    info.AddTranslator(wxT("Josef Barak (cs)"));
-    info.AddTranslator(wxT("Robert Marik (cs)"));
-    info.AddTranslator(wxT("Jens Thostrup (da)"));
-    info.AddTranslator(wxT("Harald Geyer (de)"));
-    info.AddTranslator(wxT("Dieter Kaiser (de)"));
-    info.AddTranslator(wxT("Gunter Königsmann (de)"));
-    info.AddTranslator(wxT("Alkis Akritas (el)"));
-    info.AddTranslator(wxT("Evgenia Kelepesi-Akritas (el)"));
-    info.AddTranslator(wxT("Kostantinos Derekas (el)"));
-    info.AddTranslator(wxT("Mario Rodriguez Riotorto (es)"));
-    info.AddTranslator(wxT("Antonio Ullan (es)"));
-    info.AddTranslator(wxT("Eric Delevaux (fr)"));
-    info.AddTranslator(wxT("Michele Gosse (fr)"));
-#if wxUSE_UNICODE
-    info.AddTranslator(wxT("Blahota István (hu)"));
-#else
-    info.AddTranslator(wxT("Blahota Istvan (hu)"));
-#endif
-    info.AddTranslator(wxT("Marco Ciampa (it)"));
-#if wxUSE_UNICODE
-    info.AddTranslator(wxT("Asbjørn Apeland (nb)"));
-#else
-    info.AddTranslator(wxT("Asbjorn Apeland (nb)"));
-#endif
-    info.AddTranslator(wxT("Rafal Topolnicki (pl)"));
-    info.AddTranslator(wxT("Eduardo M. Kalinowski (pt_br)"));
-    info.AddTranslator(wxT("Alexey Beshenov (ru)"));
-    info.AddTranslator(wxT("Vadim V. Zhytnikov (ru)"));
-#if wxUSE_UNICODE
-    info.AddTranslator(wxT("Tufan Şirin (tr)"));
-#else
-    info.AddTranslator(wxT("Tufan Sirin (tr)"));
-#endif
-    info.AddTranslator(wxT("Sergey Semerikov (uk)"));
-    info.AddTranslator(wxT("Frank Weng (zh_TW)"));
-    info.AddTranslator(wxT("cw.ahbong (zh_TW)"));
-
-    info.AddArtist(wxT("wxMaxima icon: Sven Hodapp"));
-    info.AddArtist(wxT("Toolbar and config icons: The TANGO Project"));
-    info.AddArtist(wxT("svg version of the icon: Gunter Königsmann"));
-
-    wxAboutBox(info);
-  }
-#else
   {
     wxString description;
 
@@ -4762,12 +4660,9 @@ void wxMaxima::HelpMenu(wxCommandEvent& event)
     if (m_lispVersion != wxEmptyString)
       description += _("<br>Lisp: ") + m_lispVersion;
 
-    MyAboutDialog dlg(this, wxID_ANY, wxString(_("About")), description);
-    dlg.Center();
-    dlg.ShowModal();
+    MyAboutDialog dlg("About", $$(description));
+    dlg.exec();
   }
-#endif
-
   break;
 
   case wxID_HELP:

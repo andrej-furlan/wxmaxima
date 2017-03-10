@@ -66,16 +66,15 @@
 #define DOCUMENT_VERSION_MINOR 4
 
 
-#ifndef __WXGTK__
-class MyAboutDialog : public wxDialog
+class MyAboutDialog : public QDialog
 {
+  QVBoxLayout m_layout{this};
+  QLabel m_top;
+  QTextBrowser m_bottom;
+  QDialogButtonBox m_buttons;
 public:
-  MyAboutDialog(wxWindow *parent, int id, const wxString title, wxString description);
-  ~MyAboutDialog() {};
-  void OnLinkClicked(wxHtmlLinkEvent& event);
-  DECLARE_EVENT_TABLE()
+  MyAboutDialog(const QString & title, const QString & description, QWidget * parent = nullptr);
 };
-#endif
 
 /* The top-level window and the main application logic
 
