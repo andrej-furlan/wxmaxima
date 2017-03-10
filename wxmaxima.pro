@@ -43,7 +43,7 @@ INCLUDEPATH += .
 
 DISTFILES += \
     src/Resources.rc \
-    data/wx
+    data/wxmathml.lisp
 
 HEADERS += \
     Setup.h \
