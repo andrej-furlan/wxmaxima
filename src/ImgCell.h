@@ -78,6 +78,7 @@ protected:
   void RecalculateHeight(int fontsize) override;
   void RecalculateWidths(int fontsize) override;
   void Draw(wxPoint point, int fontsize) override;
+  QImage DrawQt(const QPoint &, int fontsize) override;
   wxString ToString() override;
   wxString ToRTF() override;
   wxString ToTeX() override;

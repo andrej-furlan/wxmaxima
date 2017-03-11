@@ -38,6 +38,7 @@
 #include <QBuffer>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QPainter>
 
 #undef _
 static auto _ = trFor("ImgCell");
@@ -109,9 +110,12 @@ void ImgCell::RecalculateHeight(int fontsize)
   RecalculateWidths(fontsize);
 }
 
+static bool drawQt = true;
+
 void ImgCell::Draw(wxPoint point, int fontsize)
 {
   MathCell::Draw(point, fontsize);
+  if (drawQt) return;
   m_image->Recalculate();
 
   // TODO: Enable this when unselecting text updates the right region.
@@ -145,6 +149,50 @@ void ImgCell::Draw(wxPoint point, int fontsize)
   
   // The next time we need to draw a bounding box we will be informed again.
   m_drawBoundingBox = false;
+}
+
+QImage ImgCell::DrawQt(const QPoint &point, int)
+{
+  if (!drawQt) return {};
+  QImage drawn;
+  m_image->Recalculate();
+
+  // TODO: Enable this when unselecting text updates the right region.
+  //if (!InUpdateRegion()) return;
+
+  Configuration *configuration = Configuration::Get();
+  if (DrawThisCell($point(point)) && m_image)
+  {
+    drawn = {m_width, m_height, QImage::Format_ARGB32_Premultiplied};
+    QPainter dc(&drawn);
+
+    if (m_drawBoundingBox)
+      dc.setBrush(configuration->GetQColor(TS_SELECTION));
+    else
+    {
+      auto setPen = GetSetPen();
+      dc.setPen(QPen($color(setPen.color), setPen.lineWidth));
+    }
+
+    if (m_drawRectangle || m_drawBoundingBox)
+      dc.drawRect(0, 0, m_width, m_height);
+
+    if ((m_drawBoundingBox == false) || (m_imageBorderWidth > 0))\
+    {
+      QRect rect(m_imageBorderWidth, m_imageBorderWidth,
+                 m_width - 2 * m_imageBorderWidth, m_height - 2 * m_imageBorderWidth);
+      dc.drawImage(rect, m_image->GetImage(), rect);
+    }
+    else
+      dc.drawImage(QRect{5, 5, m_width - 2 * 5, m_height - 2 * 5}, m_image->GetImage(), {0, 0, m_width, m_height});
+  }
+  else
+    // The cell isn't drawn => No need to keep it's image cache for now.
+    ClearCache();
+  
+  // The next time we need to draw a bounding box we will be informed again.
+  m_drawBoundingBox = false;
+  return drawn;
 }
 
 wxString ImgCell::ToString()
