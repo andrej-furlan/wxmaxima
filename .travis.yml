@@ -10,13 +10,17 @@ branches:
   only:
     - qt-port
 
-cache: ccache
+cache:
+  ccache: true
+  directories:
+    - /opt/local
 
 before_install: 
   # prep MacPorts
   - stty rows 40 columns 80 # set rows, columns in terminal
-  - wget https://github.com/macports/macports-base/releases/download/v2.4.1/MacPorts-2.4.1-10.12-Sierra.pkg
-  - sudo installer -pkg MacPorts-2.4.1-10.12-Sierra.pkg -target /
+  - PORTSPKG=MacPorts-2.4.1-10.12-Sierra.pkg
+  - [ -f "$PORTSPKG" ] || wget https://github.com/macports/macports-base/releases/download/v2.4.1/$PORTSPKG
+  - [ -f "/opt/local/bin/port" ] || sudo installer -pkg $PORTSPKG -target /
   - export PATH=/opt/local/bin:$PATH
   - sudo port -v selfupdate
 #  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update                                             ; fi
