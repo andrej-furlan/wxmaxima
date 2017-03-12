@@ -178,3 +178,6 @@ SOURCES += \
     src/wxMaxima.cpp \
     src/wxMaximaFrame.cpp \
     src/XmlInspector.cpp
+
+OTHER_FILES += \
+    .travis.yml
