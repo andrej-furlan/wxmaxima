@@ -19,8 +19,8 @@ before_install:
   # prep MacPorts
   - stty rows 40 columns 80 # set rows, columns in terminal
   - PORTSPKG=MacPorts-2.4.1-10.12-Sierra.pkg
-  - [ -f "$PORTSPKG" ] || wget https://github.com/macports/macports-base/releases/download/v2.4.1/$PORTSPKG
-  - [ -f "/opt/local/bin/port" ] || sudo installer -pkg $PORTSPKG -target /
+  - '[ -f $PORTSPKG ] || wget https://github.com/macports/macports-base/releases/download/v2.4.1/$PORTSPKG'
+  - '[ -f /opt/local/bin/port ] || sudo installer -pkg $PORTSPKG -target /'
   - export PATH=/opt/local/bin:$PATH
   - sudo port -v selfupdate
 #  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update                                             ; fi
@@ -34,7 +34,7 @@ install:
   - sudo port -N install wxWidgets-3.0
   - export PATH=/opt/local/libexec/qt5/bin:$PATH
 
-notification:
+notifications:
   email:
     recipients:
       - kuba@mareimbrium.org
