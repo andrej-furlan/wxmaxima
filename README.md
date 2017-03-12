@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/andrejv/wxmaxima.svg?branch=master)](https://travis-ci.org/andrejv/wxmaxima)
+[![Build Status](https://travis-ci.org/KubaO/wxmaxima.svg?branch=qt-port)](https://travis-ci.org/KubaO/wxmaxima)
 
 wxMaxima
 ========

@@ -180,4 +180,5 @@ SOURCES += \
     src/XmlInspector.cpp
 
 OTHER_FILES += \
-    .travis.yml
+    .travis.yml \
+    README.md
