@@ -15,10 +15,8 @@ cache: ccache
 before_install: 
   # prep MacPorts
   - stty rows 40 columns 80 # set rows, columns in terminal
-  - wget https://distfiles.macports.org/MacPorts/MacPorts-2.4.1.tar.bz2
-  - tar xvfj MacPorts-2.4.1.tar.bz2
-  - cd MacPorts-2.4.1
-  - ./configure && sudo make install
+  - wget https://github.com/macports/macports-base/releases/download/v2.4.1/MacPorts-2.4.1-10.12-Sierra.pkg
+  - sudo installer -pkg MacPorts-2.4.1-10.12-Sierra.pkg -target /
   - export PATH=/opt/local/bin:$PATH
   - sudo port -v selfupdate
 #  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update                                             ; fi
@@ -28,8 +26,9 @@ before_install:
 #  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=$PATH:/usr/local/opt/gettext/bin ; fi
 
 install:
-  - sudo port install qt5-qtbase
-  - sudo port install wxWidgets-3.0
+  - sudo port -N install qt5-qtbase
+  - sudo port -N install wxWidgets-3.0
+  - export PATH=/opt/local/libexec/qt5/bin:$PATH
 
 notification:
   email:
