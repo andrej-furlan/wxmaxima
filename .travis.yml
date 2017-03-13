@@ -13,14 +13,22 @@ branches:
 cache:
   ccache: true
   directories:
-    - /opt/local
+    - $HOME/.cache/macports
 
 before_install: 
   # prep MacPorts
   - stty rows 40 columns 80 # set rows, columns in terminal
-  - PORTSPKG=MacPorts-2.4.1-10.12-Sierra.pkg
-  - '[ -f $PORTSPKG ] || wget https://github.com/macports/macports-base/releases/download/v2.4.1/$PORTSPKG'
-  - '[ -f /opt/local/bin/port ] || sudo installer -pkg $PORTSPKG -target /'
+  - export PORT_PKG=MacPorts-2.4.1-10.12-Sierra.pkg
+  - export PORT_CACHE=$HOME/.cache/macports
+  - export PORT_CACHE_PKG=$PORT_CACHE/$PORT_PKG
+  - export PORT_CACHE_DROP=$PORT_CACHE/macports.tar.gz
+  - mkdir -p $PORT_CACHE
+  - ls -l $PORT_CACHE
+  - if [[ ! -f $PORT_CACHE_PKG ]]; then wget -O $PORT_CACHE_PKG https://github.com/macports/macports-base/releases/download/v2.4.1/$PORT_PKG ; fi
+  - ls -l $PORT_CACHE
+  - if [[ -f $PORT_CACHE_DROP ]]; then sudo tar xPf $PORT_CACHE_DROP ; fi
+  - if [[ -d /opt/local ]]; then ls -l /opt/local ; fi
+  - if [[ ! -f /opt/local/bin/port ]]; then sudo installer -pkg $PORT_CACHE_PKG -target / ; fi
   - export PATH=/opt/local/bin:$PATH
   - sudo port -v selfupdate
 #  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update                                             ; fi
@@ -47,3 +55,7 @@ git:
 script: |
   qmake &&
   make
+
+before_cache:
+  - 'sudo rm -rf /opt/local/var/macports/build/* /opt/local/var/macports/logs/* || true'
+  - sudo tar cf $PORT_CACHE_DROP /opt/local
