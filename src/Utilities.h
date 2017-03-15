@@ -42,6 +42,8 @@ inline QPoint $point(const wxPoint &p) { return {p.x, p.y}; }
 inline wxColour $color(const QColor &c) { return {(uchar)c.red(), (uchar)c.green(), (uchar)c.blue(), (uchar)c.alpha()}; }
 inline QColor $color(const wxColour &c) { return {c.Red(), c.Green(), c.Blue(), c.Alpha()}; }
 
+inline QRect offsetIn(const QRect &rect, int o) { return rect.adjusted(o, o, -o, -o); }
+
 void appendHex(QString &dst, const QByteArray &src);
 void appendHex(wxString &dst, const QByteArray &src);
 

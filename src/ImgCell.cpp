@@ -175,16 +175,16 @@ QImage ImgCell::DrawQt(const QPoint &point, int)
     }
 
     if (m_drawRectangle || m_drawBoundingBox)
-      dc.drawRect(0, 0, m_width, m_height);
+      dc.drawRect(0, 0, m_width-1, m_height-1);
 
-    if ((m_drawBoundingBox == false) || (m_imageBorderWidth > 0))\
+    QRect imageRect(0, 0, m_width, m_height);
+    if (!m_drawBoundingBox || (m_imageBorderWidth > 0))
     {
-      QRect rect(m_imageBorderWidth, m_imageBorderWidth,
-                 m_width - 2 * m_imageBorderWidth, m_height - 2 * m_imageBorderWidth);
-      dc.drawImage(rect, m_image->GetImage(), rect);
+      imageRect = offsetIn(imageRect, 1+m_imageBorderWidth);
+      dc.drawImage(imageRect, m_image->GetImage(), imageRect);
     }
     else
-      dc.drawImage(QRect{5, 5, m_width - 2 * 5, m_height - 2 * 5}, m_image->GetImage(), {0, 0, m_width, m_height});
+      dc.drawImage(offsetIn(imageRect, 5), m_image->GetImage(), {0, 0, m_width, m_height});
   }
   else
     // The cell isn't drawn => No need to keep it's image cache for now.
