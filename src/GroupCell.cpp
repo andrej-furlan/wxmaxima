@@ -36,6 +36,7 @@
 #include "TextCell.h"
 #include "EditorCell.h"
 #include "ImgCell.h"
+#include "Utilities.h"
 #include "Bitmap.h"
 #include "list"
 
@@ -240,8 +241,8 @@ wxString GroupCell::ToWXM()
     {
       ImgCell *image= dynamic_cast<ImgCell*>(GetLabel());
       wxm += wxT("/* [wxMaxima: image   start ]\n");
-      wxm += image->GetExtension()+wxT("\n");
-      wxm += wxBase64Encode(image->GetCompressedImage())+wxT("\n");
+      wxm += $$(image->GetExtension())+wxT("\n");
+      wxm += $$(image->GetCompressedImage().toBase64())+wxT("\n");
       wxm += wxT("   [wxMaxima: image   end   ] */\n");
     }
     break;
@@ -1034,12 +1035,12 @@ wxString GroupCell::ToTeX(wxString imgDir, wxString filename, int *imgCounter)
       MathCell *copy = m_output->Copy();
       (*imgCounter)++;
       wxString image = filename + wxString::Format(wxT("_%d"), *imgCounter);
-      wxString file = imgDir + wxT("/") + image + wxT(".") + dynamic_cast<ImgCell*>(copy)->GetExtension();
+      wxString file = imgDir + wxT("/") + image + wxT(".") + $$(dynamic_cast<ImgCell*>(copy)->GetExtension());
 
       if (!wxDirExists(imgDir))
         wxMkdir(imgDir);
 
-      if (dynamic_cast<ImgCell*>(copy)->ToImageFile(file).x>=0)
+      if (dynamic_cast<ImgCell*>(copy)->ToImageFile($$(file)).width()>=0)
       {
         str << wxT("\\begin{figure}[htb]\n")
             << wxT("  \\begin{center}\n")
@@ -1210,7 +1211,7 @@ wxString GroupCell::ToTeXImage(MathCell *tmp, wxString imgDir, wxString filename
       for(int i=0;i<src->Length();i++)
       {
         wxString Frame = imgDir + wxT("/") + image + wxString::Format(wxT("_%i"), i);
-        if((src->GetBitmap(i)).SaveFile(Frame+wxT(".png")))
+        if((src->GetImage(i)).save($$(Frame+wxT(".png"))))
           str << wxT("\\includegraphics[width=.95\\linewidth,height=.80\\textheight,keepaspectratio]{")+Frame+wxT("}\n");
         else
           str << wxT("\n\\verb|<<GRAPHICS>>|\n");
@@ -1221,8 +1222,9 @@ wxString GroupCell::ToTeXImage(MathCell *tmp, wxString imgDir, wxString filename
     }
     else
     {
-      wxString file = imgDir + wxT("/") + image + wxT(".") + dynamic_cast<ImgCell*>(copy)->GetExtension();
-      if (dynamic_cast<ImgCell*>(copy)->ToImageFile(file).x>=0)
+      auto cell = dynamic_cast<ImgCell*>(copy);
+      auto file = Q$("%1/%2.%3").arg($$(imgDir)).arg($$(image)).arg(cell->GetExtension());
+      if (cell->ToImageFile(file).width()>=0)
         str += wxT("\\includegraphics[width=.95\\linewidth,height=.80\\textheight,keepaspectratio]{") +
           filename + wxT("_img/") + image + wxT("}");
       else

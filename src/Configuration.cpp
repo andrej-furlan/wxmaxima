@@ -24,6 +24,7 @@
  */
 
 #include "Configuration.h"
+#include "Utilities.h"
 
 #include <wx/font.h>
 #include <wx/config.h>
@@ -479,6 +480,11 @@ wxColour Configuration::GetColor(int st)
   if (m_outdated)
     return m_styles[TS_OUTDATED].color;
   return m_styles[st].color;
+}
+
+QColor Configuration::GetQColor(int st)
+{
+  return $color(GetColor(st));
 }
 
 /*

@@ -32,3 +32,56 @@ QString $$(const wxString & src) {
 wxString $$(const QString & src) {
   return wxString(src.toStdWString());
 }
+
+wxBitmap $bitmap(const QImage & src) {
+  return {$image(src)};
+}
+
+wxImage $image(const QImage & src) {
+  auto const image = src.convertToFormat(QImage::Format_RGB888);
+  auto const bytesPerLine = 3 * src.width(); // not src.bytesPerLine() due to padding
+  auto const data = reinterpret_cast<uchar*>(malloc(bytesPerLine * src.height()));
+  auto ptr = data;
+  for (int y = 0; y < src.height(); ++y) {;
+    memcpy(ptr, image.scanLine(y), bytesPerLine);
+    ptr += bytesPerLine;
+  }
+  return {src.width(), src.height(), data};
+}
+
+QImage $image(const wxImage & src) {
+  QImage image(src.GetWidth(), src.GetHeight(), QImage::Format_RGB888);
+  auto const bytesPerLine = 3 * src.GetWidth();
+  auto ptr = src.GetData();
+  for (int y = 0; y < image.height(); ++y) {
+    memcpy(image.scanLine(y), ptr, bytesPerLine);
+    ptr += bytesPerLine;
+  }
+  return image;
+}
+
+QImage $image(const wxBitmap & src) {
+  return $image(src.ConvertToImage());
+}
+
+wxSize $size(const QSize & src) {
+  if (!src.isNull())
+    return {src.width(), src.height()};
+  return {-1, -1};
+}
+
+QSize $size(const wxSize & src) {
+  if (src.x >= 0 && src.y >= 0)
+    return {src.x, src.y};
+  return {};
+}
+
+void appendHex(wxString & dst, const QByteArray & src) {
+  dst.reserve(dst.size() + 2*src.size());
+  for (auto c : src)
+    dst += wxString::Format("%02x", (uchar)c);
+}
+
+void appendHex(QString & dst, const QByteArray & src) {
+  dst.append(QString::fromLatin1(src.toHex()));
+}

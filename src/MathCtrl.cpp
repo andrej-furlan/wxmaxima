@@ -40,6 +40,7 @@
 #include "ImgCell.h"
 #include "MarkDown.h"
 #include "ConfigDialogue.h"
+#include "Utilities.h"
 
 #include <wx/clipbrd.h>
 #include <wx/caret.h>
@@ -3735,7 +3736,7 @@ wxSize MathCtrl::CopyToFile(wxString file) {
        m_selectionStart->GetType() == MC_TYPE_SLIDE))
   {
     if (m_selectionStart->GetType() == MC_TYPE_IMAGE)
-      return dynamic_cast<ImgCell *>(m_selectionStart)->ToImageFile(file);
+      return $size(dynamic_cast<ImgCell *>(m_selectionStart)->ToImageFile($$(file)));
     else
       return dynamic_cast<SlideShow *>(m_selectionStart)->ToImageFile(file);
   }
@@ -4492,9 +4493,9 @@ bool MathCtrl::ExportToHTML(wxString file) {
             // Something we want to export as an image.
             if(chunk->GetType() == MC_TYPE_IMAGE)
             {
-              ext = wxT(".")+dynamic_cast<ImgCell*>(chunk)->GetExtension();
-              size = dynamic_cast<ImgCell*>(chunk)->ToImageFile(
-                imgDir + wxT("/") + filename + wxString::Format(wxT("_%d"), count) + ext);
+              ext = wxT(".")+$$(dynamic_cast<ImgCell*>(chunk)->GetExtension());
+              size = $size(dynamic_cast<ImgCell*>(chunk)->ToImageFile(
+                $$(imgDir + wxT("/") + filename + wxString::Format(wxT("_%d"), count) + ext)));
             }
             else
             {
@@ -4593,7 +4594,7 @@ bool MathCtrl::ExportToHTML(wxString file) {
           output<<wxT("  <IMG src=\"") + filename + wxT("_htmlimg/") +
             filename +
             wxString::Format(wxT("_%d.%s\" alt=\"Diagram\" style=\"max-width:90%%;\" >"), count,
-                             imgCell -> GetExtension());
+                             $$(imgCell -> GetExtension()));
         }
         count++;
       }
@@ -5162,8 +5163,8 @@ void MathCtrl::ExportToMAC(wxTextFile& output, MathCell *tree, bool wxm, const s
             {
               ImgCell *image= dynamic_cast<ImgCell*>(tmp->GetLabel());
               AddLineToFile(output, wxT("/* [wxMaxima: image   start ]"), false);
-              AddLineToFile(output,image->GetExtension());
-              AddLineToFile(output,wxBase64Encode(image->GetCompressedImage()));
+              AddLineToFile(output,$$(image->GetExtension()));
+              AddLineToFile(output,image->GetCompressedImage().toBase64().constData());
               AddLineToFile(output, wxT("   [wxMaxima: image   end   ] */"), false);              
             }
           }
@@ -6368,9 +6369,8 @@ void MathCtrl::PasteFromClipboard(bool primary)
 
       if (group != NULL)
       {
-        wxBitmapDataObject bitmap;
-        wxTheClipboard->GetData(bitmap);
-        ImgCell *ic = new ImgCell(bitmap.GetBitmap());
+        auto image = QGuiApplication::clipboard()->image();
+        ImgCell *ic = new ImgCell(image);
         group->AppendOutput(ic);
       }
     }

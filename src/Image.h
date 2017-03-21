@@ -29,11 +29,10 @@
 #define IMAGE_H
 
 #include "MathCell.h"
-#include <wx/image.h>
 
 #include <wx/filesys.h>
-#include <wx/fs_arc.h>
-#include <wx/buffer.h>
+#include <QByteArray>
+#include <QImage>
 
 /*! Manages an auto-scaling image
 
@@ -63,66 +62,62 @@ class Image
 public:
   //! A constructor that generates an empty image. See LoadImage()
   Image();
-  //! A constructor that loads the compressed file from a wxMemoryBuffer
-  Image(wxMemoryBuffer image,wxString type);
-  /*! A constructor that loads a bitmap
-
-    This constructor actually has to do some compression since we got
-    the bitmap in an uncompressed form.
-   */
-  Image(const wxBitmap &bitmap);
-  /*! A constructor that loads an image
+  //! A constructor that loads the compressed file.
+  Image(const QByteArray &image, const QString &type);
+  //! A constructor that loads an image and compresses it for internal storage.
+  Image(const QImage &image);
+  /*! A constructor that loads a compressed file.
 
     \param image The name of the file
     \param filesystem The filesystem to load it from
-    \param viewport_xsize The width of the viewport the image is to be displayed in
-    \param viewport_ysize The height of the viewport the image is to be displayed in
     \param remove true = Delete the file after loading it
    */
-  Image(wxString image,bool remove = true, wxFileSystem *filesystem = NULL);
-  /*! Temporarily forget the scaled image in order to save memory
+  Image(const wxString &image, bool remove = true, wxFileSystem *filesystem = nullptr);
+  /*! Temporarily forget the scaled image in order to save memory.
 
     Will recreate the scaled image as soon as needed.
    */
-  void ClearCache() {if((m_scaledBitmap.GetWidth()>1)||(m_scaledBitmap.GetHeight()>1))m_scaledBitmap.Create(1,1);}
+  void ClearCache() { m_scaledImage = dummyImage(); }
   //! Reads the compressed image into a memory buffer
-  wxMemoryBuffer ReadCompressedImage(wxInputStream *data);
+  QByteArray ReadCompressedImage(wxInputStream *data);
   //! Returns the file name extension of the current image
-  wxString GetExtension() {return m_extension;};
+  QString GetExtension() const {return m_extension;}
   //! Loads an image from a file
-  void LoadImage(wxString image,bool remove = true, wxFileSystem *filesystem = NULL);
-  //! "Loads" an image from a bitmap
-  void LoadImage(const wxBitmap &bitmap);
+  void LoadImage(const wxString &image, bool remove = true, wxFileSystem *filesystem = nullptr);
+  //! "Loads" an image from an image
+  void LoadImage(const QImage &image);
   //! Saves the image in its original form, or as .png if it originates in a bitmap
-  wxSize ToImageFile(wxString filename);
-  //! Returns the bitmap being displayed
-  wxBitmap GetBitmap();
+  QSize ToImageFile(const QString &filename);
+  //! Returns the image being displayed
+  QImage GetImage();
   //! Returns the image in its unscaled form
-  wxBitmap GetUnscaledBitmap();
+  QImage GetUnscaledImage() const;
+  //! Returns a 1x1 filler image
+  static QImage dummyImage();
   //! Needs to be called on changing the viewport size 
   void Recalculate();
   //! The width of the scaled image
-  long m_width;
+  int m_width = 1;
   //! The height of the scaled image
-  long m_height;
+  int m_height = 1;
   //! Returns the original image in its compressed form
-  wxMemoryBuffer GetCompressedImage(){return m_compressedImage;}
+  QByteArray GetCompressedImage() const {return m_compressedImage;}
   //! Returns the original width
-  size_t GetOriginalWidth(){return m_originalWidth;}
+  size_t GetOriginalWidth() const {return m_originalWidth;}
   //! Returns the original height
-  size_t GetOriginalHeight(){return m_originalHeight;}
+  size_t GetOriginalHeight() const {return m_originalHeight;}
   //! The image in its original compressed form
-  wxMemoryBuffer m_compressedImage;
+  QByteArray m_compressedImage;
 
 protected:
   //! The width of the unscaled image
-  size_t m_originalWidth;
+  int m_originalWidth = 1;
   //! The height of the unscaled image
-  size_t m_originalHeight;
+  int m_originalHeight = 1;
   //! The bitmap, scaled down to the screen size
-  wxBitmap m_scaledBitmap;
+  QImage m_scaledImage = dummyImage();
   //! The file extension for the current image type
-  wxString m_extension;
+  QString m_extension;
 };
 
 #endif // IMAGE_H

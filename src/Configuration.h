@@ -24,6 +24,7 @@
 #include <wx/wx.h>
 #include <wx/config.h>
 #include <wx/fontenum.h>
+#include <QColor>
 
 #include "TextStyle.h"
 #include "Dirstructure.h"
@@ -123,6 +124,7 @@ public:
   wxString GetFontName(int type = TS_DEFAULT);
   wxString GetSymbolFontName();
   wxColour GetColor(int st);
+  QColor GetQColor(int st);
   wxFontWeight IsBold(int st);
   wxFontStyle IsItalic(int st);
   bool IsUnderlined(int st);

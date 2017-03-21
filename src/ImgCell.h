@@ -22,6 +22,8 @@
 #ifndef IMGCELL_H
 #define IMGCELL_H
 
+#include <memory>
+
 #include "MathCell.h"
 #include <wx/image.h>
 #include "Image.h"
@@ -33,13 +35,11 @@ class ImgCell : public MathCell
 {
 public:
   ImgCell();
-  ImgCell(wxMemoryBuffer image,wxString type);
+  ImgCell(const wxMemoryBuffer &image, wxString type);
   ImgCell(wxString image, bool remove = true, wxFileSystem *filesystem = NULL);
-  ImgCell(const wxBitmap &bitmap);
-  ~ImgCell();
-  void LoadImage(wxString image, bool remove = true);
-  MathCell* Copy();
-  void SelectInner(wxRect& rect, MathCell** first, MathCell** last)
+  ImgCell(const QImage &image);
+  MathCell* Copy() override;
+  void SelectInner(wxRect& rect, MathCell** first, MathCell** last) override
   {
     *first = *last = this;
   }
@@ -52,44 +52,44 @@ public:
 
     See also GetExtension().
    */
-  wxSize ToImageFile(wxString filename);
+  QSize ToImageFile(const QString &filename);
   /*! Removes the cached scaled image from memory
 
     The scaled version of the image will be recreated automatically once it is 
     needed.
    */
-  virtual void ClearCache(){if(m_image)m_image->ClearCache();}
+  virtual void ClearCache() override { if (m_image) m_image->ClearCache(); }
   //! Sets the bitmap that is shown
-  void SetBitmap(const wxBitmap &bitmap);
+  void SetImage(const QImage &imagep);
   //! Copies the cell to the system's clipboard
-  bool CopyToClipboard();
+  bool CopyToClipboard() override;
   // These methods should only be used for saving wxmx files
   // and are shared with SlideShowCell.
   static void WXMXResetCounter() { s_counter = 0; }
-  static wxString WXMXGetNewFileName();
+  static QString WXMXGetNewFileName();
   static int WXMXImageCount() { return s_counter; }
   void DrawRectangle(bool draw) { m_drawRectangle = draw; }
   //! Returns the file name extension that matches the image type
-  wxString GetExtension(){if(m_image)return m_image->GetExtension(); else return wxEmptyString;}
-  //! Returnes the original compressed version of the image
-  wxMemoryBuffer GetCompressedImage(){return m_image->m_compressedImage;}
+  QString GetExtension() const { return m_image ? m_image->GetExtension() : QString(); }
+  //! Returns the original compressed version of the image
+  QByteArray GetCompressedImage() const {return m_image->m_compressedImage;}
 protected:
-  Image *m_image;
-  void RecalculateHeight(int fontsize);
-  void RecalculateWidths(int fontsize);
-  void Draw(wxPoint point, int fontsize);
-  wxString ToString();
-  wxString ToRTF();
-  wxString ToTeX();
-  wxString ToXML();
+  std::unique_ptr<Image> m_image;
+  void RecalculateHeight(int fontsize) override;
+  void RecalculateWidths(int fontsize) override;
+  void Draw(wxPoint point, int fontsize) override;
+  wxString ToString() override;
+  wxString ToRTF() override;
+  wxString ToTeX() override;
+  wxString ToXML() override;
 	static int s_counter;
-	bool m_drawRectangle;
-  virtual void DrawBoundingBox(wxDC& dc, bool all = false)
+  bool m_drawRectangle = true;
+  void DrawBoundingBox(wxDC& dc, bool all = false) override
     {
       m_drawBoundingBox = true;
     }
 private:
-  bool m_drawBoundingBox;
+  bool m_drawBoundingBox = false;
 };
 
 #endif // IMGCELL_H

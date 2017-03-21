@@ -63,7 +63,7 @@ public:
     *first = *last = this;
   }
   int GetDisplayedIndex() { return m_displayed; }
-  wxImage GetBitmap(int n) { return m_images[n]->GetUnscaledBitmap().ConvertToImage(); }
+  QImage GetImage(int n){ return m_images[n]->GetUnscaledImage(); }
   void SetDisplayedIndex(int ind);
   int Length() { return m_size; }
   //! Exports the image the slideshow currently displays

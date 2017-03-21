@@ -24,244 +24,192 @@
 */
 
 #include "Image.h"
+#include "Utilities.h"
 #include <wx/mstream.h>
 #include <wx/wfstream.h>
+#include <QBuffer>
+#include <QFileInfo>
+#include <QMap>
+#include <QPainter>
+#include <QSaveFile>
 
-wxMemoryBuffer Image::ReadCompressedImage(wxInputStream *data)
+#undef _
+static auto _ = trFor("Image");
+
+QByteArray Image::ReadCompressedImage(wxInputStream *data)
 {
-  wxMemoryBuffer retval;
-
-  char *buf = new char[8192];
+  QByteArray retval;
+  char buf[8192];
 
   while(data->CanRead())
     {
-      data->Read(buf,8192);
+      data->Read(buf, sizeof(buf));
       size_t siz;
-      retval.AppendData(buf,siz=data->LastRead());
+      retval.append(buf, siz=data->LastRead());
     }
-  
-  delete [] buf;
   return retval;
 }
 
-wxBitmap Image::GetUnscaledBitmap()
+QImage Image::GetUnscaledImage() const
 {
-  wxMemoryInputStream istream(m_compressedImage.GetData(),m_compressedImage.GetDataLen());
-  wxImage img(istream, wxBITMAP_TYPE_ANY);
-  wxBitmap bmp;
-  if(img.Ok())
-    bmp = wxBitmap(img);
-  return bmp;
+  return QImage::fromData(m_compressedImage);
 }
 
 Image::Image()
-{
-  m_width = 1;
-  m_height = 1;
-  m_originalWidth = 1;
-  m_originalHeight = 1;
-  m_scaledBitmap.Create (1,1);
-}
+{}
 
-Image::Image(wxMemoryBuffer image,wxString type)
+Image::Image(const QByteArray &image, const QString &type)
 {
-  m_scaledBitmap.Create (1,1);
   m_compressedImage = image;
   m_extension = type;
-  m_width = 1;
-  m_height = 1;
   m_originalWidth  = 640;
   m_originalHeight = 480;  
 
-  wxImage Image;
-  if(m_compressedImage.GetDataLen()>0)
+  if(!m_compressedImage.isEmpty())
     {
-      wxMemoryInputStream istream(m_compressedImage.GetData(),m_compressedImage.GetDataLen());
-      Image.LoadFile(istream);
-      m_originalWidth  = Image.GetWidth();
-      m_originalHeight = Image.GetHeight();  
+      auto image = QImage::fromData(m_compressedImage);
+      m_originalWidth  = image.width();
+      m_originalHeight = image.height();
     }
-  }
+ }
 
-Image::Image(const wxBitmap &bitmap)
+Image::Image(const QImage &image)
 {
-  LoadImage(bitmap);
+  LoadImage(image);
 }
 
 // constructor which loads an image
-Image::Image(wxString image,bool remove, wxFileSystem *filesystem)
+Image::Image(const wxString &image, bool remove, wxFileSystem *filesystem)
 {
-  m_scaledBitmap.Create (1,1);
+  m_scaledImage = dummyImage();
   LoadImage(image,remove,filesystem);
 }
 
-wxSize Image::ToImageFile(wxString filename)
+QSize Image::ToImageFile(const QString &filename)
 {
-  wxFileName fn(filename);
-  wxString ext = fn.GetExt();
-  if(filename.Lower().EndsWith(GetExtension().Lower()))
+  QFileInfo fi(filename);
+  auto ext = fi.suffix();
+
+  if(filename.toLower().endsWith(GetExtension().toLower()))
   {
-    wxFile file(filename,wxFile::write);
-    if(!file.IsOpened())
-      return wxSize(-1,-1);
-    
-    file.Write(m_compressedImage.GetData(), m_compressedImage.GetDataLen());
-    if(file.Close())
-      return wxSize(m_originalWidth,m_originalHeight);
-    else
-      return wxSize(-1,-1);
+    QSaveFile file(filename);
+    if (!file.open(QFile::WriteOnly))
+      return QSize();
+    file.write(m_compressedImage);
+    if(file.commit())
+      return {m_originalWidth, m_originalHeight};
+    return {};
   }
   else
   {
-    wxBitmap bitmap = GetUnscaledBitmap();
-    wxImage image=bitmap.ConvertToImage();
-    wxBitmapType mimetype = wxBITMAP_TYPE_ANY;
-    if((ext.Lower() == wxT("jpg")) || (ext.Lower() == wxT("jpeg")))
-      mimetype = wxBITMAP_TYPE_JPEG;
-    else if(ext.Lower() == wxT("png"))
-      mimetype = wxBITMAP_TYPE_PNG;
-    else if(ext.Lower() == wxT("pcx"))
-      mimetype = wxBITMAP_TYPE_PCX;
-    else if(ext.Lower() == wxT("pnm"))
-      mimetype = wxBITMAP_TYPE_PNM;
-    else if((ext.Lower() == wxT("tif")) || (ext.Lower() == wxT("tiff")))
-      mimetype = wxBITMAP_TYPE_TIFF;
-    else if(ext.Lower() == wxT("xpm"))
-      mimetype = wxBITMAP_TYPE_XPM;
-    else if(ext.Lower() == wxT("ico"))
-      mimetype = wxBITMAP_TYPE_ICO;
-    else if(ext.Lower() == wxT("cur"))
-      mimetype = wxBITMAP_TYPE_CUR;
-    else
-      return(wxSize(-1,-1));
-    
-    if(!image.SaveFile(filename,mimetype))
-      return wxSize(-1,-1);
-    return image.GetSize();
+    auto const image = GetUnscaledImage();
+    static const QMap<QByteArray, const char *> formats = {
+      {"jpeg", "JPG"}, {"jpg", "JPG"},
+      {"bmp", "BMP"},
+      {"png", "PNG"},
+      {"xpm", "XPM"}
+      // wx addtionally supported: pcx, tiff, ico, cur
+    };
+    auto format = std::find(formats.begin(), formats.end(), ext.toLower().toLatin1());
+    if (format == formats.end())
+      return {};
+    if (!image.save(filename, *format))
+      return {};
+    return image.size();
   }
 }
 
-wxBitmap Image::GetBitmap()
+QImage Image::GetImage()
 {
   Recalculate();
 
   // Let's see if we have cached the scaled bitmap with the right size
-  if(m_scaledBitmap.GetWidth() == m_width)
-    return m_scaledBitmap;
+  if(m_scaledImage.width() == m_width)
+    return m_scaledImage;
 
+  Q_ASSERT(m_scaledImage.width() != m_width);
 
-  // Seems like we need to create a new scaled bitmap.
-  if(m_scaledBitmap.GetWidth()!=m_width)
+  QImage img;
+  if(!m_compressedImage.isEmpty())
+    img.loadFromData(m_compressedImage);
+
+  if(!img.isNull())
+    m_scaledImage = img;
+  else
     {
-      wxImage img;
-      if(m_compressedImage.GetDataLen() > 0)
-	{
-	  wxMemoryInputStream istream(m_compressedImage.GetData(),m_compressedImage.GetDataLen());
-	  
-	  img = wxImage(istream, wxBITMAP_TYPE_ANY);
-	}
-
-      if(img.Ok())
-	m_scaledBitmap = wxBitmap(img);
-      else
-	{
-	  // Create a "image not loaded" bitmap.
-	  m_scaledBitmap.Create(400, 250);
-	  
-	  wxString error(_("Error"));
-	  
-	  wxMemoryDC dc;
-	  dc.SelectObject(m_scaledBitmap);
-	  
-	  int width = 0, height = 0;
-	  dc.GetTextExtent(error, &width, &height);
-	  
-	  dc.DrawRectangle(0, 0, 400, 250);
-	  dc.DrawLine(0, 0,   400, 250);
-	  dc.DrawLine(0, 250, 400, 0);
-	  dc.DrawText(error, 200 - width/2, 125 - height/2);
-	  
-	  dc.GetTextExtent(error, &width, &height);
-	  dc.DrawText(error, 200 - width/2, 150 - height/2);
-	}
+      // Create a "image not loaded" bitmap.
+      auto message = _("Error");
+      auto error = Q$("%1\n%2").arg(message).arg(message);
+      img = QImage(400, 250, QImage::Format_ARGB32_Premultiplied);
+      img.fill(Qt::white);
+      QPainter p(&img);
+      p.drawRect(0, 0, 400, 250);
+      p.drawLine(0, 0, 400, 250);
+      p.drawLine(0, 250, 400, 0);
+      p.drawText(img.rect(), error);
     }
+
   
   // Make sure we stay within sane defaults
   if(m_width<1)m_width = 1;
   if(m_height<1)m_height = 1;
 
   // Create a scaled bitmap and return it.
-  wxImage img=m_scaledBitmap.ConvertToImage();
-  img.Rescale(m_width, m_height,wxIMAGE_QUALITY_BICUBIC);
-  m_scaledBitmap = wxBitmap(img,24);
-  return m_scaledBitmap;
+  m_scaledImage = img.scaled(m_width, m_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+  return m_scaledImage;
 }
 
-void Image::LoadImage(const wxBitmap &bitmap)
+void Image::LoadImage(const QImage &image)
 {
-  // Convert the bitmap to a png image we can use as m_compressedImage
-  wxImage image = bitmap.ConvertToImage();
-  wxMemoryOutputStream stream;
-  image.SaveFile(stream,wxBITMAP_TYPE_PNG);
-  m_compressedImage.AppendData(stream.GetOutputStreamBuffer()->GetBufferStart(),
-			       stream.GetOutputStreamBuffer()->GetBufferSize());
+  QBuffer buffer(&m_compressedImage);
+  buffer.open(QIODevice::WriteOnly);
+  image.save(&buffer, "PNG");
 
   // Set the info about the image.
-  m_extension = wxT("png");
-  m_originalWidth  = image.GetWidth();
-  m_originalHeight = image.GetHeight();
-  m_scaledBitmap.Create (1,1);
+  m_extension = Q$("png");
+  m_originalWidth  = image.width();
+  m_originalHeight = image.height();
+  m_scaledImage = dummyImage();
   m_width = 1;
   m_height = 1;
 }
 
-void Image::LoadImage(wxString image, bool remove,wxFileSystem *filesystem)
+void Image::LoadImage(const wxString &image, bool remove, wxFileSystem *filesystem)
 {
-  m_compressedImage.Clear();
-  m_scaledBitmap.Create (1,1);
+  m_compressedImage.clear();
+  m_scaledImage = dummyImage();
 
   if (filesystem) {
-    wxFSFile *fsfile = filesystem->OpenFile(image);
+    std::unique_ptr<wxFSFile> fsfile(filesystem->OpenFile(image));
     if (fsfile) { // open successful
-
       wxInputStream *istream = fsfile->GetStream();
-
       m_compressedImage = ReadCompressedImage(istream);
     }
-
-    // Closing and deleting fsfile is important: If this line is missing
+    // Closing and deleting fsfile is important: if the file is left open,
     // opening .wxmx files containing hundreds of images might lead to a
     // "too many open files" error.
-    delete fsfile;
   }
   else {
-    wxFile file(image);
-    if(file.IsOpened())
-      {
-	wxFileInputStream strm(file);
-	bool ok=strm.IsOk();
-	if(ok)
-	    m_compressedImage = ReadCompressedImage(&strm);
-	
-	file.Close();
-	if(ok && remove)
-	  wxRemoveFile (image);
-      }
+    QFile file($$(image));
+    if (file.open(QIODevice::ReadOnly)) {
+      m_compressedImage = file.readAll();
+      if (file.error() != QFile::NoError)
+        m_compressedImage.clear();
+      else if (remove)
+        file.remove();
+    }
   }
 
-  wxImage Image;
-  if(m_compressedImage.GetDataLen()>0)
-    {
-      wxMemoryInputStream istream(m_compressedImage.GetData(),m_compressedImage.GetDataLen());
-      Image.LoadFile(istream);
-    }
+  QImage loaded;
+  if(!m_compressedImage.isEmpty())
+    loaded.loadFromData(m_compressedImage);
   
   m_extension = wxFileName(image).GetExt();
 
-  if(Image.Ok())
+  if(!loaded.isNull())
     {
-      m_originalWidth  = Image.GetWidth();
-      m_originalHeight = Image.GetHeight();
+      m_originalWidth  = loaded.width();
+      m_originalHeight = loaded.height();
     }
   else
     {
@@ -319,6 +267,17 @@ void Image::Recalculate()
 
   // Clear this cell's image cache if it doesn't contain an image of the size
   // we need right now.
-  if(m_scaledBitmap.GetWidth() != m_width)
+  if(m_scaledImage.width() != m_width)
     ClearCache();
+}
+
+QImage Image::dummyImage()
+{
+  static QImage dummy;
+  if (dummy.isNull())
+  {
+    dummy = QImage(1, 1, QImage::Format_ARGB32_Premultiplied);
+    dummy.fill(Qt::white);
+  }
+  return dummy;
 }

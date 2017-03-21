@@ -34,6 +34,7 @@
 
 #include <wx/wx.h>
 #include <wx/xml/xml.h>
+#include <QImage>
 #include "Configuration.h"
 #include "TextStyle.h"
 
@@ -178,6 +179,17 @@ public:
      - false: only this cell has to be drawn
    */
   virtual void Draw(wxPoint point, int fontsize);
+
+  /*! Draw this cell using Qt.
+
+    Reimplement either this method or Draw, but not both. This method must either return
+    a null image and draw using WxWidgets within Draw, or an image that has the size of the entire
+    cell.
+
+    \param fontsize The font size that is to be used
+   */
+  virtual QImage DrawQt(const QPoint & point, int fontsize);
+
   /*! Draw this list of cells
 
     \param point The x and y position this cell is drawn at
@@ -326,6 +338,12 @@ public:
   void SetType(int type);
   int GetStyle(){ return m_textStyle; }	//l'ho aggiunto io
 
+  struct SetPenData {
+    wxColour color;
+    double lineWidth;
+    wxPenStyle penStyle;
+  };
+  SetPenData GetSetPen();
   void SetPen();
   //! Mark this cell as highlighted (e.G. being in a maxima box)
   void SetHighlight(bool highlight) { m_highlight = highlight; }

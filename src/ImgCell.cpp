@@ -27,6 +27,7 @@
  */
 
 #include "ImgCell.h"
+#include "Utilities.h"
 
 #include <wx/file.h>
 #include <wx/filename.h>
@@ -34,60 +35,43 @@
 #include <wx/fs_mem.h>
 #include <wx/clipbrd.h>
 #include <wx/mstream.h>
+#include <QBuffer>
+#include <QClipboard>
+#include <QGuiApplication>
+
+#undef _
+static auto _ = trFor("ImgCell");
 
 ImgCell::ImgCell() : MathCell()
 {
-  m_image = NULL;
   m_type = MC_TYPE_IMAGE;
-  m_drawRectangle = true;
   m_imageBorderWidth = 1;
-  m_drawBoundingBox = false;
 }
 
-ImgCell::ImgCell(wxMemoryBuffer image,wxString type) : MathCell()
+ImgCell::ImgCell(const wxMemoryBuffer &image, wxString type) : ImgCell()
 {
-  m_image = new Image(image,type);
-  m_type = MC_TYPE_IMAGE;
-  m_drawRectangle = true;
-  m_imageBorderWidth = 1;
-  m_drawBoundingBox = false;
+  m_image.reset(new Image(QByteArray::fromRawData((const char *)image.GetData(), image.GetDataLen()), $$(type)));
 }
 
-ImgCell::ImgCell(const wxBitmap &bitmap) : MathCell()
+ImgCell::ImgCell(const QImage &image) : ImgCell()
 {
-  m_image = new Image(bitmap);
-  m_type = MC_TYPE_IMAGE;
-  m_drawRectangle = true;
-  m_imageBorderWidth = 1;
-  m_drawBoundingBox = false;
+  m_image.reset(new Image(image));
 }
 
 int ImgCell::s_counter = 0;
 
-// constructor which load image
 ImgCell::ImgCell(wxString image, bool remove, wxFileSystem *filesystem) : MathCell()
 {
-  m_type = MC_TYPE_IMAGE;
-  m_drawRectangle = true;
   if(image != wxEmptyString)
-    m_image = new Image(image,remove,filesystem);
+    m_image.reset(new Image(image,remove,filesystem));
   else
-    m_image = new Image();
-  m_drawBoundingBox = false;
+    m_image.reset(new Image);
 }
 
-void ImgCell::LoadImage(wxString image, bool remove)
+void ImgCell::SetImage(const QImage &image)
 {
-  wxDELETE(m_image);
-  m_image = new Image(image, remove);
-}
-
-void ImgCell::SetBitmap(const wxBitmap &bitmap)
-{
-  wxDELETE(m_image);
-
   m_width = m_height = -1;
-  m_image = new Image(bitmap);
+  m_image.reset(new Image(image));
 }
 
 MathCell* ImgCell::Copy()
@@ -98,14 +82,9 @@ MathCell* ImgCell::Copy()
 
   Image *img = new Image();
   *img = *m_image;
-  tmp->m_image = img;
+  tmp->m_image.reset(img);
   
   return tmp;
-}
-
-ImgCell::~ImgCell()
-{
-  wxDELETE(m_image);
 }
 
 void ImgCell::RecalculateWidths(int fontsize)
@@ -152,7 +131,7 @@ void ImgCell::Draw(wxPoint point, int fontsize)
     if (m_drawRectangle || m_drawBoundingBox)
       dc.DrawRectangle(wxRect(point.x, point.y - m_center, m_width, m_height));
     
-    wxBitmap bitmap = m_image->GetBitmap();
+    auto bitmap = $bitmap(m_image->GetImage());
     bitmapDC.SelectObject(bitmap);
 
     if ((m_drawBoundingBox == false) || (m_imageBorderWidth > 0))
@@ -170,15 +149,15 @@ void ImgCell::Draw(wxPoint point, int fontsize)
 
 wxString ImgCell::ToString()
 {
-  return _(" (Graphics) ");
+  return $$(_(" (Graphics) "));
 }
 
 wxString ImgCell::ToTeX()
 {
-  return _(" (Graphics) ");
+  return $$(_(" (Graphics) "));
 }
 
-wxSize ImgCell::ToImageFile(wxString file)
+QSize ImgCell::ToImageFile(const QString &file)
 {
   return m_image->ToImageFile(file);
 }
@@ -186,78 +165,69 @@ wxSize ImgCell::ToImageFile(wxString file)
 wxString ImgCell::ToRTF()
 {
   // Lines that are common to all types of images
-  wxString header=wxT("{\\pict");
-  wxString footer=wxT("}\n");
+  auto header=Q$("{\\pict");
+  auto footer=Q$("}\n");
   
   // Extract the description of the image data
-  wxString image;
-  wxMemoryBuffer imgdata;
-  if(m_image->GetExtension().Lower() == wxT("png"))
+  QString image;
+  QByteArray imgdata;
+  if(m_image->GetExtension().toLower() == Q$("png"))
   {
     imgdata = GetCompressedImage();
-    image=wxT("\\pngblip");
+    image = Q$("\\pngblip");
   } else if(
-    (m_image->GetExtension().Lower() == wxT("jpg"))||
-    (m_image->GetExtension().Lower() == wxT("jpeg"))
+    (m_image->GetExtension().toLower() == Q$("jpg"))||
+    (m_image->GetExtension().toLower() == Q$("jpeg"))
     )
   {
     imgdata = GetCompressedImage();
-    image=wxT("\\jpegblip");
+    image = Q$("\\jpegblip");
   }
     else
     {
       // Convert any non-rtf-enabled format to .png before adding it to the .rtf file.
-      image = wxT("\\pngblip");
-      wxImage imagedata = m_image->GetUnscaledBitmap().ConvertToImage();
-      wxMemoryOutputStream stream;
-      imagedata.SaveFile(stream,wxBITMAP_TYPE_PNG);
-      imgdata.AppendData(stream.GetOutputStreamBuffer()->GetBufferStart(),
-                         stream.GetOutputStreamBuffer()->GetBufferSize());
+      image = Q$("\\pngblip");
+      auto imagedata = m_image->GetUnscaledImage();
+      QBuffer buf(&imgdata);
+      buf.open(QBuffer::WriteOnly | QBuffer::Append);
+      imagedata.save(&buf, "png");
     }
 
-  image +=wxString::Format(wxT("\\picw%li\\pich%li "),
-                           m_image->GetOriginalWidth(),
-                           m_image->GetOriginalHeight()
-    );
+  image += Q$("\\picw%1\\pich%2 ")
+      .arg(m_image->GetOriginalWidth())
+      .arg(m_image->GetOriginalHeight());
   
   // Convert the data into a hexadecimal string
-  for(size_t i=0;i<= imgdata.GetDataLen();i++)
-    image += wxString::Format("%02x",((unsigned char *)imgdata.GetData())[i]);
+  appendHex(image, imgdata);
 
-  return header+image+footer;
+  return $$(header+image+footer);
 }
 
 wxString ImgCell::ToXML()
 {
-  wxString basename = ImgCell::WXMXGetNewFileName();
+  auto basename = ImgCell::WXMXGetNewFileName();
 
   // add the file to memory
-  if(m_image)
-  {
-    if(m_image->GetCompressedImage())
-      wxMemoryFSHandler::AddFile(basename+m_image -> GetExtension(),
-                                 m_image->GetCompressedImage().GetData(),
-                                 m_image->GetCompressedImage().GetDataLen()
+  if(m_image && !m_image->GetCompressedImage().isEmpty())
+      wxMemoryFSHandler::AddFile($$(basename + m_image->GetExtension()),
+                                 m_image->GetCompressedImage().data(),
+                                 m_image->GetCompressedImage().length()
         );
-  }
-  return (m_drawRectangle ? wxT("<img>") : wxT("<img rect=\"false\">")) +
-    basename + m_image -> GetExtension()+ wxT("</img>");
+  return $$((m_drawRectangle ? Q$("<img>") : Q$("<img rect=\"false\">")) +
+    basename + m_image->GetExtension() + Q$("</img>"));
 }
 
-wxString ImgCell::WXMXGetNewFileName()
+QString ImgCell::WXMXGetNewFileName()
 {
-   wxString file(wxT("image"));
-   file << (++s_counter) << wxT(".");
-   return file;
+  return Q$("image%1.").arg(++s_counter);
 }
 
 bool ImgCell::CopyToClipboard()
 {
-  if (wxTheClipboard->Open())
-  {
-    bool res = wxTheClipboard->SetData(new wxBitmapDataObject(m_image->GetUnscaledBitmap()));
-    wxTheClipboard->Close();
-    return res;
+  auto clipboard = QGuiApplication::clipboard();
+  if (clipboard) {
+    clipboard->setImage(m_image->GetUnscaledImage());
+    return true;
   }
   return false;
 }

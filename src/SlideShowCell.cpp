@@ -27,6 +27,7 @@
 
 #include "SlideShowCell.h"
 #include "ImgCell.h"
+#include "Utilities.h"
 
 #include <wx/file.h>
 #include <wx/filename.h>
@@ -37,6 +38,9 @@
 #include <wx/config.h>
 #include "wx/config.h"
 #include <wx/mstream.h>
+#include <QBuffer>
+#include <QClipboard>
+#include <QGuiApplication>
 
 SlideShow::SlideShow(wxFileSystem *filesystem,int framerate) : MathCell()
 {
@@ -193,7 +197,7 @@ void SlideShow::Draw(wxPoint point, int fontsize)
 
     dc.DrawRectangle(wxRect(point.x, point.y - m_center, m_width, m_height));  
 
-    wxBitmap bitmap = m_images[m_displayed]->GetBitmap();
+    auto bitmap = $bitmap(m_images[m_displayed]->GetImage());
     bitmapDC.SelectObject(bitmap);
       
     dc.Blit(point.x + m_imageBorderWidth, point.y - m_center + m_imageBorderWidth, m_width - 2 * m_imageBorderWidth, m_height - 2 * m_imageBorderWidth, &bitmapDC, 0, 0);
@@ -218,18 +222,16 @@ wxString SlideShow::ToXML()
   wxString images;
 
   for (int i=0; i<m_size; i++) {
-    wxString basename = ImgCell::WXMXGetNewFileName();
+    auto basename = $$(ImgCell::WXMXGetNewFileName());
     // add the file to memory
-    if(m_images[i])
-    {
-      if(m_images[i]->GetCompressedImage())
-        wxMemoryFSHandler::AddFile(basename+m_images[i] -> GetExtension(),
-                                   m_images[i]->GetCompressedImage().GetData(),
-                                   m_images[i]->GetCompressedImage().GetDataLen()
+    if(m_images[i] && !m_images[i]->GetCompressedImage().isEmpty()) {
+      auto filename = basename + $$(m_images[i]->GetExtension());
+        wxMemoryFSHandler::AddFile(filename,
+                                   m_images[i]->GetCompressedImage().data(),
+                                   m_images[i]->GetCompressedImage().length()
           );
+      images += filename+wxT(";");
     }
-
-    images += basename + m_images[i] -> GetExtension()+wxT(";");
   }
 
   if(m_framerate<0)
@@ -240,7 +242,7 @@ wxString SlideShow::ToXML()
 
 wxSize SlideShow::ToImageFile(wxString file)
 {
-  return m_images[m_displayed]->ToImageFile(file);
+  return $size(m_images[m_displayed]->ToImageFile($$(file)));
 }
 
 wxString SlideShow::ToRTF()
@@ -254,14 +256,14 @@ wxString SlideShow::ToRTF()
   
   // Extract the description of the image data
   wxString image;
-  wxMemoryBuffer imgdata;
-  if(m_images[m_displayed]->GetExtension().Lower() == wxT("png"))
+  QByteArray imgdata;
+  if(m_images[m_displayed]->GetExtension().toLower() == Q$("png"))
   {
     imgdata = m_images[m_displayed]->GetCompressedImage();
     image=wxT("\\pngblip\n");
   } else if(
-    (m_images[m_displayed]->GetExtension().Lower() == wxT("jpg"))||
-    (m_images[m_displayed]->GetExtension().Lower() == wxT("jpeg"))
+    (m_images[m_displayed]->GetExtension().toLower() == Q$("jpg"))||
+    (m_images[m_displayed]->GetExtension().toLower() == Q$("jpeg"))
     )
   {
     imgdata = m_images[m_displayed]->GetCompressedImage();
@@ -271,11 +273,10 @@ wxString SlideShow::ToRTF()
     {
       // Convert any non-rtf-enabled format to .png before adding it to the .rtf file.
       image=wxT("\\pngblip\n");
-      wxImage imagedata = m_images[m_displayed]->GetUnscaledBitmap().ConvertToImage();
-      wxMemoryOutputStream stream;
-      imagedata.SaveFile(stream,wxBITMAP_TYPE_PNG);
-      imgdata.AppendData(stream.GetOutputStreamBuffer()->GetBufferStart(),
-                         stream.GetOutputStreamBuffer()->GetBufferSize());
+      auto imagedata = m_images[m_displayed]->GetUnscaledImage();
+      QBuffer buf(&imgdata);
+      buf.open(QBuffer::WriteOnly | QBuffer::Append);
+      imagedata.save(&buf, "PNG");
     }
 
   image += wxString::Format(wxT("\\picw%li\\pich%li "),
@@ -284,8 +285,7 @@ wxString SlideShow::ToRTF()
     );
 
   // Convert the data into a hexadecimal string
-  for(size_t i=0;i<= imgdata.GetDataLen();i++)
-    image += wxString::Format("%02x",((unsigned char *)imgdata.GetData())[i]);
+  appendHex(image, imgdata);
 
   return header+image+footer;
 }
@@ -308,7 +308,7 @@ wxSize SlideShow::ToGif(wxString file)
   {
     wxFileName imgname(tmpdir, wxString::Format(wxT("wxm_anim%d.png"), i));
 
-    wxImage image = m_images[i]->ToImageFile(imgname.GetFullPath());
+    wxImage image = $size(m_images[i]->ToImageFile($$(imgname.GetFullPath())));
 
     convert << wxT(" \"") << imgname.GetFullPath() << wxT("\"");
   }
@@ -361,11 +361,10 @@ void SlideShow::ClearCache()
 
 bool SlideShow::CopyToClipboard()
 {
-  if (wxTheClipboard->Open())
-  {
-    bool res = wxTheClipboard->SetData(new wxBitmapDataObject(m_images[m_displayed]->GetUnscaledBitmap()));
-    wxTheClipboard->Close();
-    return res;
+  auto clipboard = QGuiApplication::clipboard();
+  if (clipboard) {
+    clipboard->setImage(m_images[m_displayed]->GetUnscaledImage());
+    return true;
   }
   return false;
 }

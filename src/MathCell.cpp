@@ -26,6 +26,7 @@
 */
 
 #include "MathCell.h"
+#include "Utilities.h"
 #include <wx/regex.h>
 #include <wx/sstream.h>
 
@@ -285,10 +286,25 @@ int MathCell::GetLineWidth(double scale)
 
  To make this work each derived class must draw the content of the cell
  and then call MathCall::Draw(...).
+
+ Alternatively, the derived class should reimplement DrawQt.
  */
 void MathCell::Draw(wxPoint point, int fontsize)
 {
+  auto image = DrawQt($point(point), fontsize);
+  if (! image.isNull()) {
+    Q_ASSERT(image.width() == m_width && image.height() == m_height);
+    auto & dc = Configuration::Get()->GetDC();
+    wxBitmap bitmap = $image(image);
+    wxMemoryDC bitmapDC(bitmap);
+    dc.Blit(point.x, point.y - m_center, image.width(), image.height(), &bitmapDC, 0, 0);
+  }
   m_currentPoint = point;
+}
+
+QImage MathCell::DrawQt(const QPoint &, int)
+{
+  return {};
 }
 
 void MathCell::DrawList(wxPoint point, int fontsize)
@@ -954,25 +970,34 @@ void MathCell::UnbreakList()
 }
 
 /*!
+  Get the data of the pen to be set in the device context according to the style of the cell.
+*/
+MathCell::SetPenData MathCell::GetSetPen()
+{
+  auto configuration = Configuration::Get();
+  if (m_highlight)
+    return {configuration->GetColor(TS_HIGHLIGHT),
+            configuration->GetDefaultLineWidth(), wxPENSTYLE_SOLID};
+  else if (m_type == MC_TYPE_PROMPT)
+    return {configuration->GetColor(TS_OTHER_PROMPT),
+            configuration->GetDefaultLineWidth(), wxPENSTYLE_SOLID};
+  else if (m_type == MC_TYPE_INPUT)
+    return {configuration->GetColor(TS_INPUT),
+            configuration->GetDefaultLineWidth(), wxPENSTYLE_SOLID};
+  else
+    return {configuration->GetColor(TS_DEFAULT),
+            configuration->GetDefaultLineWidth(), wxPENSTYLE_SOLID};
+}
+
+/*!
   Set the pen in device context according to the style of the cell.
 */
 void MathCell::SetPen()
 {
   Configuration *configuration = Configuration::Get();
   wxDC& dc = configuration->GetDC();
-  
-  if (m_highlight)
-    dc.SetPen(*(wxThePenList->FindOrCreatePen(configuration->GetColor(TS_HIGHLIGHT),
-                                              configuration->GetDefaultLineWidth(), wxPENSTYLE_SOLID)));
-  else if (m_type == MC_TYPE_PROMPT)
-    dc.SetPen(*(wxThePenList->FindOrCreatePen(configuration->GetColor(TS_OTHER_PROMPT),
-                                              configuration->GetDefaultLineWidth(), wxPENSTYLE_SOLID)));
-  else if (m_type == MC_TYPE_INPUT)
-    dc.SetPen(*(wxThePenList->FindOrCreatePen(configuration->GetColor(TS_INPUT),
-                                              configuration->GetDefaultLineWidth(), wxPENSTYLE_SOLID)));
-  else
-    dc.SetPen(*(wxThePenList->FindOrCreatePen(configuration->GetColor(TS_DEFAULT),
-                                              configuration->GetDefaultLineWidth(), wxPENSTYLE_SOLID)));
+  auto setPen = GetSetPen();
+  dc.SetPen(*(wxThePenList->FindOrCreatePen(setPen.color, setPen.lineWidth, setPen.penStyle)));
 }
 
 /***
