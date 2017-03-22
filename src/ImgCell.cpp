@@ -49,9 +49,9 @@ ImgCell::ImgCell() : MathCell()
   m_imageBorderWidth = 1;
 }
 
-ImgCell::ImgCell(const wxMemoryBuffer &image, wxString type) : ImgCell()
+ImgCell::ImgCell(const QByteArray &imageData, const QString &type) : ImgCell()
 {
-  m_image.reset(new Image(QByteArray::fromRawData((const char *)image.GetData(), image.GetDataLen()), $$(type)));
+  m_image.reset(new Image(Q$(".%1").arg(type), imageData));
 }
 
 ImgCell::ImgCell(const QImage &image) : ImgCell()
@@ -61,12 +61,18 @@ ImgCell::ImgCell(const QImage &image) : ImgCell()
 
 int ImgCell::s_counter = 0;
 
-ImgCell::ImgCell(wxString image, bool remove, wxFileSystem *filesystem) : MathCell()
+ImgCell::ImgCell(const QString &fileName, const QByteArray &imageData) : ImgCell()
 {
-  if(image != wxEmptyString)
-    m_image.reset(new Image(image,remove,filesystem));
-  else
+  m_image.reset(new Image(fileName, imageData));
+}
+
+// TODO: The default constructor should do the right thing
+ImgCell::ImgCell(const QString &fileName, Image::Options options) : ImgCell()
+{
+  if (fileName.isEmpty())
     m_image.reset(new Image);
+  else
+    m_image.reset(new Image(fileName, options));
 }
 
 void ImgCell::SetImage(const QImage &image)

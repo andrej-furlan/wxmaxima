@@ -28,6 +28,8 @@
 #include <QImage>
 #include <QString>
 
+class wxFileSystem;
+
 #define Q$ QStringLiteral
 QString $$(const wxString &);
 wxString $$(const QString &);
@@ -52,5 +54,7 @@ static auto trFor = [](const char *context){
     return QCoreApplication::translate(context, source, disambiguation, n);
   };
 };
+
+QByteArray readFromFS(const wxString &fileName, wxFileSystem * fs);
 
 #endif // UTILITIES_H

@@ -24,6 +24,7 @@
  */
 
 #include "Utilities.h"
+#include <wx/filesys.h>
 
 QString $$(const wxString & src) {
   return QString::fromStdWString(src.ToStdWstring());
@@ -84,4 +85,20 @@ void appendHex(wxString & dst, const QByteArray & src) {
 
 void appendHex(QString & dst, const QByteArray & src) {
   dst.append(QString::fromLatin1(src.toHex()));
+}
+
+QByteArray readFromFS(const wxString &fileName, wxFileSystem * filesystem) {
+  std::unique_ptr<wxFSFile> fsfile(filesystem->OpenFile(fileName));
+  if (!fsfile)
+    return {};
+  auto istream = fsfile->GetStream();
+  QByteArray retval;
+  char buf[8192];
+
+  while(istream->CanRead()) {
+    istream->Read(buf, sizeof(buf));
+    size_t siz;
+    retval.append(buf, siz=istream->LastRead());
+  }
+  return retval;
 }

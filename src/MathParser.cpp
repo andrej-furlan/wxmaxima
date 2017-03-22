@@ -777,12 +777,16 @@ MathCell* MathParser::ParseTag(wxXmlNode* node, bool all)
         filename = filename1;
 #endif
 
-        if (m_fileSystem) // loading from zip
-          imageCell = new ImgCell(filename, false, m_fileSystem);
+        if (m_fileSystem)
+        {
+          // loading from zip
+          auto data = readFromFS(filename, m_fileSystem);
+          imageCell = new ImgCell($$(filename), data);
+        }
         else
         {
           if (node->GetAttribute(wxT("del"), wxT("yes")) != wxT("no"))
-            imageCell = new ImgCell(filename, true, NULL);
+            imageCell = new ImgCell(filename, Image::Remove);
           else
           {
             // This is the only case show_image() produces ergo this is the only
@@ -794,7 +798,7 @@ MathCell* MathParser::ParseTag(wxXmlNode* node, bool all)
               )
               filename = m_workingDirectory + wxT("/") + filename;
             
-            imageCell = new ImgCell(filename, false, NULL);
+            imageCell = new ImgCell(filename);
           }
         }
         

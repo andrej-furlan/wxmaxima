@@ -124,7 +124,7 @@ GroupCell::GroupCell(int groupType, wxString initString) : MathCell()
   // when creating an image cell, if a string is provided
   // it loads an image (without deleting it)
   if ((groupType == GC_TYPE_IMAGE) && (initString.Length() > 0)) {
-    ImgCell *ic = new ImgCell(initString, false);
+    ImgCell *ic = new ImgCell(initString);
     AppendOutput(ic);
   }
 

@@ -95,7 +95,8 @@ void SlideShow::LoadImages(wxArrayString images)
   if (m_fileSystem) {
     for (int i=0; i<m_size; i++)
     {
-      Image *image =new Image(images[i],false,m_fileSystem);
+      auto data = readFromFS(images[i], m_fileSystem);
+      Image *image =new Image($$(images[i]), data);
       m_images.push_back(image);
     }
     m_fileSystem = NULL;
@@ -104,7 +105,7 @@ void SlideShow::LoadImages(wxArrayString images)
     for (int i=0; i<m_size; i++)
     {
 
-      Image *image = new Image(images[i]);
+      Image *image = new Image($$(images[i]));
         m_images.push_back(image);
     }
   m_displayed = 0;

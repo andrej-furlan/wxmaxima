@@ -28,9 +28,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include "MathCell.h"
-
-#include <wx/filesys.h>
+#include <wx/config.h>
 #include <QByteArray>
 #include <QImage>
 
@@ -59,31 +57,28 @@
  */
 class Image
 {
+  Q_GADGET
 public:
+  enum Option { Remove = 0x01 };
+  Q_DECLARE_FLAGS(Options, Option)
+  Q_FLAG(Options)
   //! A constructor that generates an empty image. See LoadImage()
   Image();
-  //! A constructor that loads the compressed file.
-  Image(const QByteArray &image, const QString &type);
   //! A constructor that loads an image and compresses it for internal storage.
   Image(const QImage &image);
-  /*! A constructor that loads a compressed file.
-
-    \param image The name of the file
-    \param filesystem The filesystem to load it from
-    \param remove true = Delete the file after loading it
-   */
-  Image(const wxString &image, bool remove = true, wxFileSystem *filesystem = nullptr);
+  //! A constructor that loads a compressed file.
+  Image(const QString &fileName, Options options = Options{});
+  //! A constructor that loads a compressed file from a byte array.
+  Image(const QString &fileName, const QByteArray &image);
   /*! Temporarily forget the scaled image in order to save memory.
 
     Will recreate the scaled image as soon as needed.
    */
   void ClearCache() { m_scaledImage = dummyImage(); }
-  //! Reads the compressed image into a memory buffer
-  QByteArray ReadCompressedImage(wxInputStream *data);
   //! Returns the file name extension of the current image
   QString GetExtension() const {return m_extension;}
-  //! Loads an image from a file
-  void LoadImage(const wxString &image, bool remove = true, wxFileSystem *filesystem = nullptr);
+  //! Loads an image from a file (perhaps with pre-read contents)
+  void LoadImage(const QString &image, Options options, const QByteArray &file = QByteArray{});
   //! "Loads" an image from an image
   void LoadImage(const QImage &image);
   //! Saves the image in its original form, or as .png if it originates in a bitmap

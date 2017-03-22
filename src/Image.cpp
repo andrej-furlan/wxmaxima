@@ -24,9 +24,8 @@
 */
 
 #include "Image.h"
+#include "Configuration.h"
 #include "Utilities.h"
-#include <wx/mstream.h>
-#include <wx/wfstream.h>
 #include <QBuffer>
 #include <QFileInfo>
 #include <QMap>
@@ -36,20 +35,6 @@
 #undef _
 static auto _ = trFor("Image");
 
-QByteArray Image::ReadCompressedImage(wxInputStream *data)
-{
-  QByteArray retval;
-  char buf[8192];
-
-  while(data->CanRead())
-    {
-      data->Read(buf, sizeof(buf));
-      size_t siz;
-      retval.append(buf, siz=data->LastRead());
-    }
-  return retval;
-}
-
 QImage Image::GetUnscaledImage() const
 {
   return QImage::fromData(m_compressedImage);
@@ -58,31 +43,19 @@ QImage Image::GetUnscaledImage() const
 Image::Image()
 {}
 
-Image::Image(const QByteArray &image, const QString &type)
-{
-  m_compressedImage = image;
-  m_extension = type;
-  m_originalWidth  = 640;
-  m_originalHeight = 480;  
-
-  if(!m_compressedImage.isEmpty())
-    {
-      auto image = QImage::fromData(m_compressedImage);
-      m_originalWidth  = image.width();
-      m_originalHeight = image.height();
-    }
- }
-
 Image::Image(const QImage &image)
 {
   LoadImage(image);
 }
 
-// constructor which loads an image
-Image::Image(const wxString &image, bool remove, wxFileSystem *filesystem)
+Image::Image(const QString &fileName, Options options)
 {
-  m_scaledImage = dummyImage();
-  LoadImage(image,remove,filesystem);
+  LoadImage(fileName, options);
+}
+
+Image::Image(const QString &fileName, const QByteArray &data)
+{
+  LoadImage(fileName, {}, data);
 }
 
 QSize Image::ToImageFile(const QString &filename)
@@ -174,28 +147,19 @@ void Image::LoadImage(const QImage &image)
   m_height = 1;
 }
 
-void Image::LoadImage(const wxString &image, bool remove, wxFileSystem *filesystem)
+void Image::LoadImage(const QString &fileName, Image::Options options, const QByteArray &data)
 {
   m_compressedImage.clear();
   m_scaledImage = dummyImage();
 
-  if (filesystem) {
-    std::unique_ptr<wxFSFile> fsfile(filesystem->OpenFile(image));
-    if (fsfile) { // open successful
-      wxInputStream *istream = fsfile->GetStream();
-      m_compressedImage = ReadCompressedImage(istream);
-    }
-    // Closing and deleting fsfile is important: if the file is left open,
-    // opening .wxmx files containing hundreds of images might lead to a
-    // "too many open files" error.
-  }
-  else {
-    QFile file($$(image));
-    if (file.open(QIODevice::ReadOnly)) {
+  m_compressedImage = data;
+  if (data.isEmpty()) {
+    QFile file(fileName);
+    if(file.open(QIODevice::ReadOnly)) {
       m_compressedImage = file.readAll();
       if (file.error() != QFile::NoError)
         m_compressedImage.clear();
-      else if (remove)
+      else if (options & Remove)
         file.remove();
     }
   }
@@ -204,7 +168,7 @@ void Image::LoadImage(const wxString &image, bool remove, wxFileSystem *filesyst
   if(!m_compressedImage.isEmpty())
     loaded.loadFromData(m_compressedImage);
   
-  m_extension = wxFileName(image).GetExt();
+  m_extension = QFileInfo(fileName).suffix();
 
   if(!loaded.isNull())
     {

@@ -23,21 +23,23 @@
 #define IMGCELL_H
 
 #include <memory>
-
-#include "MathCell.h"
 #include <wx/image.h>
 #include "Image.h"
-
-#include <wx/filesys.h>
-#include <wx/fs_arc.h>
+#include "MathCell.h"
+#include "Utilities.h"
 
 class ImgCell : public MathCell
 {
 public:
   ImgCell();
-  ImgCell(const wxMemoryBuffer &image, wxString type);
-  ImgCell(wxString image, bool remove = true, wxFileSystem *filesystem = NULL);
+  ImgCell(const QByteArray &imageData, const QString &type);
+  ImgCell(const QString &fileName, Image::Options options = Image::Options());
   ImgCell(const QImage &image);
+  ImgCell(const QString &fileName, const QByteArray &imageData);
+  ImgCell(const wxString &fileName, Image::Options options = Image::Options()) :
+    ImgCell($$(fileName), options) {}
+  ImgCell(const wxMemoryBuffer &data, const wxString &type) :
+    ImgCell({(const char*)data.GetData(), (int)data.GetDataLen()}, $$(type)) {}
   MathCell* Copy() override;
   void SelectInner(wxRect& rect, MathCell** first, MathCell** last) override
   {
