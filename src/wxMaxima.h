@@ -150,9 +150,9 @@ public:
 
   /*! Get the name of the help file
    */
-  wxString GetHelpFile();
+  wxString GetMaximaHelpFile();
   //! An helper function for GetHelpFile()
-  wxString GetHelpFile2();
+  wxString GetMaximaHelpFile2();
 
   void ShowMaximaHelp(wxString keyword = wxEmptyString);
 
