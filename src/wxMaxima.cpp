@@ -4057,9 +4057,53 @@ void wxMaxima::ShowMaximaHelp(wxString keyword)
                  _("Error"), wxICON_ERROR | wxOK);
     return;
   }
-
+  
   if(MaximaHelpFile.Lower().EndsWith(wxT(".html")))
-    wxLaunchDefaultBrowser(wxURI("file://"+MaximaHelpFile+wxT("#")+keyword).BuildURI());
+  {
+    if(m_helpFileAnchors.empty())
+    {
+      wxLogMessage(_("Compiling the list of anchors the maxima manual provides"));
+      wxRegEx idExtractor(".*<span id=\\\"([a-zAZ0-9_-]*)\\\"");
+      wxRegEx correctUnderscores("_0[0-9]+[a-z]");
+      if(wxFileExists(MaximaHelpFile))
+      {
+        wxFileInputStream input(MaximaHelpFile);
+        if(input.IsOk())
+        {
+          wxTextInputStream text(input, wxT('\t'), wxConvAuto(wxFONTENCODING_UTF8));
+          while(input.IsOk() && !input.Eof())
+          {
+            wxString line = text.ReadLine();
+            wxStringTokenizer tokens(line, wxT(">"));
+            while(tokens.HasMoreTokens())
+            {
+              wxString token = tokens.GetNextToken();
+              wxString oldToken(token);
+              if(idExtractor.Replace(&token, "\\1")>0)
+              {
+                wxString id = token;
+                correctUnderscores.Replace(&token, "_");
+                token.Replace("-", " ");
+                if(!token.EndsWith("-1"))
+                  m_helpFileAnchors[token] = id;
+              }
+            }
+          }
+        }
+      }
+    }
+    if(keyword.IsEmpty())
+    {
+      wxLaunchDefaultBrowser(wxURI("file://"+MaximaHelpFile).BuildURI());
+    }
+    else
+    {
+      keyword = m_helpFileAnchors[keyword];
+      if(keyword.IsEmpty())
+        keyword = "Function-and-Variable-Index";
+      wxLaunchDefaultBrowser(wxURI("file://"+MaximaHelpFile+wxT("#")+keyword).BuildURI());
+    }
+  }
   else
     ShowHTMLHelp(MaximaHelpFile,keyword);
 }

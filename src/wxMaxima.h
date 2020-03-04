@@ -266,6 +266,9 @@ private:
   //! Can we display the "ready" prompt right now?
   bool m_ready;
 
+  WX_DECLARE_STRING_HASH_MAP(wxString, HelpFileAnchors);
+  HelpFileAnchors m_helpFileAnchors;
+
   /*! A human-readable presentation of eventual unmatched-parenthesis type errors
 
     If text doesn't contain any error this function returns wxEmptyString
