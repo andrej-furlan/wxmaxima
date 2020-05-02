@@ -44,9 +44,9 @@ EditorCell::EditorCell(Cell *parent, Configuration **config,
   m_fontStyle(wxFONTSTYLE_NORMAL),
   m_fontWeight(wxFONTWEIGHT_NORMAL)
 {
+  m_nextToDraw = NULL;
   m_text.Replace(wxT("\u2028"), "\n");
   m_text.Replace(wxT("\u2029"), "\n");
-  m_nextToDraw = NULL;
 
   m_errorIndex = -1;
   m_autoAnswer = false;

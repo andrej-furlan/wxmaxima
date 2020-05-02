@@ -34,8 +34,9 @@ ConjugateCell::ConjugateCell(Cell *parent, Configuration **config, CellPointers 
   m_open(std::make_shared<TextCell>(parent, config, cellPointers, "conjugate(")),
   m_close(std::make_shared<TextCell>(parent, config, cellPointers, ")"))
 {
+  m_nextToDraw = NULL;
   static_cast<TextCell&>(*m_open).DontEscapeOpeningParenthesis();
-  m_last = m_nextToDraw = NULL;
+  m_last = NULL;
 }
 
 // Old cppcheck bugs:
