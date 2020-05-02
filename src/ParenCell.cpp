@@ -36,6 +36,7 @@ ParenCell::ParenCell(Cell *parent, Configuration **config, CellPointers *cellPoi
   m_open(std::make_shared<TextCell>(parent, config, cellPointers, wxT("("))),
   m_close(std::make_shared<TextCell>(parent, config, cellPointers, wxT(")")))
 {
+  m_nextToDraw = NULL;
   m_open->SetStyle(TS_FUNCTION);
   m_close->SetStyle(TS_FUNCTION);
   m_numberOfExtensions = 0;
@@ -71,6 +72,7 @@ ParenCell::ParenCell(Cell *parent, Configuration **config, CellPointers *cellPoi
 ParenCell::ParenCell(const ParenCell &cell):
  ParenCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
 {
+  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if(cell.m_innerCell)
     SetInner(cell.m_innerCell->CopyList(), cell.m_type);
@@ -529,11 +531,11 @@ bool ParenCell::BreakUp()
   if (!m_isBrokenIntoLines)
   {
     m_isBrokenIntoLines = true;
-    m_open->m_nextToDraw = m_innerCell.get();
+    m_open->SetNextToDraw(m_innerCell.get());
     wxASSERT_MSG(m_last1 != NULL, _("Bug: No last cell inside a parenthesis!"));
     if (m_last1 != NULL)
-      m_last1->m_nextToDraw = m_close.get();
-    m_close->m_nextToDraw = m_nextToDraw;
+      m_last1->SetNextToDraw(m_close.get());
+    m_close->SetNextToDraw(m_nextToDraw);
     m_nextToDraw = m_open.get();
 
     ResetData();
@@ -542,4 +544,12 @@ bool ParenCell::BreakUp()
     return true;
   }
   return false;
+}
+
+void ParenCell::SetNextToDraw(Cell *next)
+{
+  if(m_isBrokenIntoLines)
+    m_close->SetNextToDraw(next);
+  else
+    m_nextToDraw = next;
 }

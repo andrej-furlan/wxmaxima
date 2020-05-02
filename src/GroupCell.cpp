@@ -43,7 +43,6 @@ GroupCell::GroupCell(Configuration **config, GroupType groupType, CellPointers *
   Cell(this, config, cellPointers)
 {
   m_numberedAnswersCount = 0;
-  m_next = m_previous = m_nextToDraw = NULL;
   m_autoAnswer = false;
   m_cellsInGroup = 1;
   m_inEvaluationQueue = false;
@@ -161,6 +160,7 @@ GroupCell::GroupCell(Configuration **config, GroupType groupType, CellPointers *
 GroupCell::GroupCell(const GroupCell &cell):
   GroupCell(cell.m_configuration, cell.m_groupType, cell.m_cellPointers, wxEmptyString)
 {
+  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if (cell.m_inputLabel)
     SetInput(cell.m_inputLabel->CopyList());
@@ -487,7 +487,8 @@ void GroupCell::AppendInput(Cell *cell)
     else if (m_inputLabel->m_next->GetValue().Length() == 0)
     {
       wxDELETE(m_inputLabel->m_next);
-      m_inputLabel->m_next = m_inputLabel->m_nextToDraw = NULL;
+      m_inputLabel->m_next = NULL;
+      m_inputLabel->SetNextToDraw(NULL);
       m_inputLabel->AppendCell(cell);
     }
     else
@@ -923,7 +924,7 @@ void GroupCell::RecalculateHeightOutput()
         m_outputRect.height += MC_LINE_SKIP;
       }
     }
-    tmp = tmp->m_nextToDraw;
+    tmp = tmp->GetNextToDraw();
   }
 
   ResetData();
@@ -1064,20 +1065,20 @@ void GroupCell::Draw(wxPoint point)
         while (tmp != NULL)
         {         
           tmp->Draw(in);
-          if ((tmp->m_nextToDraw != NULL) && (tmp->m_nextToDraw->BreakLineHere()))
+          if ((tmp->GetNextToDraw() != NULL) && (tmp->GetNextToDraw()->BreakLineHere()))
             {
-              if (tmp->m_nextToDraw->m_bigSkip)
+              if (tmp->GetNextToDraw()->m_bigSkip)
                 in.y += MC_LINE_SKIP;
  
-              in.x = point.x + GetLineIndent(tmp->m_nextToDraw);              
+              in.x = point.x + GetLineIndent(tmp->GetNextToDraw());              
 
-              in.y += drop + tmp->m_nextToDraw->GetCenterList();
-              drop = tmp->m_nextToDraw->GetMaxDrop();
+              in.y += drop + tmp->GetNextToDraw()->GetCenterList();
+              drop = tmp->GetNextToDraw()->GetMaxDrop();
             }
           else
             in.x += tmp->GetWidth();
 
-          tmp = tmp->m_nextToDraw;
+          tmp = tmp->GetNextToDraw();
         }
       }
       if ((configuration->ShowCodeCells()) ||
@@ -1408,7 +1409,7 @@ wxString GroupCell::ToString()
           str += wxT("\n");
       str += tmp->ToString();
       firstCell = false;
-      tmp = tmp->m_nextToDraw;
+      tmp = tmp->GetNextToDraw();
     }
   }
   return str;
@@ -1630,7 +1631,7 @@ wxString GroupCell::ToTeXCodeCell(wxString imgDir, wxString filename, int *imgCo
         }
       }
 
-      tmp = tmp->m_nextToDraw;
+      tmp = tmp->GetNextToDraw();
     }
 
     if (mathMode)
@@ -1911,14 +1912,14 @@ void GroupCell::SelectRectInOutput(const wxRect &rect, const wxPoint &one, const
   *first = *last = NULL;
 
   while (tmp != NULL && !rect.Intersects(tmp->GetRect()))
-    tmp = tmp->m_nextToDraw;
+    tmp = tmp->GetNextToDraw();
   *first = tmp;
   *last = tmp;
   while (tmp != NULL)
   {
     if (rect.Intersects(tmp->GetRect()))
       *last = tmp;
-    tmp = tmp->m_nextToDraw;
+    tmp = tmp->GetNextToDraw();
   }
 
   if (*first != NULL && *last != NULL)
@@ -1934,13 +1935,13 @@ void GroupCell::SelectRectInOutput(const wxRect &rect, const wxPoint &one, const
       while (*first != tmp &&
              ((*first)->GetCurrentX() + (*first)->GetWidth() < start.x
               || (*first)->GetCurrentY() + (*first)->GetDrop() < start.y))
-        *first = (*first)->m_nextToDraw;
+        *first = (*first)->GetNextToDraw();
 
       // Find the last cell in selection
       curr = *last = *first;
       while (1)
       {
-        curr = curr->m_nextToDraw;
+        curr = curr->GetNextToDraw();
         if (curr == NULL)
           break;
         if (curr->GetCurrentX() <= end.x &&
@@ -2057,14 +2058,14 @@ void GroupCell::BreakLines(Cell *cell)
       {
         cell->SoftLineBreak(true);
         Cell *nextCell = cell;
-        if(cell->m_nextToDraw)
-          nextCell = cell->m_nextToDraw;
+        if(cell->GetNextToDraw())
+          nextCell = cell->GetNextToDraw();
         currentWidth = GetLineIndent(nextCell) + cell->GetWidth();
       }
       else
         currentWidth += cell->GetWidth();
     }
-    cell = cell->m_nextToDraw;
+    cell = cell->GetNextToDraw();
   }
 }
 
@@ -2076,17 +2077,17 @@ void GroupCell::SelectOutput(Cell **start, Cell **end)
   *start = m_output.get();
 
   while (*start != NULL && ((*start)->GetStyle() != TS_LABEL) && ((*start)->GetStyle() != TS_USERLABEL))
-    *start = (*start)->m_nextToDraw;
+    *start = (*start)->GetNextToDraw();
 
 
   if (*start != NULL)
-    *start = (*start)->m_nextToDraw;
+    *start = (*start)->GetNextToDraw();
 
   *end = *start;
 
   while (*end != NULL &&
-         (*end)->m_nextToDraw != NULL)
-    *end = (*end)->m_nextToDraw;
+         (*end)->GetNextToDraw() != NULL)
+    *end = (*end)->GetNextToDraw();
 
   if (*end == NULL || *start == NULL)
     *end = *start = NULL;
@@ -2126,7 +2127,7 @@ bool GroupCell::BreakUpCells(Cell *cell)
     {
       if (cell->BreakUp())
         lineHeightsChanged = true;
-      cell = cell->m_nextToDraw;
+      cell = cell->GetNextToDraw();
     }
     return lineHeightsChanged;
   }
@@ -2144,7 +2145,7 @@ bool GroupCell::BreakUpCells(Cell *cell)
         if (cell->BreakUp())
           lineHeightsChanged = true;
       }
-      cell = cell->m_nextToDraw;
+      cell = cell->GetNextToDraw();
     }
     
     return lineHeightsChanged;
@@ -2183,7 +2184,7 @@ void GroupCell::UnBreakUpCells(Cell *cell)
   {
     if (cell->m_isBrokenIntoLines)
       cell->Unbreak();
-    cell = cell->m_nextToDraw;
+    cell = cell->GetNextToDraw();
   }
 }
 
@@ -2306,12 +2307,16 @@ GroupCell *GroupCell::Fold()
   {
     if(end->m_next != NULL)
     {
-      m_next = m_nextToDraw = end->m_next;
+      m_next = end->m_next;
+      SetNextToDraw(end->m_next);
       end->m_next->m_previous = this;
     }
     else
       m_next = m_nextToDraw = NULL;
-    end->m_next = end->m_nextToDraw = NULL;
+    {
+      end->m_next = NULL;
+      end->SetNextToDraw(NULL);
+    }
   }
   
   start->m_previous = NULL;
@@ -2337,7 +2342,8 @@ GroupCell *GroupCell::Unfold()
   while (tmp->m_next)
     tmp = tmp->m_next;
   // tmp holds the last element of m_hiddenTree
-  tmp->m_next = tmp->m_nextToDraw = next;
+  tmp->m_next = next;
+  tmp->SetNextToDraw(next);
   if (next)
     next->m_previous = tmp;
 
@@ -2599,6 +2605,11 @@ wxAccStatus GroupCell::GetLocation(wxRect &rect, int elementId)
 }
 
 #endif
+
+void GroupCell::SetNextToDraw(Cell *next)
+{
+  m_nextToDraw = next;
+}
 
 wxString GroupCell:: m_lookalikeChars(
     wxT("µ")		wxT("\u03bc")
