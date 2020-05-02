@@ -370,11 +370,11 @@ void ParenCell::Draw(wxPoint point)
     default:
     {
       wxDC *adc = configuration->GetAntialiassingDC();
-      innerCellPos.x = point.x + Scale_Px(6) + (*m_configuration)->GetDefaultLineWidth();
       innerCellPos.y += (m_innerCell->GetCenterList() - m_innerCell->GetHeightList() /2);
       SetPen(1.0);
 
       int signWidth = m_signWidth - Scale_Px(2);
+      innerCellPos.x = point.x + m_signWidth;
 
       wxPointList points;
       // Left bracket
