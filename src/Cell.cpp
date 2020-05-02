@@ -272,6 +272,11 @@ void Cell::AppendCell(Cell *p_next)
   LastInList->m_next = p_next;
   LastInList->m_next->m_previous = LastInList;
 
+  wxASSERT(LastInList != NULL);
+  
+  if(LastInList == NULL)
+    return;
+  
   // Search the last cell in the list that is sorted by the drawing order
   Cell *LastToDraw = LastInList;
   while (LastToDraw->GetNextToDraw() != NULL)

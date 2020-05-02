@@ -34,6 +34,7 @@
 TextCell::TextCell(Cell *parent, Configuration **config, CellPointers *cellPointers,
                    wxString text, TextStyle style) : Cell(parent, config, cellPointers)
 {
+  m_nextToDraw = NULL;
   switch(m_textStyle = style)
   {
   case TS_DEFAULT: m_type = MC_TYPE_DEFAULT; break;
