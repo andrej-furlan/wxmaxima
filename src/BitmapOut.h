@@ -63,7 +63,7 @@ public:
 
     \return The size of the bitmap in millimeters. Sizes <0 indicate that the export has failed.
    */
-  wxSize ToFile(wxString file);
+  wxSize ToFile(const wxString &file);
 
   //! Returns the bitmap representation of the list of cells that was passed to SetData()
   wxBitmap GetBitmap() const

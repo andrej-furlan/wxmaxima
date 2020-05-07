@@ -291,7 +291,7 @@ void BitmapOut::Draw()
   m_ppi.y *= m_scale;
 }
 
-wxSize BitmapOut::ToFile(wxString file)
+wxSize BitmapOut::ToFile(const wxString &file)
 {
   // Assign a resolution to the bitmap.
   wxImage img = m_bmp.ConvertToImage();
@@ -301,32 +301,21 @@ wxSize BitmapOut::ToFile(wxString file)
   img.SetOption(wxIMAGE_OPTION_RESOLUTION, resolution * m_scale);
 
   bool success = false;
-  if (file.Right(4) == wxT(".bmp"))
+  if (file.EndsWith(wxT(".bmp")))
     success = img.SaveFile(file, wxBITMAP_TYPE_BMP);
-  else if (file.Right(4) == wxT(".xpm"))
+  else if (file.EndsWith(wxT(".xpm")))
     success = img.SaveFile(file, wxBITMAP_TYPE_XPM);
-  else if (file.Right(4) == wxT(".jpg"))
+  else if (file.EndsWith(wxT(".jpg")))
     success = img.SaveFile(file, wxBITMAP_TYPE_JPEG);
-  else
-  {
-    if (file.Right(4) != wxT(".png"))
-      file = file + wxT(".png");
+  else if (file.EndsWith(wxT(".png")))
     success = img.SaveFile(file, wxBITMAP_TYPE_PNG);
-  }
-
-  wxSize retval;
-  if (success)
-  {
-    retval.x = GetRealWidth();
-    retval.y = GetRealHeight();
-    return retval;
-  }
   else
-  {
-    retval.x = -1;
-    retval.y = -1;
-    return retval;
-  };
+    success = img.SaveFile(file + wxT(".png"), wxBITMAP_TYPE_PNG);
+
+  if (success)
+    return wxSize(GetRealWidth(), GetRealHeight());
+  else
+    return wxSize(-1, -1);
 }
 
 bool BitmapOut::ToClipboard()

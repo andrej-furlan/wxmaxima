@@ -126,7 +126,7 @@ private:
   class GetGeneralFiles : public wxDirTraverser
   {
   public:
-    explicit GetGeneralFiles(wxArrayString& files, wxString prefix = wxEmptyString) :
+    explicit GetGeneralFiles(wxArrayString& files, const wxString &prefix = {}) :
       m_files(files), m_prefix(prefix) { }
     virtual wxDirTraverseResult OnFile(const wxString& filename) override
       {
@@ -156,7 +156,7 @@ private:
   class GetMacFiles_includingSubdirs : public wxDirTraverser
   {
   public:
-    explicit GetMacFiles_includingSubdirs(wxArrayString& files, wxString prefix = wxEmptyString) :
+    explicit GetMacFiles_includingSubdirs(wxArrayString& files, const wxString &prefix = {}) :
       m_files(files), m_prefix(prefix)  { }
     virtual wxDirTraverseResult OnFile(const wxString& filename) override
       {
@@ -196,7 +196,7 @@ private:
   class GetMacFiles : public GetMacFiles_includingSubdirs
   {
   public:
-    explicit GetMacFiles(wxArrayString& files, wxString prefix = wxEmptyString) :
+    explicit GetMacFiles(wxArrayString& files, const wxString &prefix = {}) :
       GetMacFiles_includingSubdirs(files, prefix){ }
     virtual wxDirTraverseResult OnDir(const wxString& dirname) override
       {
@@ -213,7 +213,7 @@ private:
   class GetDemoFiles_includingSubdirs : public wxDirTraverser
   {
   public:
-    explicit GetDemoFiles_includingSubdirs(wxArrayString& files, wxString prefix = wxEmptyString) :
+    explicit GetDemoFiles_includingSubdirs(wxArrayString& files, const wxString &prefix = {}) :
       m_files(files), m_prefix(prefix) { }
     virtual wxDirTraverseResult OnFile(const wxString& filename) override
       {
@@ -249,7 +249,7 @@ private:
   class GetDemoFiles : public GetDemoFiles_includingSubdirs
   {
   public:
-    explicit GetDemoFiles(wxArrayString& files, wxString prefix = wxEmptyString) :
+    explicit GetDemoFiles(wxArrayString& files, const wxString &prefix = {}) :
       GetDemoFiles_includingSubdirs(files, prefix){ }
     virtual wxDirTraverseResult OnDir(const wxString& dirname) override
       {

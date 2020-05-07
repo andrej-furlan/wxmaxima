@@ -82,31 +82,31 @@ bool BTextCtrl::MatchParenthesis(int code)
   switch (code)
   {
     case '(':
-      CloseParenthesis(wxT("("), wxT(")"), true);
+      CloseParenthesis('(', ')', true);
       skip = false;
       break;
     case ')':
-      CloseParenthesis(wxT("("), wxT(")"), false);
+      CloseParenthesis('(', ')', false);
       skip = false;
       break;
     case '[':
-      CloseParenthesis(wxT("["), wxT("]"), true);
+      CloseParenthesis('[', ']', true);
       skip = false;
       break;
     case ']':
-      CloseParenthesis(wxT("["), wxT("]"), false);
+      CloseParenthesis('[', ']', false);
       skip = false;
       break;
     case '{':
-      CloseParenthesis(wxT("{"), wxT("}"), true);
+      CloseParenthesis('{', '}', true);
       skip = false;
       break;
     case '}':
-      CloseParenthesis(wxT("{"), wxT("}"), false);
+      CloseParenthesis('{', '}', false);
       skip = false;
       break;
     case '"':
-      CloseParenthesis(wxT("\""), wxT("\""), true);
+      CloseParenthesis('"', '"', true);
       skip = false;
       break;
     case WXK_UP:
@@ -120,41 +120,34 @@ bool BTextCtrl::MatchParenthesis(int code)
   return skip;
 }
 
-void BTextCtrl::CloseParenthesis(wxString open, wxString close, bool fromOpen)
+void BTextCtrl::CloseParenthesis(wxChar open, wxChar close, bool fromOpen)
 {
   long from, to;
   GetSelection(&from, &to);
 
   if (from == to)  // nothing selected
   {
-    wxString text = GetValue();
-    wxString charHere = wxT(" ");//text.GetChar((size_t)GetInsertionPoint());
+    wxChar charHere = ' '; //text.GetChar((size_t)GetInsertionPoint());
     size_t insp = GetInsertionPoint();
 
-    if (!fromOpen && charHere == close)
-      SetInsertionPoint(insp + 1);
-    else
+    if (fromOpen || charHere != close)
     {
-      wxString newtext =
-              (insp > 0 ? text.SubString(0, insp - 1) : wxT("")) +
-              (fromOpen ? open : wxT("")) + close +
-              text.SubString(insp, text.length());
-
-      ChangeValue(newtext);
-
-      SetInsertionPoint(insp + 1);
+      wxString text = GetValue();
+      text.reserve(text.size() + (fromOpen ? 2 : 1));
+      if (fromOpen)
+        text.insert(insp, open);
+      text.insert(insp + (fromOpen ? 1 : 0), close);
+      ChangeValue(text);
     }
+    SetInsertionPoint(insp + 1);
   }
   else
   {
     wxString text = GetValue();
-
-    wxString newtext =
-            (from > 0 ? text.SubString(0, from - 1) : wxT("")) +
-            open + text.SubString(from, to - 1) + close +
-            text.SubString(to, text.length());
-
-    ChangeValue(newtext);
+    text.reserve(text.size() + 2);
+    text.insert(from, open);
+    text.insert(to+1, close);
+    ChangeValue(text);
 
     if (fromOpen)
       SetInsertionPoint(from + 1);

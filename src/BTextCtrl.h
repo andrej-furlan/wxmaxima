@@ -51,7 +51,7 @@ private:
 
   bool MatchParenthesis(int code);
 
-  void CloseParenthesis(wxString open, wxString close, bool fromOpen);
+  void CloseParenthesis(wxChar open, wxChar close, bool fromOpen);
 
   void OnChar(wxKeyEvent &event);
 
