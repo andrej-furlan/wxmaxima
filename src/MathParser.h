@@ -56,8 +56,8 @@ public:
   void SetUserLabel(wxString label){ m_userDefinedLabel = label; }
   Cell *ParseLine(wxString s, CellType style = MC_TYPE_DEFAULT);
 
-  Cell *ParseTag(wxXmlNode *node, bool all);
-  Cell *ParseTag(wxXmlNode *node){return ParseTag(node, true);}
+  Cell *ParseTag(wxXmlNode *node, bool all = true);
+  Cell *ParseTagContents(wxXmlNode *node){return ParseTag(node->GetChildren, true);}
 
 private:
   //! A storage for a tag and the function to call if one encounters it

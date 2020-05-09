@@ -110,8 +110,8 @@ MathParser::MathParser(Configuration **cfg, Cell::CellPointers *cellPointers, wx
     m_knownTags.push_back(TagFunction(wxT("ie"), &MathParser::ParseSubSupTag));
     m_knownTags.push_back(TagFunction(wxT("mmultiscripts"), &MathParser::ParseMmultiscriptsTag));
     m_knownTags.push_back(TagFunction(wxT("lm"), &MathParser::ParseLimitTag));
-    m_knownTags.push_back(TagFunction(wxT("r"), &MathParser::ParseTag));
-    m_knownTags.push_back(TagFunction(wxT("mrow"), &MathParser::ParseTag));
+    m_knownTags.push_back(TagFunction(wxT("r"), &MathParser::ParseTagContents));
+    m_knownTags.push_back(TagFunction(wxT("mrow"), &MathParser::ParseTagContents));
     m_knownTags.push_back(TagFunction(wxT("tb"), &MathParser::ParseTableTag));
     m_knownTags.push_back(TagFunction(wxT("mth"), &MathParser::ParseMthTag));
     m_knownTags.push_back(TagFunction(wxT("line"), &MathParser::ParseMthTag));
@@ -141,6 +141,14 @@ Cell *MathParser::ParseHiddenOperatorTag(wxXmlNode *node)
   Cell *retval = ParseText(node->GetChildren());
   retval->m_isHidableMultSign = true;
   return retval;
+}
+
+Cell *MathParser::ParseTagContents(wxXmlNode *node)
+{
+  Cell *tmp = NULL;
+  if((node == NULL) && (node->GetChildren))
+    tmp = ParseTag(node->GetChildren, true);
+  return tmp;
 }
 
 Cell *MathParser::ParseHighlightTag(wxXmlNode *node)
