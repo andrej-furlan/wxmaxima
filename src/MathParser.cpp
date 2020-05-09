@@ -146,8 +146,8 @@ Cell *MathParser::ParseHiddenOperatorTag(wxXmlNode *node)
 Cell *MathParser::ParseTagContents(wxXmlNode *node)
 {
   Cell *tmp = NULL;
-  if((node == NULL) && (node->GetChildren))
-    tmp = ParseTag(node->GetChildren, true);
+  if((node != NULL) && (node->GetChildren() != NULL))
+    tmp = ParseTag(node->GetChildren(), true);
   return tmp;
 }
 

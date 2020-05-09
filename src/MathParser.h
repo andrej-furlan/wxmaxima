@@ -57,7 +57,7 @@ public:
   Cell *ParseLine(wxString s, CellType style = MC_TYPE_DEFAULT);
 
   Cell *ParseTag(wxXmlNode *node, bool all = true);
-  Cell *ParseTagContents(wxXmlNode *node){return ParseTag(node->GetChildren, true);}
+  Cell *ParseTagContents(wxXmlNode *node);
 
 private:
   //! A storage for a tag and the function to call if one encounters it
