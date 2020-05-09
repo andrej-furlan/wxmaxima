@@ -1018,7 +1018,8 @@ Cell *MathParser::ParseTag(wxXmlNode *node, bool all)
       {
         if(tagName == it->m_tag)
         {
-          tmp = *it->m_function(node);
+          #define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))         
+          tmp =  CALL_MEMBER_FN(*this,it->m_function)(node);
           break;
         }
       }
@@ -1138,3 +1139,4 @@ Cell *MathParser::ParseLine(wxString s, CellType style)
 }
 
 wxRegEx MathParser::m_graphRegex(wxT("[[:cntrl:]]"));
+std::vector<MathParser::TagFunction> MathParser::m_knownTags;
