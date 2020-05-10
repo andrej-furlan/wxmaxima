@@ -37,6 +37,7 @@ The header file for the xml cell parser
 #include "TextCell.h"
 #include "EditorCell.h"
 #include "FracCell.h"
+#include "GroupCell.h"
 
 /*! This class handles parsing the xml representation of a cell tree.
 
@@ -77,11 +78,14 @@ private:
     Cell * (MathParser::* m_function)(wxXmlNode *node);
   };
 
-  /*! Who you gonna call if you encounter any of these tags?
+  /*! Who you gonna call if you encounter any of these math cell tags?
    */
-  static std::vector<TagFunction> m_knownTags;
+  static std::vector<TagFunction> m_innerTags;
+  //! A list of functions to call on all types of GroupCell tags
+  static std::vector<TagFunction> m_groupTags;
+  //! Parses attributes that apply to nearly all types of cells
   static void ParseCommonAttrs(wxXmlNode *node, Cell *cell);
-
+  //! Returns cell or, if cell==NULL, an empty text cell as a fallback.
   Cell *HandleNullPointer(Cell *cell);
 
   /*! Get the next xml tag
@@ -114,6 +118,38 @@ private:
     loading of WXMX files.
   */
   Cell *ParseCellTag(wxXmlNode *node);
+  //! Convert a code cell tag to a GroupCell
+  GroupCell *GroupCellFromCodeTag(wxXmlNode *node);
+  GroupCell *GroupCellFromImageTag(wxXmlNode *node);
+  GroupCell *GroupCellFromTitleTag(wxXmlNode *node)
+    {
+      return new GroupCell(m_configuration, GC_TYPE_TITLE, m_cellPointers);
+    }
+  GroupCell *GroupCellFromSectionTag(wxXmlNode *node)
+    {
+      return new GroupCell(m_configuration, GC_TYPE_SECTION, m_cellPointers);
+    }
+  GroupCell *GroupCellFromPagebreakTag(wxXmlNode *WXUNUSED(node))
+    {
+      return new GroupCell(m_configuration, GC_TYPE_PAGEBREAK, m_cellPointers);
+    }
+  GroupCell *GroupCellFromSubsectionTag(wxXmlNode *node);
+  GroupCell *GroupCellFromSubsubsectionTag(wxXmlNode *node)
+    {
+      return new GroupCell(m_configuration, GC_TYPE_SUBSUBSECTION, m_cellPointers);
+    }
+  GroupCell *GroupCellHeading5Tag(wxXmlNode *node)
+    {
+      return new GroupCell(m_configuration, GC_TYPE_HEADING5, m_cellPointers);
+    }
+  GroupCell *GroupCellHeading6Tag(wxXmlNode *node)
+    {
+      return new GroupCell(m_configuration, GC_TYPE_HEADING6, m_cellPointers);
+    }
+  GroupCell *GroupCellFromTextTag(wxXmlNode *node)
+    {
+      return new GroupCell(m_configuration, GC_TYPE_TEXT, m_cellPointers);
+    }
 
   Cell *ParseEditorTag(wxXmlNode *node);
 
@@ -169,7 +205,7 @@ private:
   Cell *ParseSubSupTag(wxXmlNode *node);
 
   Cell *ParseMmultiscriptsTag(wxXmlNode *node);
-  
+
   wxString m_userDefinedLabel;
   static wxRegEx m_graphRegex;
 
