@@ -78,11 +78,23 @@ private:
     Cell * (MathParser::* m_function)(wxXmlNode *node);
   };
 
+    //! A storage for a GroupCell tag and the function to call if one encounters it
+  class GroupCellTagFunction
+  {
+  public:
+    GroupCellTagFunction(wxString tag, GroupCell * (MathParser::* function)(wxXmlNode *node)):
+      m_tag(tag),
+      m_function(function)
+      {}
+    wxString m_tag;
+    GroupCell * (MathParser::* m_function)(wxXmlNode *node);
+  };
+
   /*! Who you gonna call if you encounter any of these math cell tags?
    */
   static std::vector<TagFunction> m_innerTags;
-  //! A list of functions to call on all types of GroupCell tags
-  static std::vector<TagFunction> m_groupTags;
+  //! A list of functions to call on encountering all types of GroupCell tags
+  static std::vector<GroupCellTagFunction> m_groupTags;
   //! Parses attributes that apply to nearly all types of cells
   static void ParseCommonAttrs(wxXmlNode *node, Cell *cell);
   //! Returns cell or, if cell==NULL, an empty text cell as a fallback.
@@ -121,11 +133,11 @@ private:
   //! Convert a code cell tag to a GroupCell
   GroupCell *GroupCellFromCodeTag(wxXmlNode *node);
   GroupCell *GroupCellFromImageTag(wxXmlNode *node);
-  GroupCell *GroupCellFromTitleTag(wxXmlNode *node)
+  GroupCell *GroupCellFromTitleTag(wxXmlNode *WXUNUSED(node))
     {
       return new GroupCell(m_configuration, GC_TYPE_TITLE, m_cellPointers);
     }
-  GroupCell *GroupCellFromSectionTag(wxXmlNode *node)
+  GroupCell *GroupCellFromSectionTag(wxXmlNode *WXUNUSED(node))
     {
       return new GroupCell(m_configuration, GC_TYPE_SECTION, m_cellPointers);
     }
@@ -134,19 +146,19 @@ private:
       return new GroupCell(m_configuration, GC_TYPE_PAGEBREAK, m_cellPointers);
     }
   GroupCell *GroupCellFromSubsectionTag(wxXmlNode *node);
-  GroupCell *GroupCellFromSubsubsectionTag(wxXmlNode *node)
+  GroupCell *GroupCellFromSubsubsectionTag(wxXmlNode *WXUNUSED(node))
     {
       return new GroupCell(m_configuration, GC_TYPE_SUBSUBSECTION, m_cellPointers);
     }
-  GroupCell *GroupCellHeading5Tag(wxXmlNode *node)
+  GroupCell *GroupCellHeading5Tag(wxXmlNode *WXUNUSED(node))
     {
       return new GroupCell(m_configuration, GC_TYPE_HEADING5, m_cellPointers);
     }
-  GroupCell *GroupCellHeading6Tag(wxXmlNode *node)
+  GroupCell *GroupCellHeading6Tag(wxXmlNode *WXUNUSED(node))
     {
       return new GroupCell(m_configuration, GC_TYPE_HEADING6, m_cellPointers);
     }
-  GroupCell *GroupCellFromTextTag(wxXmlNode *node)
+  GroupCell *GroupCellFromTextTag(wxXmlNode *WXUNUSED(node))
     {
       return new GroupCell(m_configuration, GC_TYPE_TEXT, m_cellPointers);
     }

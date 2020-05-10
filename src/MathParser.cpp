@@ -49,6 +49,12 @@
 #include "SubSupCell.h"
 #include "SlideShowCell.h"
 
+/*! Calls a member function from a function pointer
+
+  \todo Replace this by a C++17 construct when we switch to C++17
+ */
+#define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))         
+
 wxXmlNode *MathParser::SkipWhitespaceNode(wxXmlNode *node)
 {
   if (node)
@@ -125,8 +131,16 @@ MathParser::MathParser(Configuration **cfg, Cell::CellPointers *cellPointers, wx
   }
   if(m_groupTags.empty())
   {
-    m_groupTags.push_back(TagFunction(wxT("ascii"), &MathParser::ParseCharCode));
-    
+    m_groupTags.push_back(GroupCellTagFunction(wxT("code"), &MathParser::GroupCellFromCodeTag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("image"), &MathParser::GroupCellFromImageTag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("pagebreak"), &MathParser::GroupCellFromPagebreakTag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("text"), &MathParser::GroupCellFromTextTag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("title"), &MathParser::GroupCellFromTitleTag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("section"), &MathParser::GroupCellFromSectionTag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("subsection"), &MathParser::GroupCellFromSubsectionTag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("subsubsection"), &MathParser::GroupCellFromSubsubsectionTag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("heading5"), &MathParser::GroupCellHeading5Tag));
+    m_groupTags.push_back(GroupCellTagFunction(wxT("heading6"), &MathParser::GroupCellHeading6Tag));
   }
   m_highlight = false;
   if (zipfile.Length() > 0)
@@ -348,27 +362,16 @@ Cell *MathParser::ParseCellTag(wxXmlNode *node)
   // read (group)cell type
   wxString type = node->GetAttribute(wxT("type"), wxT("text"));
 
-  if (type == wxT("code"))
-    group = GroupCellFromCodeTag(node);
-  else if (type == wxT("image"))
-    group = GroupCellFromImageTag(node);
-  else if (type == wxT("pagebreak"))
-    group = GroupCellFromPagebreakTag(node);
-  else if (type == wxT("text"))
-    group = GroupCellFromTextTag(node);
-  else if (type == wxT("title"))
-    group = GroupCellFromTitleTag(node);
-  else if (type == wxT("section"))
-    group = GroupCellFromSectionTag(node);
-  else if (type == wxT("subsection"))
-    group = GroupCellFromSubsectionTag(node);
-  else if (type == wxT("subsubsection"))
-    group = GroupCellFromSubsubsectionTag(node);
-  else if (type == wxT("heading5"))
-    group = GroupCellHeading5Tag(node);
-  else if (type == wxT("heading6"))
-    group = GroupCellHeading6Tag(node);
-
+  std::vector<GroupCellTagFunction>::const_iterator it;
+  for (it = m_groupTags.begin(); it != m_groupTags.end(); ++it)
+  {
+    if(type == it->m_tag)
+    {
+      group =  CALL_MEMBER_FN(*this,it->m_function)(node);
+      break;
+    }
+  }
+  
   if(group == NULL) return group;
   
   wxXmlNode *children = node->GetChildren();
@@ -382,7 +385,7 @@ Cell *MathParser::ParseCellTag(wxXmlNode *node)
         group->SetEditableContent(ed->GetValue());
     }
     else if (children->GetName() == wxT("fold"))
-    { // we have folded groupcells
+    { // This GroupCell contains folded groupcells
       wxXmlNode *xmlcells = children->GetChildren();
       xmlcells = SkipWhitespaceNode(xmlcells);
       Cell *tree = NULL;
@@ -421,7 +424,7 @@ Cell *MathParser::ParseCellTag(wxXmlNode *node)
     }
     else
     {
-      group->AppendOutput(HandleNullPointer(ParseTag(children->GetChildren())));
+      group->AppendOutput(HandleNullPointer(ParseTag(children)));
     }
 
     children = GetNextTag(children);
@@ -1004,7 +1007,6 @@ Cell *MathParser::ParseTag(wxXmlNode *node, bool all)
       {
         if(tagName == it->m_tag)
         {
-          #define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))         
           tmp =  CALL_MEMBER_FN(*this,it->m_function)(node);
           break;
         }
@@ -1126,5 +1128,5 @@ Cell *MathParser::ParseLine(wxString s, CellType style)
 
 wxRegEx MathParser::m_graphRegex(wxT("[[:cntrl:]]"));
 std::vector<MathParser::TagFunction> MathParser::m_innerTags;
-std::vector<MathParser::TagFunction> MathParser::m_groupTags;
+std::vector<MathParser::GroupCellTagFunction> MathParser::m_groupTags;
 
