@@ -66,7 +66,7 @@ Items where a list of groupcells can be folded include
 class GroupCell : public Cell
 {
 public:
-  GroupCell(Configuration **config, GroupType groupType, CellPointers *cellPointers, wxString initString = wxEmptyString);
+  GroupCell(Configuration **config, GroupType groupType, CellPointers *cellPointers, const wxString &initString = {});
   GroupCell(const GroupCell &cell);
   Cell *Copy() override {return new GroupCell(*this);}
   ~GroupCell();
@@ -138,7 +138,7 @@ public:
 
   /*! Returns the tooltip for the element at the position point.
 
-    wxEmptyString means: No toolTip.
+    empty string means: No toolTip.
    */
   wxString GetToolTip(const wxPoint &point)  override;
 
@@ -184,7 +184,7 @@ public:
   //! GroupCells warn if they contain both greek and latin lookalike chars.
   void UpdateConfusableCharWarnings();
   
-  wxString ToTeX(wxString imgDir, wxString filename, int *imgCounter);
+  wxString ToTeX(const wxString &imgDir, const wxString &filename, int *imgCounter);
 
   /*! Convert the current cell to its wxm representation.
 
@@ -196,7 +196,7 @@ public:
 
   wxString ToRTF() override;
 
-  wxString ToTeXCodeCell(wxString imgDir, wxString filename, int *imgCounter);
+  wxString ToTeXCodeCell(const wxString &imgDir, const wxString &filename, int *imgCounter);
 
   static wxString ToTeXImage(Cell *tmp, wxString imgDir, wxString filename, int *imgCounter);
 

@@ -38,7 +38,7 @@ wxString Cell::GetToolTip(const wxPoint &point)
   wxString toolTip;
   for (auto cell = InnerBegin(); cell != InnerEnd(); ++ cell)
     for (Cell *tmp = cell; tmp; tmp = tmp->m_next)
-      if (!(toolTip = tmp->GetToolTip(point)).IsEmpty())
+      if (!(toolTip = tmp->GetToolTip(point)).empty())
         return toolTip;
 
   return m_toolTip;
@@ -712,8 +712,8 @@ wxString Cell::ListToTeX()
 
   while (tmp != NULL)
   {
-    if ((tmp->m_textStyle == TS_LABEL && retval != wxEmptyString) ||
-        (tmp->m_breakLine && retval != wxEmptyString))
+    if ((tmp->m_textStyle == TS_LABEL && !retval.empty()) ||
+        (tmp->m_breakLine && !retval.empty()))
       retval += wxT("\\]\\[");
     retval += tmp->ToTeX();
     tmp = tmp->m_next;
@@ -875,7 +875,7 @@ wxString Cell::RTFescape(wxString input, bool MarkDown)
   input.Replace(wxT("\r"), "\n");
 
   // The Character we will use as a soft line break
-  input.Replace("\r", wxEmptyString);
+  input.Replace("\r", {});
 
   // Encode unicode characters in a rather mind-boggling way
   wxString output;
@@ -969,7 +969,7 @@ wxString Cell::ListToRTF(bool startofline)
     }
     else
     {
-      if (tmp->ListToOMML() != wxEmptyString)
+      if (!tmp->ListToOMML().empty())
       {
         // Math!
 

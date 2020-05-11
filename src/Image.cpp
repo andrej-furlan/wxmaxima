@@ -36,100 +36,59 @@
 #include "SvgBitmap.h"
 #include "ErrorRedirector.h"
 
-Image::Image(Configuration **config)
+Image::Image(Configuration **config) :
+  m_configuration(config)
 {
   #ifdef HAVE_OMP_HEADER
   omp_init_lock(&m_gnuplotLock);
   omp_init_lock(&m_imageLoadLock);
   #endif
-  m_configuration = config;
-  m_width = 1;
-  m_height = 1;
-  m_originalWidth = 640;
-  m_originalHeight = 480;
   m_scaledBitmap.Create(1, 1);
-  m_isOk = false;
-  m_maxWidth = -1;
-  m_maxHeight = -1;
-  m_svgImage = NULL;
-  m_svgRast = NULL;
 }
 
-Image::Image(Configuration **config, wxMemoryBuffer image, wxString type)
+Image::Image(Configuration **config, wxMemoryBuffer image, const wxString &type) :
+    m_compressedImage(image),
+    m_extension(type),
+    m_configuration(config)
 {
   #ifdef HAVE_OMP_HEADER
   omp_init_lock(&m_gnuplotLock);
   omp_init_lock(&m_imageLoadLock);
   #endif
-  m_configuration = config;
-  m_scaledBitmap.Create(1, 1);
-  m_compressedImage = image;
-  m_extension = type;
-  m_isOk = false;
-  m_width = 1;
-  m_height = 1;
-  m_originalWidth = 640;
-  m_originalHeight = 480;
-  m_svgImage = NULL;
-  m_svgRast = NULL;
-  
-  wxImage Image;
+
   if (m_compressedImage.GetDataLen() > 0)
   {
     wxMemoryInputStream istream(m_compressedImage.GetData(), m_compressedImage.GetDataLen());
-    Image.LoadFile(istream);
+    wxImage Image(istream);
     m_isOk = Image.IsOk();
     m_originalWidth = Image.GetWidth();
     m_originalHeight = Image.GetHeight();
   }
   else
     InvalidBitmap();
-  m_maxWidth = -1;
-  m_maxHeight = -1;
 }
 
-Image::Image(Configuration **config, const wxBitmap &bitmap)
+Image::Image(Configuration **config, const wxBitmap &bitmap) : Image(config)
 {
   #ifdef HAVE_OMP_HEADER
   omp_init_lock(&m_gnuplotLock);
   omp_init_lock(&m_imageLoadLock);
   #endif
-  m_svgImage = NULL;
-  m_svgRast = NULL;
-  m_configuration = config;
-  m_isOk = false;
-  m_width = 1;
-  m_height = 1;
-  m_maxWidth = -1;
-  m_maxHeight = -1;
-  m_originalWidth = 640;
-  m_originalHeight = 480;
-  LoadImage(bitmap);
-  m_scaledBitmap.Create(1, 1);
+  this->LoadImage(bitmap);
 }
 
 // constructor which loads an image
 // filesystem cannot be passed by const reference as we want to keep the
 // pointer to the file system alive in a background task
 // cppcheck-suppress performance symbolName=filesystem
-Image::Image(Configuration **config, wxString image, std::shared_ptr<wxFileSystem> filesystem, bool remove):
-  m_fs_keepalive_imagedata(filesystem)
+Image::Image(Configuration **config, const wxString &image, std::shared_ptr<wxFileSystem> filesystem, bool remove) :
+    Image(config)
 {
+  m_fs_keepalive_imagedata = filesystem;
   #ifdef HAVE_OMP_HEADER
   omp_init_lock(&m_gnuplotLock);
   omp_init_lock(&m_imageLoadLock);
   #endif
-  m_svgImage = NULL;
-  m_svgRast = NULL;
-  m_configuration = config;
-  m_scaledBitmap.Create(1, 1);
-  m_isOk = false;
-  m_width = 1;
-  m_height = 1;
-  m_maxWidth = -1;
-  m_maxHeight = -1;
-  m_originalWidth = 640;
-  m_originalHeight = 480;
   LoadImage(image, filesystem, remove);
 }
 
@@ -165,18 +124,15 @@ Image::~Image()
 
 wxMemoryBuffer Image::ReadCompressedImage(wxInputStream *data)
 {
-  wxMemoryBuffer retval;
-  
-  char *buf = new char[8192];
-
+  wxMemoryBuffer retval;  
   while (data->CanRead())
   {
-    data->Read(buf, 8192);
-    size_t siz;
-    retval.AppendData(buf, siz = data->LastRead());
+    constexpr size_t chunkSize = 8192;
+    void *buf = retval.GetAppendBuf(chunkSize);
+    data->Read(buf, chunkSize);
+    auto sz = data->LastRead();
+    retval.UngetAppendBuf(sz);
   }
-
-  delete[] buf;
   return retval;
 }
 

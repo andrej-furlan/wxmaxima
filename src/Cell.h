@@ -311,7 +311,7 @@ class Cell
 
   /*! Returns the ToolTip this cell provides.
 
-    wxEmptyString means: No ToolTip
+    empty string means: No ToolTip
    */
   virtual wxString GetToolTip(const wxPoint &point);
 
@@ -723,7 +723,7 @@ class Cell
 
   /*! Returns the cell's representation as RTF.
 
-    If this method returns wxEmptyString this might mean that this cell is 
+    If this method returns an empty string this might mean that this cell is
     better handled in OMML.
    */
   virtual wxString ToRTF()
@@ -737,7 +737,7 @@ class Cell
 
   /*! Returns the cell's representation as OMML
 
-    If this method returns wxEmptyString this might mean that this cell is 
+    If this method returns an empty string this might mean that this cell is
     better handled in RTF; The OOML can later be translated to the 
     respective RTF maths commands using OMML2RTF.
 
@@ -868,12 +868,12 @@ class Cell
   
   /*! Retrieve the gnuplot source data for this image 
 
-    wxEmptyString means: No such data.
+    empty string means: No such data.
    */
   virtual wxString GnuplotSource() const {return {};}
   /*! Retrieve the gnuplot data file's contents for this image 
 
-    wxEmptyString means: No such data.
+    empty string means: No such data.
    */
   virtual wxString GnuplotData() const{return {};}
 
@@ -981,7 +981,7 @@ class Cell
 
   //! Remove this cell's tooltip
   void ClearToolTip(){m_toolTip.clear();}
-  //! Set the tooltip of this math cell. wxEmptyString means: no tooltip.
+  //! Set the tooltip of this math cell. An empty string means: no tooltip.
   void SetToolTip(const wxString &tooltip){m_toolTip = tooltip;}
   //! Add another tooltip to this cell
   void AddToolTip(const wxString &tip);

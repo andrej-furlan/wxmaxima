@@ -97,7 +97,7 @@ private:
 public:
   //! The constructor
   EditorCell(Cell *parent, Configuration **config,
-             CellPointers *cellPointers, wxString text = wxEmptyString);
+    CellPointers *cellPointers, const wxString &text = {});
   EditorCell(const EditorCell &cell);
   Cell *Copy() override {return new EditorCell(*this);}
   ~EditorCell();
@@ -630,7 +630,7 @@ private:
 
     /*! Defines a piece of text with the default style that possibly is indented
      */
-    explicit StyledText(wxString text, int indentPixels = 0, wxString indentChar = wxEmptyString):
+    explicit StyledText(const wxString &text, int indentPixels = 0, const wxString &indentChar = {}):
       m_text(text),
       m_indentPixels(indentPixels),
       m_indentChar(indentChar)
@@ -659,7 +659,7 @@ private:
     }
     
     //! Changes the indentation level of this token
-    void SetIndentation(int indentPixels, wxString indentString = wxEmptyString)
+    void SetIndentation(int indentPixels, const wxString &indentString = {})
     {
       m_indentPixels = indentPixels;
       m_indentChar = indentString;
