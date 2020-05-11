@@ -395,7 +395,7 @@ wxString MatrCell::ToXML()
   if (m_roundedParens)
     flags += wxT(" roundedParens=\"true\"");
 
-  wxString s = wxEmptyString;
+  wxString s;
   if (m_specialMatrix)
     s = wxString::Format(
       wxT("<tb") + flags + wxT(" special=\"true\" inference=\"%s\" rownames=\"%s\" colnames=\"%s\">"),

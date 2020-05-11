@@ -131,7 +131,7 @@ wxMaximaFrame::wxMaximaFrame(wxWindow *parent, int id, const wxString &title,
     wxString::Format(_("Translations are read from %s."), Dirstructure::Get()->LocaleDir())
       );
 
-  if(Configuration::m_configfileLocation_override != wxEmptyString)
+  if(!Configuration::m_configfileLocation_override.empty())
     wxLogMessage(wxString::Format(_("Reading the config from %s."),
                                   Configuration::m_configfileLocation_override.utf8_str()));
   else
@@ -411,7 +411,7 @@ wxMaximaFrame::wxMaximaFrame(wxWindow *parent, int id, const wxString &title,
   config->Read(wxT("AUI/savePanes"), &loadPanes);
   config->Read(wxT("AUI/perspective"), &perspective);
 
-  if(perspective != wxEmptyString)
+  if(!perspective.empty())
   {
     // Loads the window states. We tell wxaui not to recalculate and display the
     // results of this step now as we will do so manually after
@@ -1462,7 +1462,7 @@ void wxMaximaFrame::UpdateRecentDocuments()
       wxFileName filename = recentPackages.front();
       wxString path(filename.GetPath()), fullname(filename.GetFullName());
       wxString label;
-      if(path != wxEmptyString)
+      if(!path.empty())
         label = fullname + wxT("   [ ") + path + wxT(" ]");
       else
         label = fullname;
@@ -1481,7 +1481,7 @@ void wxMaximaFrame::ReReadConfig()
   // On MSW re-reading the config is only necessary if the config is read from
   // the registry
   #ifdef __WXMSW__
-  if (Configuration::m_configfileLocation_override != wxEmptyString)
+  if (!Configuration::m_configfileLocation_override.empty())
   #endif
   {
     // Delete the old config
@@ -1490,7 +1490,7 @@ void wxMaximaFrame::ReReadConfig()
     wxDELETE(config);
     config = NULL;
     
-    if (Configuration::m_configfileLocation_override == wxEmptyString)
+    if (Configuration::m_configfileLocation_override.empty())
     {
       wxLogMessage(_("Re-Reading the config from the default location."));
       wxConfig::Set(new wxConfig(wxT("wxMaxima")));
@@ -1518,7 +1518,7 @@ void wxMaximaFrame::RegisterAutoSaveFile()
 
 void wxMaximaFrame::RemoveTempAutosavefile()
 {
-  if(m_tempfileName != wxEmptyString)
+  if(!m_tempfileName.empty())
   {
     // Don't delete the file if we have opened it and haven't saved it under a
     // different name yet.
@@ -1528,7 +1528,7 @@ void wxMaximaFrame::RemoveTempAutosavefile()
       wxRemoveFile(m_tempfileName);
     }
   }
-  m_tempfileName = wxEmptyString;
+  m_tempfileName.clear();
 }
 
 bool wxMaximaFrame::IsPaneDisplayed(Event id)

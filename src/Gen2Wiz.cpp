@@ -53,7 +53,7 @@ Gen2Wiz::Gen2Wiz(wxString lab1, wxString lab2,
   button_2 = new wxButton(this, wxID_OK, _("OK"));
 #endif
   
-  if(warning != wxEmptyString)    
+  if(!warning.empty())
   {
     m_warningText = warning;
     m_warning = new wxStaticText(this, -1, wxEmptyString);

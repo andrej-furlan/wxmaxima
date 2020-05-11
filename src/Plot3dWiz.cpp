@@ -243,7 +243,7 @@ void Plot3DWiz::Parse(wxString s)
   while (i < s.Length() && s.GetChar(i) != '[')
     i++;
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ',')
   {
     curr += s.GetChar(i);
@@ -251,7 +251,7 @@ void Plot3DWiz::Parse(wxString s)
   }
   text_ctrl_2->SetValue(curr);
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ',')
   {
     curr += s.GetChar(i);
@@ -259,7 +259,7 @@ void Plot3DWiz::Parse(wxString s)
   }
   text_ctrl_3->SetValue(curr);
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ']')
   {
     curr += s.GetChar(i);
@@ -271,7 +271,7 @@ void Plot3DWiz::Parse(wxString s)
   while (i < s.Length() && s.GetChar(i) != '[')
     i++;
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ',')
   {
     curr += s.GetChar(i);
@@ -279,7 +279,7 @@ void Plot3DWiz::Parse(wxString s)
   }
   text_ctrl_5->SetValue(curr);
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ',')
   {
     curr += s.GetChar(i);
@@ -287,7 +287,7 @@ void Plot3DWiz::Parse(wxString s)
   }
   text_ctrl_6->SetValue(curr);
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ']')
   {
     curr += s.GetChar(i);
@@ -301,7 +301,7 @@ void Plot3DWiz::Parse(wxString s)
     if (s.GetChar(i) == '[')
     {
       i++;
-      curr = wxEmptyString;
+      curr.clear();
       while (i < s.Length() && s.GetChar(i) != ',')
       {
         curr += s.GetChar(i);
@@ -314,7 +314,7 @@ void Plot3DWiz::Parse(wxString s)
         while (i < s.Length() && s.GetChar(i) != '"')
           i++;
         i++;
-        curr = wxEmptyString;
+        curr.clear();
         while (i < s.Length() && s.GetChar(i) != '"')
         {
           curr += s.GetChar(i);
@@ -327,7 +327,7 @@ void Plot3DWiz::Parse(wxString s)
         while (i < s.Length() && s.GetChar(i) != '"')
           i++;
         i++;
-        curr = wxEmptyString;
+        curr.clear();
         while (i < s.Length() && s.GetChar(i) != '"')
         {
           curr += s.GetChar(i);
@@ -337,7 +337,7 @@ void Plot3DWiz::Parse(wxString s)
       }
       else if (curr == wxT("gnuplot_pm3d"))
       {
-        curr = wxEmptyString;
+        curr.clear();
         while (i < s.Length() && s.GetChar(i) != ']')
         {
           curr += s.GetChar(i);

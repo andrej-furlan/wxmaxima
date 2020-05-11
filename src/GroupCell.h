@@ -77,17 +77,17 @@ public:
   wxString GetAnswer(int answer)
     {
       if((!m_autoAnswer) && (!(*m_configuration)->OfferKnownAnswers()))
-        return wxEmptyString;
+        return {};
       
       return m_knownAnswers[wxString::Format(wxT("Question #%i"),answer)];
     }
   wxString GetAnswer(wxString question)
     {
       if((!m_autoAnswer) && (!(*m_configuration)->OfferKnownAnswers()))
-        return wxEmptyString;
+        return {};
       
       wxString answer = m_knownAnswers[question];
-      if(answer.IsEmpty())
+      if(answer.empty())
         answer = GetAnswer(++m_numberedAnswersCount);
       return answer;
     }
@@ -101,7 +101,7 @@ public:
   // Add a new answer to the cell
   void SetAnswer(wxString question, wxString answer)
     {
-      if(answer != wxEmptyString)
+      if(!answer.empty())
         m_knownAnswers[question] = answer;
     }
   /*! Tell this cell to remove it from all gui actions.

@@ -55,8 +55,8 @@ XmlInspector::~XmlInspector()
 void XmlInspector::Clear()
 {
   m_clear = true;
-  m_fromMaxima = wxEmptyString;
-  m_toMaxima = wxEmptyString;
+  m_fromMaxima.clear();
+  m_toMaxima.clear();
   m_updateNeeded = true;
 }
 
@@ -76,7 +76,7 @@ void XmlInspector::Update()
   }
   
   // Display all data we have sent to Maxima
-  if(m_toMaxima != wxEmptyString)
+  if(!m_toMaxima.empty())
   {
     if(m_state != toMaxima)
     {
@@ -101,11 +101,11 @@ void XmlInspector::Update()
     BeginTextColour(wxColour(128,0,0));
     WriteText(m_toMaxima);
     EndTextColour();
-    m_toMaxima = wxEmptyString;
+    m_toMaxima.clear();
   }
 
   // Display all data from Maxima
-  if(m_fromMaxima != wxEmptyString)
+  if(!m_fromMaxima.empty())
   {
     if(m_state != fromMaxima)
     {
@@ -152,7 +152,7 @@ void XmlInspector::Update()
     BeginTextColour(wxColour(0,128,0));
     WriteText(textWithIndention);
     EndTextColour();
-    m_fromMaxima = wxEmptyString;
+    m_fromMaxima.clear();
 
     // Adding many chars to the XML inspector is slow => Warn our users if we do so.
     if(length > 100000)
@@ -170,10 +170,10 @@ wxString XmlInspector::IndentString(int level)
 
 void XmlInspector::Add_ToMaxima(wxString text)
 {
-  if(m_toMaxima != wxEmptyString)
+  if(!m_toMaxima.empty())
   {
     m_toMaxima += wxT("\n\u2015\n");
-    if(m_fromMaxima != wxEmptyString)
+    if(!m_fromMaxima.empty())
       m_fromMaxima += wxT("\n\u2015\n");
   }
   m_toMaxima += text;

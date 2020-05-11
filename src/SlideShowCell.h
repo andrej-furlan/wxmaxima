@@ -157,7 +157,7 @@ public:
   void AnimationRunning(bool run);
   bool CanPopOut() override
     {
-      return (!m_images[m_displayed]->GnuplotSource().IsEmpty());
+      return (!m_images[m_displayed]->GnuplotSource().empty());
     }
 
   void GnuplotSource(int image, wxString gnuplotFilename, wxString dataFilename, std::shared_ptr<wxFileSystem> filesystem)
@@ -168,14 +168,14 @@ public:
   wxString GnuplotSource() const override
     {
       if(m_images[m_displayed] == NULL)
-        return wxEmptyString;
+        return {};
       else
         return m_images[m_displayed]->GnuplotSource();
     }
   wxString GnuplotData() const override
     {
       if(m_images[m_displayed] == NULL)
-        return wxEmptyString;
+        return {};
       else
         return m_images[m_displayed]->GnuplotData();
     }

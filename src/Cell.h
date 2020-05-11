@@ -639,7 +639,7 @@ class Cell
   {}
 
   virtual wxString GetValue() const
-  { return wxEmptyString; }
+  { return {}; }
 
   //! Get the first cell in this list of cells
   Cell *first();
@@ -727,7 +727,7 @@ class Cell
     better handled in OMML.
    */
   virtual wxString ToRTF()
-  { return wxEmptyString; }
+  { return {}; }
 
   //! Converts an OMML tag to the corresponding RTF snippet
   wxString OMML2RTF(wxXmlNode *node);
@@ -745,7 +745,7 @@ class Cell
     though.
    */
   virtual wxString ToOMML()
-  { return wxEmptyString; }
+  { return {}; }
 
   //! Convert this cell to its Matlab representation
   virtual wxString ToMatlab();
@@ -870,12 +870,12 @@ class Cell
 
     wxEmptyString means: No such data.
    */
-  virtual wxString GnuplotSource() const {return wxEmptyString;}
+  virtual wxString GnuplotSource() const {return {};}
   /*! Retrieve the gnuplot data file's contents for this image 
 
     wxEmptyString means: No such data.
    */
-  virtual wxString GnuplotData() const{return wxEmptyString;}
+  virtual wxString GnuplotData() const{return {};}
 
   //! Processes a key event.
   virtual void ProcessEvent(wxKeyEvent &WXUNUSED(event))
@@ -980,7 +980,7 @@ class Cell
   bool m_SuppressMultiplicationDot;
 
   //! Remove this cell's tooltip
-  void ClearToolTip(){m_toolTip = wxEmptyString;}
+  void ClearToolTip(){m_toolTip.clear();}
   //! Set the tooltip of this math cell. wxEmptyString means: no tooltip.
   void SetToolTip(const wxString &tooltip){m_toolTip = tooltip;}
   //! Add another tooltip to this cell

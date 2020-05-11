@@ -121,7 +121,7 @@ void DiffCell::Draw(wxPoint point)
 wxString DiffCell::ToString()
 {
   if (m_isBrokenIntoLines)
-    return wxEmptyString;
+    return {};
   Cell *tmp = m_baseCell->m_next;
   wxString s = wxT("'diff(");
   if (tmp != NULL)
@@ -134,7 +134,7 @@ wxString DiffCell::ToString()
 wxString DiffCell::ToMatlab()
 {
   if (m_isBrokenIntoLines)
-	return wxEmptyString;
+    return {};
   Cell *tmp = m_baseCell->m_next;
   wxString s = wxT("'diff(");
   if (tmp != NULL)
@@ -147,7 +147,7 @@ wxString DiffCell::ToMatlab()
 wxString DiffCell::ToTeX()
 {
   if (m_isBrokenIntoLines)
-    return wxEmptyString;
+    return {};
   wxString diff = m_diffCell->ListToTeX();
   wxString function = m_baseCell->ListToTeX();
 

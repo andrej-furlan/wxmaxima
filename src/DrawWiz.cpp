@@ -114,7 +114,7 @@ ExplicitWiz::ExplicitWiz(wxWindow *parent, Configuration *config, wxString expre
 wxString ExplicitWiz::GetValue()
 {
   wxString retval;
-  if((m_dimensions < 3) && (m_filledfunc->GetValue() != wxEmptyString))
+  if((m_dimensions < 3) && (!m_filledfunc->GetValue().empty()))
     retval = "filled_func=" + m_filledfunc->GetValue() + ",\n    ";
   
   retval += wxT("explicit(\n        ") + m_expression->GetValue() + ",\n        ";
@@ -124,7 +124,7 @@ wxString ExplicitWiz::GetValue()
       m_yEnd->GetValue();
   retval += "\n    )";
 
-  if((m_dimensions < 3) && (m_filledfunc->GetValue() != wxEmptyString))
+  if((m_dimensions < 3) && (!m_filledfunc->GetValue().empty()))
     retval += ",\n    filled_func=false";
 
   return retval;
@@ -340,90 +340,90 @@ AxisWiz::AxisWiz(wxWindow *parent, Configuration *config, int dimensions) :
 wxString AxisWiz::GetValue()
 {
   wxString retval;
-  if(m_xLabel->GetValue() != wxEmptyString)
+  if(!m_xLabel->GetValue().empty())
   {
     retval = "xlabel=\"" + m_xLabel->GetValue() + "\"";
   }
-  if(m_yLabel->GetValue() != wxEmptyString)
+  if(!m_yLabel->GetValue().empty())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "ylabel=\"" + m_yLabel->GetValue() + "\"";
   }
-  if((m_dimensions == 3) && (m_zLabel->GetValue() != wxEmptyString))
+  if((m_dimensions == 3) && (!m_zLabel->GetValue().empty()))
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "zlabel=\"" + m_zLabel->GetValue() + "\"";
   }
 
-  if(m_x2Label->GetValue() != wxEmptyString)
+  if(!m_x2Label->GetValue().empty())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "xlabel_secondary=\"" + m_x2Label->GetValue() + "\"";
   }
-  if(m_y2Label->GetValue() != wxEmptyString)
+  if(!m_y2Label->GetValue().empty())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "ylabel_secondary=\"" + m_y2Label->GetValue() + "\"";
   }
 
-  if((m_xStart->GetValue() != wxEmptyString) && (m_xEnd->GetValue() != wxEmptyString))
+  if((!m_xStart->GetValue().empty()) && (!m_xEnd->GetValue().empty()))
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "xrange=[" + m_xStart->GetValue() + "," + m_xEnd->GetValue() + "]";
   }
-  if((m_yStart->GetValue() != wxEmptyString) && (m_yEnd->GetValue() != wxEmptyString))
+  if((!m_yStart->GetValue().empty()) && (!m_yEnd->GetValue().empty()))
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "yrange=[" + m_yStart->GetValue() + "," + m_yEnd->GetValue() + "]";
   }
-  if((m_dimensions == 3) && (m_zStart->GetValue() != wxEmptyString) && (m_zEnd->GetValue() != wxEmptyString))
+  if((m_dimensions == 3) && (!m_zStart->GetValue().empty()) && (!m_zEnd->GetValue().empty()))
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "zrange=[" + m_zStart->GetValue() + "," + m_zEnd->GetValue() + "]";
   }
 
-  if((m_x2Start->GetValue() != wxEmptyString) && (m_x2End->GetValue() != wxEmptyString))
+  if((!m_x2Start->GetValue().empty()) && (!m_x2End->GetValue().empty()))
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "xrange_secondary=[" + m_x2Start->GetValue() + "," + m_x2End->GetValue() + "]";
   }
-  if((m_y2Start->GetValue() != wxEmptyString) && (m_y2End->GetValue() != wxEmptyString))
+  if((!m_y2Start->GetValue().empty()) && (!m_y2End->GetValue().empty()))
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "yrange_secondary=[" + m_y2Start->GetValue() + "," + m_y2End->GetValue() + "]";
   }
 
   if(m_useSecondaryX->Get3StateValue() == wxCHK_CHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "xaxis_secondary=true";
   }
   if(m_useSecondaryX->Get3StateValue() == wxCHK_UNCHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "xaxis_secondary=false";
   }
 
   if(m_useSecondaryY->Get3StateValue() == wxCHK_CHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "yaxis_secondary=true";
   }
   if(m_useSecondaryY->Get3StateValue() == wxCHK_UNCHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "yaxis_secondary=false";
   }
@@ -565,25 +565,25 @@ wxString Wiz3D::GetValue()
   wxString retval;
   if(m_hidden3d->Get3StateValue() == wxCHK_CHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "surface_hide=true";
   }
   if(m_hidden3d->Get3StateValue() == wxCHK_UNCHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "surface_hide=false";
   }
   if(m_enhanced3d->Get3StateValue() == wxCHK_CHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "enhanced3d=true";
   }
   if(m_enhanced3d->Get3StateValue() == wxCHK_UNCHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "enhanced3d=false";
   }
@@ -694,31 +694,31 @@ wxString WizContour::GetValue()
   wxString retval;
   if(m_contourNone->GetValue())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "contour='none";
   }
   if(m_contourBase->GetValue())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "contour='base";
   }
   if(m_contourBoth->GetValue())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "contour='both";
   }
   if(m_contourSurface->GetValue())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "contour='surface";
   }
   if(m_contourOnly->GetValue())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "contour='map";
   }
@@ -871,54 +871,54 @@ wxString WizPoints::GetValue()
   {
     if(m_pointStyle->GetSelection() == 1)
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "point_type='none";
     }
     else
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "point_type=" + m_pointStyle->GetStringSelection();
     }
   }
   if(m_pointsJoined->Get3StateValue() == wxCHK_UNCHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "points_joined=false";
   }
   if(m_pointsJoined->Get3StateValue() == wxCHK_CHECKED)
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "points_joined=true";
   }
 
   wxString data = m_data->GetValue();
-  if(data != wxEmptyString)
+  if(!data.empty())
   {
     if(m_formatStd->GetValue())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "points(" + data +")";
     }
     if(m_formatListOfLists->GetValue())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "apply('points," + data +")";
     }
     if(m_transposedMatrix->GetValue())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "points(transpose(" + data +"))";
     }
     if(m_transposedListOfLists->GetValue())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "points(transpose(apply('matrix," + data +")))";
     }
@@ -997,65 +997,65 @@ WizDrawAccuracy::WizDrawAccuracy(wxWindow *parent, Configuration *config, int di
 wxString WizDrawAccuracy::GetValue()
 {
   wxString retval;
-  if(m_nticks->GetValue() != wxEmptyString)
+  if(!m_nticks->GetValue().empty())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "nticks=" + m_nticks->GetValue();
   }
 
-  if(m_adapt_depth->GetValue() != wxEmptyString)
+  if(!m_adapt_depth->GetValue().empty())
   {
-    if(retval != wxEmptyString)
+    if (!retval.empty())
       retval += ",\n";
     retval += "adapt_depth=" + m_adapt_depth->GetValue();
   }
   
   if(m_dimensions < 3)
   {
-    if((m_ip_grid_x->GetValue() != wxEmptyString) && (m_ip_grid_y->GetValue() != wxEmptyString))
+    if((!m_ip_grid_x->GetValue().empty()) && (!m_ip_grid_y->GetValue().empty()))
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "ip_grid=[" + m_ip_grid_x->GetValue() + "," + m_ip_grid_y->GetValue()+"]";
     }
-    if((!m_ip_grid_in_x->GetValue().IsEmpty()) && (!m_ip_grid_in_y->GetValue().IsEmpty()))
+    if((!m_ip_grid_in_x->GetValue().empty()) && (!m_ip_grid_in_y->GetValue().empty()))
     {
-      if(!retval.IsEmpty())
+      if(!retval.empty())
         retval += ",\n";
       retval += "ip_grid_in=[" + m_ip_grid_in_x->GetValue() + "," + m_ip_grid_in_y->GetValue()+"]";
     }
   }
   else
   {
-    if(m_xu_grid->GetValue() != wxEmptyString)
+    if(!m_xu_grid->GetValue().empty())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "xu_grid=" + m_xu_grid->GetValue();
     }
-    if(m_yv_grid->GetValue() != wxEmptyString)
+    if(!m_yv_grid->GetValue().empty())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "yv_grid=" + m_yv_grid->GetValue();
     }
       
-    if(m_x_voxel->GetValue() != wxEmptyString)
+    if(!m_x_voxel->GetValue().empty())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "x_voxel=" + m_x_voxel->GetValue();
     }
-    if(m_y_voxel->GetValue() != wxEmptyString)
+    if(!m_y_voxel->GetValue().empty())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "y_voxel=" + m_y_voxel->GetValue();
     }
-    if(m_z_voxel->GetValue() != wxEmptyString)
+    if(!m_z_voxel->GetValue().empty())
     {
-      if(retval != wxEmptyString)
+      if (!retval.empty())
         retval += ",\n";
       retval += "z_voxel=" + m_z_voxel->GetValue();
     }

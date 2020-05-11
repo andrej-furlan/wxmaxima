@@ -46,7 +46,7 @@ Gen1Wiz::Gen1Wiz(wxWindow *parent, int id, Configuration *cfg, const wxString &t
   button_2 = new wxButton(this, wxID_OK, _("OK"));
 #endif
 
-  if(warning != wxEmptyString)    
+  if(!warning.empty())
   {
     m_warningText = warning;
     m_warning = new wxStaticText(this, -1, wxEmptyString);

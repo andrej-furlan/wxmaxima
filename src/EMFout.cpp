@@ -47,7 +47,7 @@ Emfout::Emfout(Configuration **configuration, wxString filename)
   m_emfFormat = wxDataFormat(wxT("image/x-emf"));
 
   m_filename = filename;
-  if (m_filename == wxEmptyString)
+  if (m_filename.empty())
     m_filename = wxFileName::CreateTempFileName(wxT("wxmaxima_"));
 
   m_dc = NULL;
@@ -332,7 +332,7 @@ Emfout::EMFDataObject *Emfout::GetDataObject()
       }
     free(data);
   }
-  if((m_filename != wxEmptyString) && (wxFileExists(m_filename)))
+  if((!m_filename.empty()) && (wxFileExists(m_filename)))
   {
     // Don't output error messages if the worst thing that can happen is that we
     // cannot clean up a temp file
@@ -341,7 +341,7 @@ Emfout::EMFDataObject *Emfout::GetDataObject()
 
     wxRemoveFile(m_filename);
   }
-  m_filename = wxEmptyString;
+  m_filename.clear();
 
   return new EMFDataObject(emfContents);
 }
@@ -353,7 +353,7 @@ bool Emfout::ToClipboard()
   {
     bool res = wxTheClipboard->SetData(GetDataObject());
     wxTheClipboard->Close();
-    m_filename = wxEmptyString;
+    m_filename.clear();
     return res;
   }
   return false;

@@ -135,7 +135,7 @@ void ConjugateCell::Draw(wxPoint point)
 wxString ConjugateCell::ToString()
 {
   if (m_isBrokenIntoLines)
-    return wxEmptyString;
+    return {};
   else
     return wxT("conjugate(") + m_innerCell->ListToString() + wxT(")");
 }
@@ -143,7 +143,7 @@ wxString ConjugateCell::ToString()
 wxString ConjugateCell::ToMatlab()
 {
   if (m_isBrokenIntoLines)
-	return wxEmptyString;
+    return {};
   else
 	return wxT("conjugate(") + m_innerCell->ListToMatlab() + wxT(")");
 }
@@ -151,7 +151,7 @@ wxString ConjugateCell::ToMatlab()
 wxString ConjugateCell::ToTeX()
 {
   if (m_isBrokenIntoLines)
-    return wxEmptyString;
+    return {};
   else
     return wxT("\\overline{") + m_innerCell->ListToTeX() + wxT("}");
 }

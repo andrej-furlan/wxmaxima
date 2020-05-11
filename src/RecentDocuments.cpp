@@ -17,7 +17,7 @@ void RecentDocuments::Load()
       wxString filename;
       if (config->Read(name, &filename))
 	{
-	  if(filename != wxEmptyString)
+      if(!filename.empty())
 	    m_listOfFiles.push_back(filename);
 	}
     }  
@@ -32,12 +32,12 @@ wxString RecentDocuments::Get(int num) const
   for(int i = 0; i<num; i++)
     {
       if(listOfFiles.empty())
-	return wxEmptyString;
+    return {};
       else
 	listOfFiles.pop_front();      
     }
   if(listOfFiles.empty())
-    return wxEmptyString;
+    return {};
   else
     return listOfFiles.front();
 }

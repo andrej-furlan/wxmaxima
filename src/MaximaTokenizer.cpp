@@ -51,7 +51,7 @@ MaximaTokenizer::MaximaTokenizer(wxString commands, Configuration *configuration
       ++it;
     }
     token.Trim(true);
-    if(!token.IsEmpty())
+    if(!token.empty())
       m_tokens.emplace_back(token, TS_CODE_LISP);
   }
   while (it < commands.end())
@@ -321,7 +321,7 @@ MaximaTokenizer::MaximaTokenizer(wxString commands, Configuration *configuration
             else
             {
               m_tokens.emplace_back(token);
-              token = wxEmptyString;
+              token.clear();
 
               break;
             }

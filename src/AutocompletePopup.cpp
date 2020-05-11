@@ -152,7 +152,7 @@ void AutocompletePopup::OnKeyDown(wxKeyEvent &event)
   break;
   case WXK_LEFT:
   case WXK_ESCAPE:
-    if((m_type == AutoComplete::esccommand) && (m_partial != wxEmptyString))
+    if((m_type == AutoComplete::esccommand) && (!m_partial.empty()))
     {
       int selection = GetNextItem(0,wxLIST_NEXT_ALL,
                                   wxLIST_STATE_SELECTED);
@@ -235,9 +235,9 @@ void AutocompletePopup::OnKeyDown(wxKeyEvent &event)
   case WXK_NUMPAD_DELETE:
   {
     wxString oldString = m_partial;
-    if(m_partial != wxEmptyString)
+    if(!m_partial.empty())
       m_partial = m_partial.Left(m_partial.Length() - 1);
-    if (oldString != wxEmptyString)
+    if (!oldString.empty())
     {
       UpdateResults();
       

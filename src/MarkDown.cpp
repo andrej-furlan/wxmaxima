@@ -46,7 +46,7 @@ wxString MarkDownParser::MarkDown(wxString str)
     (*it)->DoReplace(&str);
 
   // The result of this action
-  wxString result = wxEmptyString;
+  wxString result;
 
   // The list of indentation levels for bullet lists we found
   // so far
@@ -73,7 +73,7 @@ wxString MarkDownParser::MarkDown(wxString str)
     line = line.Trim();
 
     // Does the line contain anything other than spaces?
-    if (st != wxEmptyString)
+    if (!st.empty())
     {
       // The line contains actual text..
 
@@ -187,7 +187,7 @@ wxString MarkDownParser::MarkDown(wxString str)
         if (!indentationLevels.empty())
         {
           // Add the text to the output.
-          if((result != wxEmptyString) &&
+          if((!result.empty()) &&
              (!result.EndsWith(itemizeEndItem())) &&
              (!result.EndsWith(itemizeEnd())) &&
              (!result.EndsWith(quoteEnd()))

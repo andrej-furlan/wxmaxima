@@ -265,7 +265,7 @@ bool MyApp::OnInit()
   if (!wxGetEnv(wxT("BUILD_DIR"), NULL))
   {
     wxString dir = wxPathOnly(wxStandardPaths::Get().GetExecutablePath());
-    if(dir != wxEmptyString)
+    if(!dir.empty())
       wxSetWorkingDirectory(wxPathOnly(wxStandardPaths::Get().GetExecutablePath()));
   }
   /* Add private jsMath fonts, if they exist */ 
@@ -361,7 +361,7 @@ bool MyApp::OnInit()
   // Now we can finally send our debug output to a window without making
   // std::cerr confusing the mac.
   wxString logMessagesSoFar = noStdErr.GetBuffer();
-  if(!logMessagesSoFar.IsEmpty())
+  if(!logMessagesSoFar.empty())
     wxLogMessage("Log messages during early startup: " + logMessagesSoFar);
   return true;
 }
@@ -405,7 +405,7 @@ void MyApp::NewWindow(const wxString &file, bool evalOnStartup, bool exitAfterEv
       {
         initialContents += _(block);
         initialContents += line + "\n";
-        block = wxEmptyString;
+        block.clear();
       }
       else
         block += line + "\n";
@@ -473,9 +473,9 @@ void MyApp::OnFileMenu(wxCommandEvent &ev)
 #else
 //      NewWindow();
       wxString args;
-      if(Configuration::m_configfileLocation_override != wxEmptyString)
+      if(!Configuration::m_configfileLocation_override.empty())
         args += " -f \"" + Configuration::m_configfileLocation_override + "\"";
-      if(Configuration::m_maximaLocation_override != wxEmptyString)
+      if(!Configuration::m_maximaLocation_override.empty())
         args += " -m \"" + Configuration::m_maximaLocation_override + "\"";
 
       wxExecute(wxT("\"") + wxStandardPaths::Get().GetExecutablePath() + wxT("\"") + args);

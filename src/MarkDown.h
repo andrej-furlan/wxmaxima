@@ -115,7 +115,7 @@ private:
   { return wxT("\\item "); }
 
   virtual wxString itemizeEndItem() override
-  { return wxEmptyString; }
+  { return {}; }
 
   virtual wxString NewLine() override
   { return wxT("\n\n"); }

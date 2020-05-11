@@ -255,7 +255,7 @@ void SubSupCell::Draw(wxPoint point)
 
 wxString SubSupCell::ToString()
 {
-  if (m_altCopyText != wxEmptyString)
+  if (!m_altCopyText.empty())
     return m_altCopyText;
 
   wxString s;
@@ -450,7 +450,7 @@ wxString SubSupCell::ToXML()
   if (m_forceBreakLine)
     flags += " breakline=\"true\"";
 
-  if (m_altCopyText != wxEmptyString)
+  if (!m_altCopyText.empty())
     flags += " altCopy=\"" + XMLescape(m_altCopyText) + "\"";
 
   wxString retval;

@@ -833,7 +833,7 @@ wxString Configuration::GetFontName(long type) const
   if (type == TS_TITLE || type == TS_SUBSECTION || type == TS_SUBSUBSECTION ||
       type == TS_HEADING5 || type == TS_HEADING6 || type == TS_SECTION || type == TS_TEXT)
     retval = m_styles[type].FontName();
-  if(retval == wxEmptyString)
+  if(retval.empty())
     retval = m_fontName;
   
   if (type == TS_NUMBER || type == TS_VARIABLE || type == TS_FUNCTION ||
@@ -869,7 +869,7 @@ void Configuration::ReadStyles(wxString file)
   // Font
   config->Read(wxT("Style/Default/Style/Text/fontname"), &m_fontName);
 #ifdef __WXOSX_MAC__
-  if (m_fontName.IsEmpty())
+  if (m_fontName.empty())
   {
     m_fontName = "Monaco";
   }
@@ -878,7 +878,7 @@ void Configuration::ReadStyles(wxString file)
   config->Read(wxT("mathfontsize"), &m_mathFontSize);
   config->Read(wxT("Style/Math/fontname"), &m_mathFontName);
 #ifdef __WXOSX_MAC__
-  if (m_mathFontName.IsEmpty())
+  if (m_mathFontName.empty())
   {
     m_mathFontName = "Monaco";
   }

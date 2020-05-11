@@ -66,7 +66,7 @@ void History::AddToHistory(const wxString &cmd)
   {
     wxString curr = cmds.GetNextToken().Trim(false).Trim(true);
 
-    if (curr != wxEmptyString)
+    if (!curr.empty())
       commands.Insert(curr, 0);
   }
 
@@ -81,7 +81,7 @@ void History::UpdateDisplay()
   wxArrayString display;
   wxRegEx matcher;
 
-  if (regex != wxEmptyString)
+  if (!regex.empty())
     matcher.Compile(regex);
 
   for (unsigned int i = 0; i < commands.Count(); i++)
@@ -108,7 +108,7 @@ void History::OnRegExEvent(wxCommandEvent &WXUNUSED(ev))
 wxString History::GetCommand(bool next)
 {
   if (commands.GetCount() == 0)
-    return wxEmptyString;
+    return {};
 
   else if (next)
   {

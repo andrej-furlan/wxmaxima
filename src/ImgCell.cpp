@@ -81,7 +81,7 @@ ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointer
   m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
   m_drawRectangle = true;
-  if (image != wxEmptyString)
+  if (!image.empty())
     m_image = std::make_shared<Image>(m_configuration, image, filesystem, remove);
   else
     m_image = std::make_shared<Image>(m_configuration);
@@ -135,7 +135,7 @@ wxString ImgCell::GetToolTip(const wxPoint &point)
       return m_toolTip;
   }
   else
-    return wxEmptyString;
+    return {};
 }
 
 void ImgCell::RecalculateWidths(int fontsize)
@@ -327,19 +327,19 @@ wxString ImgCell::ToXML()
     // Anonymize the name of our temp directory for saving
     wxString gnuplotSource;
     wxString gnuplotData;
-    if(m_image->GnuplotData() != wxEmptyString)
+    if(!m_image->GnuplotData().empty())
     {
       wxFileName gnuplotDataFile(m_image->GnuplotData());
       gnuplotData = gnuplotDataFile.GetFullName();
     }
-    if(m_image->GnuplotSource() != wxEmptyString)
+    if(!m_image->GnuplotSource().empty())
     {
       wxFileName gnuplotSourceFile(m_image->GnuplotSource());
       gnuplotSource = gnuplotSourceFile.GetFullName();
     }
 
     // Save the gnuplot source, if necessary.
-    if(gnuplotSource != wxEmptyString)
+    if(!gnuplotSource.empty())
     {
       flags += " gnuplotsource=\"" + gnuplotSource + "\"";
       wxMemoryBuffer data = m_image->GetGnuplotSource();
@@ -351,7 +351,7 @@ wxString ImgCell::ToXML()
           );
       }
     }
-    if(gnuplotData != wxEmptyString)
+    if(!gnuplotData.empty())
     {
       flags += " gnuplotdata=\"" + gnuplotData + "\"";
       wxMemoryBuffer data = m_image->GetGnuplotData();

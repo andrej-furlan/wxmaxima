@@ -52,7 +52,7 @@ CharButton::CharButton(wxPanel *parent, wxWindow *worksheet, const Definition &d
   wxStaticText *text = new wxStaticText(this, wxID_ANY, {def.symbol});
   vbox->Add(text, 1, wxALL | wxCENTER, 0);
 
-  if (!def.description.IsEmpty())
+  if (!def.description.empty())
     text->SetToolTip(def.description);
   Connect(wxEVT_LEFT_UP, wxMouseEventHandler(CharButton::CharButtonPressed), NULL, this);
   text->Connect(wxEVT_LEFT_UP, wxMouseEventHandler(CharButton::CharButtonPressed), NULL, this);

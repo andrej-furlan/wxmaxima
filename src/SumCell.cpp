@@ -268,7 +268,7 @@ void SumCell::Draw(wxPoint point)
 
 wxString SumCell::ToString()
 {
-  if (m_altCopyText != wxEmptyString)
+  if (!m_altCopyText.empty())
     return m_altCopyText;
 
   wxString s;
@@ -290,7 +290,7 @@ wxString SumCell::ToString()
   }
   wxString to = m_over->ListToString();
   s += wxT(",") + var + wxT(",") + from;
-  if (to != wxEmptyString)
+  if (!to.empty())
     s += wxT(",") + to + wxT(")");
   else
     s = wxT("l") + s + wxT(")");
@@ -318,7 +318,7 @@ wxString SumCell::ToMatlab()
   }
   wxString to = m_over->ListToMatlab();
   s += wxT(",") + var + wxT(",") + from;
-  if (to != wxEmptyString)
+  if (!to.empty())
 	s += wxT(",") + to + wxT(")");
   else
 	s = wxT("l") + s + wxT(")");
@@ -365,9 +365,9 @@ wxString SumCell::ToOMML()
     retval += wxT("\u220F");
 
   retval += wxT("</m:chr></m:naryPr>");
-  if (from != wxEmptyString)
+  if (!from.empty())
     retval += wxT("<m:sub>") + from + wxT("</m:sub>");
-  if (to != wxEmptyString)
+  if (!to.empty())
     retval += wxT("<m:sup>") + to + wxT("</m:sup>");
   retval += wxT("<m:e>") + base + wxT("</m:e></m:nary>");
 
@@ -381,7 +381,7 @@ wxString SumCell::ToXML()
 
   if (m_sumStyle == SM_PROD)
     type = wxT("prod");
-  else if (m_over->ListToString() == wxEmptyString)
+  else if (m_over->ListToString().empty())
     type = wxT("lsum");
 
 
@@ -409,30 +409,30 @@ wxString SumCell::ToMathML()
   if (m_sumStyle == SM_SUM)
   {
 //    retval = wxT("<apply><sum/>");
-//    if(!from.IsEmpty())
+//    if(!from.empty())
 //      retval += wxT("<lowlimit>") + m_under->ListToMathML() + wxT("</lowlimit>");
-//    if(!to.IsEmpty())
+//    if(!to.empty())
 //      retval += wxT("<uplimit>") + m_over->ListToMathML() + wxT("</uplimit>");
 //    retval += m_base->ListToMathML() + wxT("</apply>");
-    if (from.IsEmpty() && to.IsEmpty())
+    if (from.empty() && to.empty())
       retval = wxT("<mo>&#x2211;</mo>") + base;
-    if (from.IsEmpty() && !to.IsEmpty())
+    if (from.empty() && !to.empty())
       retval = wxT("<mover><mo>&#x2211;</mo>") + to + wxT("</mover>") + base;
-    if (!from.IsEmpty() && to.IsEmpty())
+    if (!from.empty() && to.empty())
       retval = wxT("<munder><mo>&#x2211;</mo>") + from + wxT("</munder>") + base;
-    if (!from.IsEmpty() && !to.IsEmpty())
+    if (!from.empty() && !to.empty())
       retval = wxT("<munderover><mo>&#x2211;</mo>") + from + to + wxT("</munderover>") + base;
   }
   else
   {
     // A product
-    if (from.IsEmpty() && to.IsEmpty())
+    if (from.empty() && to.empty())
       retval = wxT("<mo>&#x220F;</mo>") + base;
-    if (from.IsEmpty() && !to.IsEmpty())
+    if (from.empty() && !to.empty())
       retval = wxT("<mover><mo>&#x220F;</mo>") + to + wxT("</mover>") + base;
-    if (!from.IsEmpty() && to.IsEmpty())
+    if (!from.empty() && to.empty())
       retval = wxT("<munder><mo>&#x220F;</mo>") + from + wxT("</munder>") + base;
-    if (!from.IsEmpty() && !to.IsEmpty())
+    if (!from.empty() && !to.empty())
       retval = wxT("<munderover><mo>&#x220F;</mo>") + from + to + wxT("</munderover>") + base;
   }
   return (wxT("<mrow>") + retval + wxT("</mrow>"));

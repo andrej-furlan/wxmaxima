@@ -9,7 +9,7 @@
 
 wxMathML::wxMathML()
 {
-  if(m_maximaCMD.IsEmpty())
+  if(m_maximaCMD.empty())
     {
       // Unzip wxMathml.lisp: We need to store it in a .zip format
       // in order to avoid a bug in the ArchLinux C compiler that
@@ -31,7 +31,7 @@ wxMathML::wxMathML()
 
 wxString wxMathML::GetCmd()
 {
-  if(m_maximaCMD.IsEmpty())
+  if(m_maximaCMD.empty())
     {
       wxStringTokenizer lines(m_wxMathML,wxT("\n"));
       while(lines.HasMoreTokens())

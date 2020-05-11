@@ -195,10 +195,10 @@ void EditorCell::AddDrawParameter(wxString param)
 wxString EditorCell::GetFullCommandUnderCursor()
 {
   if(!IsActive())
-    return wxEmptyString;
+    return {};
 
-  if(m_text == wxEmptyString)
-    return wxEmptyString;
+  if(m_text.empty())
+    return {};
 
   wxString result;
   int pos = 1;
@@ -219,7 +219,7 @@ wxString EditorCell::GetFullCommandUnderCursor()
       {
         if(m_positionOfCaret < pos)
           return result;
-        result = wxEmptyString;
+        result.clear();
       }
     }
 
@@ -674,7 +674,7 @@ void EditorCell::RecalculateWidths(int fontsize)
       m_numberOfLines = 1;
 
     // Assign empty lines a minimum width
-    if (m_text == wxEmptyString)
+    if (m_text.empty())
       width = charWidth;
 
     // Add a line border
@@ -953,7 +953,7 @@ void EditorCell::Draw(wxPoint point)
         }
         
         // Draw a char that shows we continue an indentation - if this is needed.
-        if (textSnippet->GetIndentChar() != wxEmptyString)
+        if (!textSnippet->GetIndentChar().empty())
           dc->DrawText(textSnippet->GetIndentChar(),
                        TextStartingpoint.x + lastIndent,
                        TextCurrentPoint.y - m_center);
@@ -1159,25 +1159,25 @@ wxString EditorCell::GetCurrentCommand()
         if ((it != lineTillCursor.end()) && (*it == wxT('(')))
         {
           command = possibleCommand;
-          possibleCommand = wxEmptyString;
+          possibleCommand.clear();
           ++it;
         }
         break;
       case '(':
-        if((possibleCommand != wxEmptyString))
+        if((!possibleCommand.empty()))
           command = possibleCommand;
         ++it;
         break;
       case '$':
       case ';':
       {
-        command = wxEmptyString;
-        possibleCommand = wxEmptyString;
+        command.clear();
+        possibleCommand.clear();
         ++it;
         break;
       }
       default:
-        possibleCommand = wxEmptyString;
+        possibleCommand.clear();
         ++it;
         break;
       }
@@ -2117,7 +2117,7 @@ bool EditorCell::HandleSpecialKey(wxKeyEvent &event)
           long newLineIndex = wxMin(m_text.find(wxT('\n'), start), m_text.find(wxT('\r'), start));
 
           if (((newLineIndex != wxNOT_FOUND) && (newLineIndex < end)) ||
-              (m_text.SubString(newLineIndex, start).Trim() == wxEmptyString)
+              (m_text.SubString(newLineIndex, start).Trim().empty())
             )
           {
             start = BeginningOfLine(start);
@@ -3002,7 +3002,7 @@ void EditorCell::SetSelection(int start, int end)
     m_selectionStart = start;
     m_positionOfCaret = m_selectionEnd = end;
     if (m_selectionStart == -1 || m_selectionEnd == -1)
-      m_cellPointers->m_selectionString = wxEmptyString;
+      m_cellPointers->m_selectionString.clear();
     else
       m_cellPointers->m_selectionString = m_text.SubString(
               wxMin(m_selectionStart, m_selectionEnd),
@@ -3028,7 +3028,7 @@ void EditorCell::CommentSelection()
 wxString EditorCell::GetWordUnderCaret()
 {
   if(m_positionOfCaret < 0)
-    return wxEmptyString;
+    return {};
   unsigned long start = m_positionOfCaret;
   if(start >= m_text.Length())
     start = m_text.Length();
@@ -3042,7 +3042,7 @@ wxString EditorCell::GetWordUnderCaret()
       if(pos >= start)
         break;
       else
-        retval = wxEmptyString;
+        retval.clear();
     }
     else
       retval += *it;
@@ -3059,9 +3059,9 @@ wxString EditorCell::GetWordUnderCaret()
       }
     }
   }
-  if(retval.IsEmpty())
+  if(retval.empty())
     {
-      if(!m_text.IsEmpty())
+      if(!m_text.empty())
         retval = wxString(m_text.GetChar(start));
     }
   return retval;
@@ -3078,7 +3078,7 @@ wxString EditorCell::GetWordUnderCaret()
 wxString EditorCell::SelectWordUnderCaret(bool WXUNUSED(selectParens), bool toRight, bool includeDoubleQuotes)
 {
   if(m_positionOfCaret < 0)
-    return wxEmptyString;
+    return {};
   
   long start = 0;
   long pos = 0;
@@ -3126,7 +3126,7 @@ bool EditorCell::CopyToClipboard()
   if(end > m_text.Length())
     end = m_text.Length();
   wxString s = m_text.SubString(start, end);
-  if (!s.IsEmpty() && (wxTheClipboard->Open()))
+  if (!s.empty() && (wxTheClipboard->Open()))
   {
     if(!wxTheClipboard->SetData(new wxTextDataObject(s)))
     {
@@ -3452,7 +3452,7 @@ void EditorCell::StyleTextCode()
   {
     pos += token.GetText().Length();
     auto &tokenString = token.GetText();
-    if (tokenString.IsEmpty())
+    if (tokenString.empty())
       continue;
     wxChar Ch = tokenString[0];
     
@@ -3490,13 +3490,13 @@ void EditorCell::StyleTextCode()
         line +=wxString(*it2);
       else
       {
-        if(line != wxEmptyString)
+        if(!line.empty())
           m_styledText.push_back(StyledText(token.GetStyle(), line));
         m_styledText.push_back(StyledText(token.GetStyle(), "\n"));
-        line = wxEmptyString;
+        line.clear();
       }
     }
-    if(line != wxEmptyString)
+    if(!line.empty())
       m_styledText.push_back(StyledText(token.GetStyle(), line));
     HandleSoftLineBreaks_Code(lastSpace, lineWidth, token, pos, m_text, lastSpacePos,
                               indentationPixels);
@@ -3577,7 +3577,7 @@ void EditorCell::StyleTextTexts()
             if (i > 0)
               line = m_text.SubString(lastLineStart, i - 1);
             else
-              line = wxEmptyString;
+              line.clear();
           }
           else
             line = m_text.SubString(lastLineStart, i);
@@ -3702,7 +3702,7 @@ void EditorCell::StyleTextTexts()
 
           // Every line of a Quote begins with a ">":
           if (!line_trimmed.StartsWith(wxT("> ")))
-            indentChar = wxEmptyString;
+            indentChar.clear();
 
           // Equip bullet lists with real bullets
           if (line_trimmed.StartsWith(wxT("* ")))
@@ -3731,7 +3731,7 @@ void EditorCell::StyleTextTexts()
       }
 
       if (prefixes.empty())
-        indentChar = wxEmptyString;
+        indentChar.clear();
 
       if ((!indentPixels.empty()) && (!newLine))
         indent = indentPixels.back();
@@ -3805,7 +3805,7 @@ void EditorCell::StyleText()
   m_wordList.Clear();
   m_styledText.clear();
 
-  if(m_text == wxEmptyString)
+  if(m_text.empty())
     return;
 
   // Remove all soft line breaks. They will be re-added in the right places
@@ -4063,7 +4063,7 @@ wxString EditorCell::GetSelectionString() const
   if (m_selectionStart >= 0)
     return m_cellPointers->m_selectionString;
   else
-    return wxEmptyString;
+    return {};
 }
 
 void EditorCell::ClearSelection()
@@ -4071,7 +4071,7 @@ void EditorCell::ClearSelection()
   if (SelectionActive())
   {
     m_selectionChanged = true;
-    m_cellPointers->m_selectionString = wxEmptyString;
+    m_cellPointers->m_selectionString.clear();
     m_oldSelectionStart = m_oldSelectionEnd = m_selectionStart = m_selectionEnd = -1;
   }
 }

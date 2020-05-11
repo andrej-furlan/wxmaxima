@@ -225,7 +225,7 @@ void SlideShow::LoadImages(wxArrayString images, bool deleteRead)
         {
           m_images.push_back(
             std::make_shared<Image>(m_configuration, images[i], m_fileSystem, deleteRead));
-          if(gnuplotFilename != wxEmptyString)
+          if(!gnuplotFilename.empty())
           {
             if(m_images.back())
               m_images.back()->GnuplotSource(gnuplotFilename, dataFilename);
@@ -416,7 +416,7 @@ wxString SlideShow::ToXML()
       }
 
       // Save the gnuplot source, if necessary.
-      if(gnuplotSource != wxEmptyString)
+      if(!gnuplotSource.empty())
       {
         gnuplotSourceFiles += gnuplotSource + ";";
         wxMemoryBuffer data = m_images[i]->GetGnuplotSource();
@@ -428,7 +428,7 @@ wxString SlideShow::ToXML()
             );
         }
       }
-      if(gnuplotData != wxEmptyString)
+      if(!gnuplotData.empty())
       {
         gnuplotDataFiles += gnuplotData + ";";
         wxMemoryBuffer data = m_images[i]->GetGnuplotData();
@@ -536,7 +536,7 @@ wxString SlideShow::GetToolTip(const wxPoint &point)
       return m_toolTip;
   }
   else
-    return wxEmptyString;
+    return {};
 }
 
 wxSize SlideShow::ToGif(wxString file)

@@ -112,7 +112,7 @@ void SubCell::Draw(wxPoint point)
 
 wxString SubCell::ToString()
 {
-  if (m_altCopyText != wxEmptyString)
+  if (!m_altCopyText.empty())
     return m_altCopyText;
 
   wxString s;
@@ -126,7 +126,7 @@ wxString SubCell::ToString()
 
 wxString SubCell::ToMatlab()
 {
-  if (m_altCopyText != wxEmptyString)
+  if (!m_altCopyText.empty())
   {
 	return m_altCopyText;
   }
@@ -176,7 +176,7 @@ wxString SubCell::ToXML()
   if (m_forceBreakLine)
     flags += wxT(" breakline=\"true\"");
 
-  if (m_altCopyText != wxEmptyString)
+  if (!m_altCopyText.empty())
     flags += wxT(" altCopy=\"") + XMLescape(m_altCopyText) + wxT("\"");
   
   return wxT("<i") + flags + wxT("><r>") + m_baseCell->ListToXML() + wxT("</r><r>") +

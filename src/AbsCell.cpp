@@ -141,7 +141,7 @@ void AbsCell::Draw(wxPoint point)
 wxString AbsCell::ToString()
 {
   if (m_isBrokenIntoLines)
-    return wxEmptyString;
+    return {};
   wxString s;
   s = wxT("abs(") + m_innerCell->ListToString() + wxT(")");
   return s;
@@ -150,7 +150,7 @@ wxString AbsCell::ToString()
 wxString AbsCell::ToMatlab()
 {
   if (m_isBrokenIntoLines)
-	return wxEmptyString;
+    return {};
   wxString s;
   s = wxT("abs(") + m_innerCell->ListToMatlab() + wxT(")");
   return s;
@@ -159,7 +159,7 @@ wxString AbsCell::ToMatlab()
 wxString AbsCell::ToTeX()
 {
   if (m_isBrokenIntoLines)
-    return wxEmptyString;
+    return {};
   return wxT("\\left| ") + m_innerCell->ListToTeX() + wxT("\\right| ");
 }
 

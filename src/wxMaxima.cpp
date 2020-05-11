@@ -229,7 +229,7 @@ wxMaxima::wxMaxima(wxWindow *parent, int id, wxLocale *locale, const wxString ti
   // If maxima fails to come up directly on startup of wxMaxima there is no need to retry.
   m_unsuccessfulConnectionAttempts = 11;
   m_outputCellsFromCurrentCommand = 0;
-  m_CWD = wxEmptyString;
+  m_CWD.clear();
   m_pid = -1;
   m_hasEvaluatedCells = false;
   m_process = NULL;
@@ -242,21 +242,21 @@ wxMaxima::wxMaxima(wxWindow *parent, int id, wxLocale *locale, const wxString ti
   m_server = NULL;
 
   config->Read(wxT("lastPath"), &m_lastPath);
-  m_lastPrompt = wxEmptyString;
+  m_lastPrompt.clear();
 
   m_closing = false;
   m_fileSaved = true;
 
-  m_chmhelpFile = wxEmptyString;
+  m_chmhelpFile.clear();
 
   wxFileSystem::AddHandler(new wxMemoryFSHandler); // for saving wxmx
 
   UpdateRecentDocuments();
 
   m_worksheet->m_findDialog = NULL;
-  m_oldFindString = wxEmptyString;
+  m_oldFindString.clear();
   m_oldFindFlags = 0;
-  m_worksheet->m_currentFile = wxEmptyString;
+  m_worksheet->m_currentFile.clear();
   int findFlags = wxFR_DOWN | wxFR_MATCHCASE;
   wxConfig::Get()->Read(wxT("findFlags"), &findFlags);
   m_findData.SetFlags(findFlags);
@@ -303,7 +303,7 @@ wxMaxima::wxMaxima(wxWindow *parent, int id, wxLocale *locale, const wxString ti
     LeftStatusText(_("Starting server failed"));
   else
   {
-    if(m_openFile.IsEmpty())
+    if(m_openFile.empty())
     {
       if (!StartMaxima())
         LeftStatusText(_("Starting Maxima process failed"));
@@ -1187,7 +1187,7 @@ TextCell *wxMaxima::ConsoleAppend(wxString s, CellType type, const wxString &use
   // TODO: Is a printf(false,"~%")$ a real use-case?
   wxString t(s);
   t.Trim();t.Trim(false);
-  if (t.IsEmpty())
+  if (t.empty())
     return NULL;
 
   if (m_maxOutputCellsPerCommand > 0)
@@ -1272,7 +1272,7 @@ void wxMaxima::DoConsoleAppend(wxString s, CellType type, bool newLine,
 {
   Cell *cell;
 
-  if (s.IsEmpty())
+  if (s.empty())
     return;
 
   s.Replace(wxT("\n"), wxT(" "), true);
@@ -1300,7 +1300,7 @@ TextCell *wxMaxima::DoRawConsoleAppend(wxString s, CellType type)
     m_worksheet->InsertGroupCells(
       new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE, &m_worksheet->m_cellPointers, wxEmptyString));
 
-  if (s.IsEmpty())
+  if (s.empty())
     return NULL;
 
   bool scrollToCaret = (!m_worksheet->FollowEvaluation() && m_worksheet->CaretVisibleIs());
@@ -1330,11 +1330,11 @@ TextCell *wxMaxima::DoRawConsoleAppend(wxString s, CellType type)
       else
       {
         newVal += s;
-        s = wxEmptyString;
+        s.clear();
       }
 
       incompleteTextCell->SetValue(newVal);
-      if(s == wxEmptyString)
+      if(s.empty())
       {
         dynamic_cast<GroupCell *>(incompleteTextCell->GetGroup())->ResetSize();
         dynamic_cast<GroupCell *>(incompleteTextCell->GetGroup())->Recalculate();
@@ -1430,7 +1430,7 @@ void wxMaxima::SendMaxima(wxString s, bool addToHistory)
   // cell is placed in the evaluation queue we need to catch it here.
   int index;
   wxString parenthesisError = GetUnmatchedParenthesisState(s,index);
-  if (parenthesisError == wxEmptyString)
+  if (parenthesisError.empty())
   {
     s = m_worksheet->UnicodeToMaxima(s);
 
@@ -1474,7 +1474,7 @@ void wxMaxima::SendMaxima(wxString s, bool addToHistory)
           if (count > 0)
             funName << wxT(",");
           wxString a = argTokens.GetNextToken().Trim().Trim(false);
-          if (a != wxEmptyString)
+          if (!a.empty())
           {
             if (a[0] == '[')
               funName << wxT("[<") << a.SubString(1, a.Length() - 2) << wxT(">]");
@@ -1683,7 +1683,7 @@ void wxMaxima::OnMaximaConnect()
     
   m_statusBar->NetworkStatus(StatusBar::idle);
   m_worksheet->QuestionAnswered();
-  m_currentOutput = wxEmptyString;
+  m_currentOutput.clear();
     
   m_client.reset(m_server->Accept(false));
   if(!m_client)
@@ -1763,10 +1763,10 @@ bool wxMaxima::StartMaxima(bool force)
   wxString dirname;
   {
     wxString filename = m_worksheet->m_currentFile;
-    if(filename.IsEmpty())
+    if(filename.empty())
       filename = m_openFile;
     
-    if(!filename.IsEmpty())
+    if(!filename.empty())
     {
       wxFileName dir(filename);
       dir.MakeAbsolute();
@@ -1793,7 +1793,7 @@ bool wxMaxima::StartMaxima(bool force)
     
     // If we have an open file tell maxima to start in the directory the file is in
     wxUnsetEnv("MAXIMA_INITIAL_FOLDER");
-    if(!dirname.IsEmpty())
+    if(!dirname.empty())
     {
       if(wxDirExists(dirname))
       {
@@ -1814,7 +1814,7 @@ bool wxMaxima::StartMaxima(bool force)
     m_maximaStdoutPollTimer.StartOnce(MAXIMAPOLLMSECS);
 
     wxString command = GetCommand();
-    if(!command.IsEmpty())
+    if(!command.empty())
     {
       command.Append(wxString::Format(wxT(" -s %d "), m_port));
 
@@ -2022,7 +2022,7 @@ void wxMaxima::KillMaxima(bool logMessage)
   m_closing = true;
   m_worksheet->m_variablesPane->ResetValues();
   m_varNamesToQuery = m_worksheet->m_variablesPane->GetEscapedVarnames();
-  m_configCommands = wxEmptyString;
+  m_configCommands.clear();
   // The new maxima process will be in its initial condition => mark it as such.
   m_hasEvaluatedCells = false;
 
@@ -2032,9 +2032,9 @@ void wxMaxima::KillMaxima(bool logMessage)
 
   // We start checking for maximas output again as soon as we send some data to the program.
   m_statusBar->SetMaximaCPUPercentage(0);
-  m_CWD = wxEmptyString;
+  m_CWD.clear();
   m_worksheet->QuestionAnswered();
-  m_currentOutput = wxEmptyString;
+  m_currentOutput.clear();
   // If we did close maxima by hand we already might have a new process
   // and therefore invalidate the wrong process in this step
   if (m_process)
@@ -2078,7 +2078,7 @@ void wxMaxima::KillMaxima(bool logMessage)
 
   // As we might have killed maxima before it was able to clean up its
   // temp files we try to do so manually now:
-  if(m_maximaTempDir != wxEmptyString)
+  if(!m_maximaTempDir.empty())
   {
     SuppressErrorDialogs logNull;
     if(wxFileExists(m_maximaTempDir + wxT("/maxout") + wxString::Format("%li.gnuplot",m_pid)))
@@ -2121,7 +2121,7 @@ void wxMaxima::OnProcessEvent(wxProcessEvent& event)
     
     wxString o_trimmed = o;
     o_trimmed.Trim();
-    if(!o.IsEmpty())
+    if(!o.empty())
       wxLogMessage(_("Last message from maxima's stdout: %s"), o.utf8_str());
   }
   if(m_maximaStderr)
@@ -2134,7 +2134,7 @@ void wxMaxima::OnProcessEvent(wxProcessEvent& event)
     
     wxString o_trimmed = o;
     o_trimmed.Trim();
-    if(!o.IsEmpty())
+    if(!o.empty())
       wxLogMessage(_("Last message from maxima's stderr: %s"), o.utf8_str());
   }
   m_rawDataToSend.Clear();
@@ -2300,14 +2300,14 @@ int wxMaxima::GetMiscTextEnd(const wxString &data)
 
 void wxMaxima::ReadMiscText(wxString &data)
 {
-  if (data.IsEmpty())
+  if (data.empty())
     return;
 
   // Extract all text that isn't a xml tag known to us.
   int miscTextLen = GetMiscTextEnd(data);
   if(miscTextLen <= 0)
   {
-    if(data != wxEmptyString)
+    if(!data.empty())
       m_worksheet->m_cellPointers.m_currentTextCell = NULL;
     return;
   }
@@ -2388,7 +2388,7 @@ void wxMaxima::ReadMiscText(wxString &data)
     trimmedLine.Trim(true);
     trimmedLine.Trim(false);
 
-    if((textline != wxEmptyString)&&(textline != wxT("\n")))
+    if((!textline.empty())&&(textline != wxT("\n")))
     {
       if(error)
       {
@@ -2409,13 +2409,13 @@ void wxMaxima::ReadMiscText(wxString &data)
   if(miscText.EndsWith("\n"))
     m_worksheet->m_cellPointers.m_currentTextCell = NULL;
 
-  if(data != wxEmptyString)
+  if(!data.empty())
     m_worksheet->m_cellPointers.m_currentTextCell = NULL;
 }
 
 int wxMaxima::FindTagEnd(const wxString &data, const wxString &tag)
 {
-  if((m_currentOutputEnd == wxEmptyString) || (m_currentOutputEnd.Find(tag) != wxNOT_FOUND))
+  if((m_currentOutputEnd.empty()) || (m_currentOutputEnd.Find(tag) != wxNOT_FOUND))
     return data.Find(tag);
   else
     return wxNOT_FOUND;
@@ -2739,7 +2739,7 @@ void wxMaxima::ReadPrompt(wxString &data)
   // Remove the prompt we will process from the string.
   data = data.Right(data.Length()-end-m_promptSuffix.Length());
   if(data == wxT(" "))
-    data = wxEmptyString;
+    data.clear();
 
   // If we got a prompt our connection to maxima was successful.
   if(m_unsuccessfulConnectionAttempts > 0)
@@ -2834,7 +2834,7 @@ void wxMaxima::ReadPrompt(wxString &data)
        ((m_worksheet->GetWorkingGroup()->m_knownAnswers.empty()) &&
         m_worksheet->GetWorkingGroup()->AutoAnswer()))
        m_worksheet->SetNotification(_("Maxima asks a question!"), wxICON_INFORMATION);
-    if (!o.IsEmpty())
+    if (!o.empty())
     {
       if((!m_worksheet->GetWorkingGroup()) || (!m_worksheet->GetWorkingGroup()->AutoAnswer()))
         m_worksheet->m_configuration->SetDefaultCellToolTip(
@@ -2887,7 +2887,7 @@ void wxMaxima::SetCWD(wxString file)
 
   wxFileName filename(file);
 
-  if (filename.GetPath() == wxEmptyString)
+  if (filename.GetPath().empty())
     filename.AssignDir(wxGetCwd());
 
   // Escape all backslashes in the filename if needed by the OS.
@@ -2934,7 +2934,7 @@ wxString wxMaxima::ReadMacContents(const wxString &file)
     LoggingMessageBox(_("wxMaxima encountered an error loading ") + file, _("Error"), wxOK | wxICON_EXCLAMATION);
     StatusMaximaBusy(waiting);
     RightStatusText(_("File could not be opened"));
-    return wxEmptyString;
+    return {};
   }
 
   bool input = true;
@@ -2982,14 +2982,14 @@ bool wxMaxima::OpenMACFile(const wxString &file, Worksheet *document, bool clear
 
   wxString macContents = ReadMacContents(file);
 
-  if(macContents == wxEmptyString)
+  if(macContents.empty())
     return false;
 
   if (clearDocument)
     document->ClearDocument();
 
   GroupCell *last = NULL;
-  wxString line = wxEmptyString;
+  wxString line;
   wxChar lastChar = wxT(' ');
   wxString::const_iterator ch = macContents.begin();
   while (ch != macContents.end())
@@ -3130,7 +3130,7 @@ bool wxMaxima::OpenMACFile(const wxString &file, Worksheet *document, bool clear
           last = cell;
         }
 
-        line = wxEmptyString;
+        line.clear();
       }
     }
     // Handle strings
@@ -3175,7 +3175,7 @@ bool wxMaxima::OpenMACFile(const wxString &file, Worksheet *document, bool clear
                         GC_TYPE_CODE, &document->m_cellPointers, line),
           last);
         last = cell;
-        line = wxEmptyString;
+        line.clear();
       }
       lastChar = *ch;
       if(ch != macContents.end())
@@ -3185,7 +3185,7 @@ bool wxMaxima::OpenMACFile(const wxString &file, Worksheet *document, bool clear
 
   line.Trim(true);
   line.Trim(false);
-  if(line != wxEmptyString)
+  if(!line.empty())
   {
     document->InsertGroupCells(
       new GroupCell(&(document->m_configuration),
@@ -3764,7 +3764,7 @@ wxString wxMaxima::GetCommand(bool params)
   {
     command = wxT("\"") + command + wxT("\"");
   }
-  if(!m_extraMaximaArgs.IsEmpty())
+  if(!m_extraMaximaArgs.empty())
     wxASSERT(m_extraMaximaArgs.StartsWith(" "));
   command += m_extraMaximaArgs;
   return command;
@@ -3910,7 +3910,7 @@ wxString wxMaxima::GetMaximaHelpFile2()
   if(wxFileExists(headerFile))
     return headerFile;
 
-  return wxEmptyString;
+  return {};
 }
 
 void wxMaxima::ShowHTMLHelp(const wxString &helpfile, const wxString &keyword)
@@ -3928,7 +3928,7 @@ void wxMaxima::ShowHTMLHelp(const wxString &helpfile, const wxString &keyword)
 
   if ((keyword == wxT("%")) ||
       (keyword == wxT(" << Graphics >> ")) ||
-      (keyword == wxEmptyString))
+      (keyword.empty()))
     m_htmlhelpCtrl.DisplayContents();
   else
     m_htmlhelpCtrl.KeywordSearch(keyword, wxHELP_SEARCH_INDEX);
@@ -3942,7 +3942,7 @@ void wxMaxima::ShowCHMHelp(const wxString &helpfile, const wxString &keyword)
 
   if ((keyword == wxT("%")) ||
       (keyword == wxT(" << Graphics >> ")) ||
-      (keyword.IsEmpty())
+      (keyword.empty())
     )
     m_chmhelpCtrl.DisplayContents();
   else
@@ -4008,7 +4008,7 @@ void wxMaxima::ShowWxMaximaHelp()
   helpfile.Replace("\\", "/", true);
 #endif
 
-  if(!helpfile.IsEmpty())
+  if(!helpfile.empty())
   {
     // A Unix absolute path starts with a "/", so a valid file URI
     // file:///path/to/helpfile (3 slashes) is constructed.
@@ -4041,7 +4041,7 @@ void wxMaxima::ShowWxMaximaHelp()
 
 void wxMaxima::ShowHelp(const wxString &keyword)
 {
-  if((keyword.IsEmpty()) || (keyword == "%"))
+  if((keyword.empty()) || (keyword == "%"))
     ShowWxMaximaHelp();
   else
     ShowMaximaHelp(keyword);
@@ -4058,7 +4058,7 @@ void wxMaxima::CompileHelpFileAnchors()
   #endif  
   #endif
 
-  if(m_worksheet->m_helpFileAnchors.empty() && (!(MaximaHelpFile.IsEmpty())))
+  if(m_worksheet->m_helpFileAnchors.empty() && (!(MaximaHelpFile.empty())))
   {
     m_worksheet->m_helpFileAnchors["wxbarsplot"] = "barsplot";
     m_worksheet->m_helpFileAnchors["wxboxplot"] = "boxplot";
@@ -4102,7 +4102,7 @@ void wxMaxima::CompileHelpFileAnchors()
               if(idExtractor_oldManual.Replace(&token, "\\1")>0)
                 id = token;
             }
-            if(!id.IsEmpty())
+            if(!id.empty())
             {
               // In anchors a space is represented by a hyphen
               token.Replace("-", " ");
@@ -4126,7 +4126,7 @@ void wxMaxima::CompileHelpFileAnchors()
     }
     wxLogMessage(wxString::Format(_("Found %i anchors."), foundAnchors));
   }
-  if(m_worksheet->m_helpFileAnchors["%solve"].IsEmpty())
+  if(m_worksheet->m_helpFileAnchors["%solve"].empty())
     m_worksheet->m_helpFileAnchors["%solve"] = m_worksheet->m_helpFileAnchors["to_poly_solve"];
   #ifdef HAVE_OMP_HEADER
   omp_unset_lock(&m_helpFileAnchorsLock);
@@ -4145,7 +4145,7 @@ void wxMaxima::ShowMaximaHelp(wxString keyword)
   MaximaHelpFile.Replace("\\", "/", true);
 #endif
   
-  if((!(MaximaHelpFile.Lower().EndsWith(wxT(".html")))) && (!MaximaHelpFile.IsEmpty()))
+  if((!(MaximaHelpFile.Lower().EndsWith(wxT(".html")))) && (!MaximaHelpFile.empty()))
   {
     ShowHTMLHelp(MaximaHelpFile,keyword);
   }
@@ -4154,9 +4154,9 @@ void wxMaxima::ShowMaximaHelp(wxString keyword)
     wxBusyCursor crs;
     CompileHelpFileAnchors();
     keyword = m_worksheet->m_helpFileAnchors[keyword];
-    if(keyword.IsEmpty())
+    if(keyword.empty())
       keyword = "Function-and-Variable-Index";
-    if(!MaximaHelpFile.IsEmpty())
+    if(!MaximaHelpFile.empty())
     {
       // A Unix absolute path starts with a "/", so a valid file URI
       // file:///path/to/helpfile (3 slashes!!) is constructed.
@@ -4168,7 +4168,7 @@ void wxMaxima::ShowMaximaHelp(wxString keyword)
                                    wxString("/") +
 #endif
                                    MaximaHelpFile;
-      if(!keyword.IsEmpty()) {
+      if(!keyword.empty()) {
         maximaHelpfileURI = maximaHelpfileURI + "#" + keyword;
       }
       wxLogMessage(wxString::Format(_("Opening help file %s"),maximaHelpfileURI.utf8_str()));
@@ -4189,7 +4189,7 @@ void wxMaxima::ShowMaximaHelp(wxString keyword)
 
 bool wxMaxima::InterpretDataFromMaxima()
 {
-  if(m_newCharsFromMaxima.IsEmpty())
+  if(m_newCharsFromMaxima.empty())
     return false;
 
   if ((m_xmlInspector) && (IsPaneDisplayed(menu_pane_xmlInspector)))
@@ -4200,7 +4200,7 @@ bool wxMaxima::InterpretDataFromMaxima()
   m_currentOutputEnd = m_currentOutput.Right(30) + m_newCharsFromMaxima;
 
   m_currentOutput += m_newCharsFromMaxima;
-  m_newCharsFromMaxima = wxEmptyString;
+  m_newCharsFromMaxima.clear();
   if ((m_xmlInspector) && (IsPaneDisplayed(menu_pane_xmlInspector)))
     m_xmlInspector->Add_FromMaxima(m_newCharsFromMaxima);
 
@@ -4287,10 +4287,10 @@ void wxMaxima::OnIdle(wxIdleEvent &event)
   // event when we wait for it here.
   if ((m_worksheet != NULL) && (m_worksheet->m_configuration->GetDC() != NULL))
   {
-    if(m_openFile != wxEmptyString)
+    if(!m_openFile.empty())
     {
       wxString file = m_openFile;
-      m_openFile = wxEmptyString;
+      m_openFile.clear();
       m_openInitialFileError = !OpenFile(file);
       
       // After doing such big a thing we should end our idle event and request
@@ -4300,7 +4300,7 @@ void wxMaxima::OnIdle(wxIdleEvent &event)
       return;
     }
     //! wxm data the worksheet is populated from 
-    if(!m_initialWorkSheetContents.IsEmpty())
+    if(!m_initialWorkSheetContents.empty())
     {
       //  Convert the comment block to an array of lines
       wxStringTokenizer tokenizer(m_initialWorkSheetContents, "\n");
@@ -4313,7 +4313,7 @@ void wxMaxima::OnIdle(wxIdleEvent &event)
       m_worksheet->RecalculateIfNeeded();
       m_worksheet->UpdateMLast();
       m_worksheet->SetSaved(true);
-      m_initialWorkSheetContents = wxEmptyString;
+      m_initialWorkSheetContents.clear();
     }
   }
   // Update the info what maxima is currently doing
@@ -4826,7 +4826,7 @@ wxString wxMaxima::GetDefaultEntry()
     return retval = m_worksheet->GetActiveCell()->GetWordUnderCaret();
   if(m_worksheet->IsSelected(MC_TYPE_DEFAULT))
     return m_worksheet->GetSelectionStart()->ToString(); 
-  if (retval.IsEmpty())
+  if (retval.empty())
     retval = "%";
   return retval;
 }
@@ -4835,7 +4835,7 @@ bool wxMaxima::OpenFile(const wxString &file, const wxString &command)
 {
   wxBusyCursor crs;
   bool retval = true;
-  if (file == wxEmptyString)
+  if (file.empty())
   {
     wxLogError(_("Trying to open a file with an empty name!"));
     return false;
@@ -5126,7 +5126,7 @@ void wxMaxima::ReadStdErr()
     o_trimmed.Trim();
 
     o = _("Message from the stdout of Maxima: ") + o;
-    if ((o_trimmed != wxEmptyString) && (!o.StartsWith("Connecting Maxima to server on port")) &&
+    if ((!o_trimmed.empty()) && (!o.StartsWith("Connecting Maxima to server on port")) &&
         (!m_first))
     {
       DoRawConsoleAppend(o, MC_TYPE_DEFAULT);
@@ -5149,7 +5149,7 @@ void wxMaxima::ReadStdErr()
     o = wxT("Message from maxima's stderr stream: ") + o;
 
     if((o != wxT("Message from maxima's stderr stream: End of animation sequence")) &&
-       !o.Contains("frames in animation sequence") && (o_trimmed != wxEmptyString) &&
+       !o.Contains("frames in animation sequence") && (!o_trimmed.empty()) &&
        (o.Length() > 1))
     {
       DoRawConsoleAppend(o, MC_TYPE_ERROR);
@@ -5389,14 +5389,14 @@ bool wxMaxima::AutoSave()
 
   
   if (m_worksheet->m_configuration->AutoSaveAsTempFile() ||
-      m_worksheet->m_currentFile.IsEmpty())
+      m_worksheet->m_currentFile.empty())
   {
     bool saved = m_worksheet->ExportToWXMX(m_tempfileName);
 
     wxLogMessage(wxString::Format(_("Autosaving as temp file %s"), m_tempfileName.utf8_str()));
     if((m_tempfileName != oldTempFile) && saved)
     {
-      if(!oldTempFile.IsEmpty())
+      if(!oldTempFile.empty())
       {
         if(wxFileExists(oldTempFile))
         {
@@ -5627,7 +5627,7 @@ void wxMaxima::FileMenu(wxCommandEvent &event)
                                      wxEmptyString, wxEmptyString,
                                      _("Maxima package (*.mac)|*.mac"),
                                      wxFD_OPEN);
-      if(file != wxEmptyString)
+      if(!file.empty())
         OpenFile(file, wxT("batch"));
     }
       break;
@@ -5736,7 +5736,7 @@ void wxMaxima::EditMenu(wxCommandEvent &event)
 
     wxString gnuplotSource =
       m_worksheet->m_cellPointers.m_selectionStart->GnuplotSource();
-    if(gnuplotSource == wxEmptyString)
+    if(gnuplotSource.empty())
       return;
 
     if(!wxFileExists(gnuplotSource))
@@ -5970,7 +5970,7 @@ void wxMaxima::EditMenu(wxCommandEvent &event)
       {
         // Start incremental search and highlighting of search results again.
         if (m_worksheet->m_findDialog != NULL)
-          m_oldFindString = wxEmptyString;
+          m_oldFindString.clear();
 
         wxString selected = m_worksheet->GetActiveCell()->GetSelectionString();
         if (selected.Length() > 0)
@@ -5987,14 +5987,14 @@ void wxMaxima::EditMenu(wxCommandEvent &event)
     case menu_history_next:
     {
       wxString command = m_history->GetCommand(true);
-      if (command != wxEmptyString)
+      if (!command.empty())
         m_worksheet->SetActiveCellText(command);
     }
       break;
     case menu_history_previous:
     {
       wxString command = m_history->GetCommand(false);
-      if (command != wxEmptyString)
+      if (!command.empty())
         m_worksheet->SetActiveCellText(command);
     }
       break;
@@ -6014,7 +6014,7 @@ void wxMaxima::OnFindClose(wxFindDialogEvent &WXUNUSED(event))
 {
   if (m_worksheet->m_findDialog != NULL)
     m_worksheet->m_findDialog->Destroy();
-  m_oldFindString = wxEmptyString;
+  m_oldFindString.clear();
   m_worksheet->m_findDialog = NULL;
 }
 
@@ -6529,8 +6529,8 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
       //wiz->Centre(wxBOTH);
       if (wiz->ShowModal() == wxID_OK)
       {
-        cmd = wxEmptyString;
-        if(wiz->GetValue1() == wxEmptyString)
+        cmd.clear();
+        if(wiz->GetValue1().empty())
           cmd = wiz->GetValue1() + wxT(":");
         cmd += wxT("matrixmap(") + wiz->GetValue2() + wxT(", ")
               + wiz->GetValue3() + wxT(");");
@@ -6548,7 +6548,7 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
       //wiz->Centre(wxBOTH);
       if (wiz->ShowModal() == wxID_OK)
       {
-        if (wiz->GetValue0() != wxEmptyString)
+        if (!wiz->GetValue0().empty())
           cmd = wiz->GetValue0() + wxT(": ");
         long w, h;
         int type = wiz->GetMatrixType();
@@ -6604,7 +6604,7 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
         wxString val = wxT("genmatrix(") + wiz->GetValue1() +
                        wxT(", ") + wiz->GetValue2() +
                        wxT(", ") + wiz->GetValue3() + wxT(");");
-        if (wiz->GetValue4() != wxEmptyString)
+        if (!wiz->GetValue4().empty())
           val = wiz->GetValue4() + wxT(": ") + val;
         MenuCommand(val);
       }
@@ -6624,7 +6624,7 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
         wxString val = wxT("genmatrix(lambda([i,j], ") + wiz->GetValue1() +
                        wxT("), ") + wiz->GetValue2() +
                        wxT(", ") + wiz->GetValue3() + wxT(");");
-        if (wiz->GetValue4() != wxEmptyString)
+        if (!wiz->GetValue4().empty())
           val = wiz->GetValue4() + wxT(": ") + val;
         MenuCommand(val);
       }
@@ -7946,11 +7946,11 @@ void wxMaxima::HelpMenu(wxCommandEvent &event)
       description += _("\nNo OpenMP support");
       #endif
       
-      if (m_maximaVersion != wxEmptyString)
+      if (!m_maximaVersion.empty())
         description += _("\nMaxima version: ") + m_maximaVersion + " ("+m_maximaArch+")";
       else
         description += _("\nNot connected.");
-      if (m_lispVersion != wxEmptyString)
+      if (!m_lispVersion.empty())
         description += _("\nMaxima compiled using: ") + m_lispType + " " + m_lispVersion;
 
       info.SetIcon(wxMaximaIcon());
@@ -8311,7 +8311,7 @@ void wxMaxima::StatsMenu(wxCommandEvent &event)
                                      wxEmptyString, wxEmptyString,
                                      _("Data file (*.csv, *.tab, *.txt)|*.csv;*.tab;*.txt"),
                                      wxFD_OPEN);
-      if (file != wxEmptyString)
+      if (!file.empty())
       {
         m_lastPath = wxPathOnly(file);
 
@@ -8322,7 +8322,7 @@ void wxMaxima::StatsMenu(wxCommandEvent &event)
         wxString name = wxGetTextFromUser(wxT("Enter matrix name:"), wxT("Marix name"));
         wxString cmd;
 
-        if (name != wxEmptyString)
+        if (!name.empty())
           cmd << name << wxT(": ");
 
         wxString format;
@@ -8331,7 +8331,7 @@ void wxMaxima::StatsMenu(wxCommandEvent &event)
         else if (file.Lower().EndsWith(wxT(".tab")))
           format = wxT("tab");
 
-        if (format != wxEmptyString)
+        if (!format.empty())
           MenuCommand(cmd + wxT("read_matrix(\"") + file + wxT("\", '") + format + wxT(");"));
         else
           MenuCommand(cmd + wxT("read_matrix(\"") + file + wxT("\");"));
@@ -8353,18 +8353,18 @@ void wxMaxima::StatsMenu(wxCommandEvent &event)
 
         wxString cmd;
 
-        if (name != wxEmptyString)
+        if (!name.empty())
           cmd << name << wxT(": ");
 
         cmd += wxT("subsample(\n   ") + wiz->GetValue1() + wxT(",\n   ") +
                wxT("lambda([col], is( ");
 
-        if (wiz->GetValue2() != wxEmptyString)
+        if (!wiz->GetValue2().empty())
           cmd += wiz->GetValue2() + wxT(" ))");
         else
           cmd += wxT("true ))");
 
-        if (wiz->GetValue3() != wxEmptyString)
+        if (!wiz->GetValue3().empty())
           cmd += wxT(",\n   ") + wiz->GetValue3();
 
         cmd += wxT(");");
@@ -8961,7 +8961,7 @@ void wxMaxima::OnUnsavedDocument(wxCommandEvent &event)
 
   wxString file = m_unsavedDocuments.Get(event.GetId() - menu_unsaved_document_0);
 
-  if(file == wxEmptyString)
+  if(file.empty())
     return;
 
   if (SaveNecessary() &&
@@ -8987,7 +8987,7 @@ void wxMaxima::OnUnsavedDocument(wxCommandEvent &event)
   {
     OpenWXMXFile(file, m_worksheet, true);
     m_tempfileName = file;
-    m_worksheet->m_currentFile = wxEmptyString;    
+    m_worksheet->m_currentFile.clear();
   }
   else
     LoggingMessageBox(_("File you tried to open does not exist."), _("File not found"), wxOK);
@@ -9119,7 +9119,7 @@ wxString wxMaxima::GetUnmatchedParenthesisState(wxString text,int &index)
 {
   text.Trim(true);
   text.Trim(false);
-  if(text == wxEmptyString)
+  if(text.empty())
     return (wxEmptyString);
   if (text.EndsWith(wxT("\\")))
     return (_("Cell ends in a backslash"));
@@ -9213,7 +9213,7 @@ wxString wxMaxima::GetUnmatchedParenthesisState(wxString text,int &index)
   if((endingNeeded) && (!m_worksheet->m_configuration->InLispMode()))
     return _("No dollar ($) or semicolon (;) at the end of command");
   else
-    return wxEmptyString;
+    return {};
 }
 
 //! Tries to evaluate next group cell in queue
@@ -9251,9 +9251,9 @@ void wxMaxima::TriggerEvaluation()
     if((m_worksheet->m_configuration->NotifyIfIdle()) && (m_worksheet->GetTree() != NULL))
       m_worksheet->SetNotification(_("Maxima has finished calculating."));
 
-    if(m_configCommands != wxEmptyString)
+    if(!m_configCommands.empty())
       SendMaxima(m_configCommands);
-    m_configCommands = wxEmptyString;
+    m_configCommands.clear();
     return; //empty queue
   }
 
@@ -9301,11 +9301,11 @@ void wxMaxima::TriggerEvaluation()
   }
   wxString text = m_worksheet->m_evaluationQueue.GetCommand();
   m_commandIndex = m_worksheet->m_evaluationQueue.GetIndex();
-  if ((text != wxEmptyString) && (text != wxT(";")) && (text != wxT("$")))
+  if ((!text.empty()) && (text != wxT(";")) && (text != wxT("$")))
   {
     int index;
     wxString parenthesisError = GetUnmatchedParenthesisState(tmp->GetEditable()->ToString(true),index);
-    if (parenthesisError == wxEmptyString)
+    if (parenthesisError.empty())
     {
       if (m_worksheet->FollowEvaluation())
       {
@@ -9325,7 +9325,7 @@ void wxMaxima::TriggerEvaluation()
       m_maximaBusy = true;
       // Now that we have sent a command we need to query all variable values anew
       m_varNamesToQuery = m_worksheet->m_variablesPane->GetEscapedVarnames();
-      m_configCommands = wxEmptyString;
+      m_configCommands.clear();
 
       EvaluationQueueLength(m_worksheet->m_evaluationQueue.Size(),
                             m_worksheet->m_evaluationQueue.CommandsLeftInCell()
@@ -9430,14 +9430,14 @@ void wxMaxima::InsertMenu(wxCommandEvent &event)
       if(m_worksheet->GetActiveCell())
       {
         selectionString = m_worksheet->GetActiveCell()->GetSelectionString();
-        if(selectionString.IsEmpty())
+        if(selectionString.empty())
           selectionString = m_worksheet->GetActiveCell()->GetWordUnderCaret();
         m_worksheet->m_variablesPane->AddWatchCode(selectionString);
         wxMaximaFrame::ShowPane(menu_pane_variables,true);
       }
-      if(selectionString.IsEmpty() && (m_worksheet->GetSelectionStart() != NULL))
+      if(selectionString.empty() && (m_worksheet->GetSelectionStart() != NULL))
         selectionString = m_worksheet->GetSelectionStart()->ToString();
-      if(!selectionString.IsEmpty())
+      if(!selectionString.empty())
       {
         m_worksheet->m_variablesPane->AddWatchCode(selectionString);
         wxMaximaFrame::ShowPane(menu_pane_variables,true);
@@ -9589,7 +9589,7 @@ void wxMaxima::InsertMenu(wxCommandEvent &event)
                                      wxEmptyString, wxEmptyString,
                                      _("Image files (*.png, *.jpg, *.bmp, *.xpm, *.gif, *.svg, *.svgz)|*.png;*.jpg;*.bmp;*.xpm;*.gif;*.svg;*.svgz"),
                                      wxFD_OPEN);
-      if (file != wxEmptyString)
+      if (!file.empty())
         m_worksheet->OpenHCaret(file, GC_TYPE_IMAGE);
       m_worksheet->SetFocus();
       return;
@@ -9620,7 +9620,7 @@ void wxMaxima::InsertMenu(wxCommandEvent &event)
       input = m_worksheet->GetOutputAboveCaret();
     else
       input = m_worksheet->GetInputAboveCaret();
-    if (input != wxEmptyString)
+    if (!input.empty())
       m_worksheet->OpenHCaret(input, type);
   }
   else if (
@@ -9914,7 +9914,7 @@ void wxMaxima::CheckForUpdates(bool reportUpToDate)
 int wxMaxima::SaveDocumentP()
 {
   wxString file, ext;
-  if (m_worksheet->m_currentFile == wxEmptyString)
+  if (m_worksheet->m_currentFile.empty())
   {
     // Check if we want to save modified untitled documents on exit
     bool save = true;

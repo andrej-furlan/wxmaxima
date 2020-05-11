@@ -293,7 +293,7 @@ bool Worksheet::RedrawIfRequested()
         m_cellPointers.m_cellUnderPointer = NULL;
         wxString toolTip = dynamic_cast<GroupCell *>(m_cellPointers.m_groupCellUnderPointer)->GetToolTip(wxPoint(m_pointer_x,m_pointer_y));
 
-        if(toolTip != wxEmptyString)
+        if(!toolTip.empty())
         {
           if(GetToolTip() != NULL)
           {
@@ -1427,7 +1427,7 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
       if (IsSelected(MC_TYPE_DEFAULT))
       {
         wxString wordUnderCursor = GetSelectionStart()->ToString();
-        if(m_helpFileAnchorsUsable &&(!m_helpFileAnchors[wordUnderCursor].IsEmpty()))
+        if(m_helpFileAnchorsUsable &&(!m_helpFileAnchors[wordUnderCursor].empty()))
         {          
           popupMenu->Append(wxID_HELP, wxString::Format(_("Help on \"%s\""), wordUnderCursor));
           popupMenu->AppendSeparator();
@@ -1655,9 +1655,9 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
         dynamic_cast<GroupCell *>(GetActiveCell()->GetGroup())->GetGroupType() == GC_TYPE_CODE)
       popupMenu->Append(popid_comment_selection, _("Comment Selection"), wxEmptyString, wxITEM_NORMAL);
     wxString selectionString = GetActiveCell()->GetSelectionString();
-    if(selectionString.IsEmpty())
+    if(selectionString.empty())
       selectionString = GetActiveCell()->GetWordUnderCaret();
-    if(!selectionString.IsEmpty() &&
+    if(!selectionString.empty() &&
        !selectionString.Contains("\n") &&
        !selectionString.Contains("\r") &&
        !selectionString.Contains(":") &&
@@ -1719,7 +1719,7 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
             wxString wordUnderCursor = group->GetEditable()->GetWordUnderCaret();
             wxArrayString dst[4];
             wxArrayString sameBeginning;
-            if(m_helpFileAnchorsUsable &&(!m_helpFileAnchors[wordUnderCursor].IsEmpty()))
+            if(m_helpFileAnchorsUsable &&(!m_helpFileAnchors[wordUnderCursor].empty()))
               popupMenu->Append(wxID_HELP, wxString::Format(_("Help on \"%s\""), wordUnderCursor));
             HelpFileAnchors::const_iterator it;
             for (it = m_helpFileAnchors.begin(); it != m_helpFileAnchors.end(); ++it)
@@ -2354,7 +2354,7 @@ wxString Worksheet::GetString(bool lb)
   if (m_cellPointers.m_selectionStart == NULL)
   {
     if (GetActiveCell() == NULL)
-      return wxEmptyString;
+      return {};
     else
       return GetActiveCell()->ToString();
   }
@@ -2415,7 +2415,7 @@ bool Worksheet::Copy(bool astext)
       {
         // Add a mathML representation of the data to the clipboard
         s = ConvertSelectionToMathML();
-        if (s != wxEmptyString)
+        if (!s.empty())
         {
           // We mark the MathML version of the data on the clipboard as "preferred"
           // as if an application supports MathML neither bitmaps nor plain text
@@ -2485,10 +2485,10 @@ bool Worksheet::Copy(bool astext)
 wxString Worksheet::ConvertSelectionToMathML()
 {
   if (GetActiveCell() != NULL)
-    return wxEmptyString;
+    return {};
 
   if ((m_cellPointers.m_selectionStart == NULL) || (m_cellPointers.m_selectionEnd == NULL))
-    return wxEmptyString;
+    return {};
 
   wxString s;
    std::unique_ptr<Cell> tmp(
@@ -3043,10 +3043,10 @@ void Worksheet::SetAnswer(wxString answer)
   if(answerCell == NULL)
     return;
 
-  if(answer.IsEmpty())
+  if(answer.empty())
     return;
 
-  if(m_lastQuestion.IsEmpty())
+  if(m_lastQuestion.empty())
     return;
   
   answerCell->SetAnswer(m_lastQuestion, answer);
@@ -3082,10 +3082,10 @@ void Worksheet::OpenQuestionCaret(wxString txt)
       &m_cellPointers);
     m_cellPointers.m_answerCell->SetType(MC_TYPE_INPUT);
     bool autoEvaluate = false;
-    if(txt == wxEmptyString)
+    if(txt.empty())
     {
       txt = group->GetAnswer(m_lastQuestion);
-      if(!txt.IsEmpty())
+      if(!txt.empty())
         autoEvaluate = group->AutoAnswer();
     }
     m_cellPointers.m_answerCell->SetValue(txt);
@@ -3524,7 +3524,7 @@ void Worksheet::OnCharInActive(wxKeyEvent &event)
 
   // an empty cell is removed on backspace/delete
   if ((event.GetKeyCode() == WXK_BACK || event.GetKeyCode() == WXK_DELETE || event.GetKeyCode() == WXK_NUMPAD_DELETE) &&
-      GetActiveCell()->GetValue() == wxEmptyString)
+      GetActiveCell()->GetValue().empty())
   {
     SetSelection(dynamic_cast<GroupCell *>(GetActiveCell()->GetGroup()));
     DeleteSelection();
@@ -4559,7 +4559,7 @@ void Worksheet::OnTimer(wxTimerEvent &event)
 
 void Worksheet::RequestRedraw(wxRect rect)
 {
-  if(m_rectToRefresh.IsEmpty())
+  if (m_rectToRefresh.IsEmpty())
     m_rectToRefresh = rect;
   else
     m_rectToRefresh = m_rectToRefresh.Union(rect);
@@ -4755,7 +4755,7 @@ Cell *Worksheet::CopySelection(Cell *start, Cell *end, bool asData)
 
 void Worksheet::AddLineToFile(wxTextFile &output, const wxString &s)
 {
-  if (s == wxT("\n") || s == wxEmptyString)
+  if (s == wxT("\n") || s.empty())
     output.AddLine(wxEmptyString);
   else
   {
@@ -5826,7 +5826,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
 
   wxString question;
   
-  while (!wxmLines.IsEmpty())
+  while (!wxmLines.empty())
   {
     cell = NULL;
 
@@ -5839,7 +5839,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: title   end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: title   end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -5863,7 +5863,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: section end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: section end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -5887,7 +5887,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: subsect end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: subsect end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -5911,7 +5911,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: subsubsect end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: subsubsect end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -5935,7 +5935,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: heading5 end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: heading5 end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -5959,7 +5959,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: heading6 end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: heading6 end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -5983,7 +5983,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: comment end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: comment end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -6008,7 +6008,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
 
       wxString line;
 
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: caption end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: caption end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -6028,7 +6028,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       }
 
       // Gracefully handle captions without images
-      if(wxmLines.IsEmpty())
+      if(wxmLines.empty())
         break;
 
       wxmLines.RemoveAt(0);
@@ -6041,7 +6041,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
         wxmLines.RemoveAt(0);
 
         wxString ln;
-        while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: image   end   ] */")))
+        while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("   [wxMaxima: image   end   ] */")))
         {
           if (ln.Length() == 0)
             ln += wxmLines.Item(0);
@@ -6061,7 +6061,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("/* [wxMaxima: input   end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("/* [wxMaxima: input   end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -6083,7 +6083,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("/* [wxMaxima: answer  end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("/* [wxMaxima: answer  end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -6092,7 +6092,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
 
         wxmLines.RemoveAt(0);
       }
-      if((last != NULL) && (!question.IsEmpty()))
+      if((last != NULL) && (!question.empty()))
         last->SetAnswer(question, line);
     }
     if (wxmLines.Item(0) == wxT("/* [wxMaxima: question  start ] */"))
@@ -6100,7 +6100,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxString line;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("/* [wxMaxima: question  end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("/* [wxMaxima: question  end   ] */")))
       {
         if (line.Length() == 0)
           line += wxmLines.Item(0);
@@ -6128,7 +6128,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       wxmLines.RemoveAt(0);
 
       wxArrayString hiddenTree;
-      while ((!wxmLines.IsEmpty()) && (wxmLines.Item(0) != wxT("/* [wxMaxima: fold    end   ] */")))
+      while ((!wxmLines.empty()) && (wxmLines.Item(0) != wxT("/* [wxMaxima: fold    end   ] */")))
       {
         hiddenTree.Add(wxmLines.Item(0));
         wxmLines.RemoveAt(0);
@@ -6151,7 +6151,7 @@ GroupCell *Worksheet::CreateTreeFromWXMCode(wxArrayString wxmLines)
       cell = NULL;
     }
 
-    if (!wxmLines.IsEmpty())
+    if (!wxmLines.empty())
       wxmLines.RemoveAt(0);
   }
 
@@ -6182,7 +6182,7 @@ bool Worksheet::ExportToTeX(const wxString &file)
 
   wxTextOutputStream output(outfile);
 
-  if(m_configuration->DocumentclassOptions().IsEmpty())
+  if(m_configuration->DocumentclassOptions().empty())
     output << "\\documentclass{" +
       m_configuration->Documentclass() +
       "}\n\n";
@@ -6262,7 +6262,7 @@ bool Worksheet::ExportToTeX(const wxString &file)
   // Add an eventual preamble requested by the user.
   wxString texPreamble;
   wxConfig::Get()->Read(wxT("texPreamble"), &texPreamble);
-  if (texPreamble != wxEmptyString)
+  if (!texPreamble.empty())
     output << texPreamble << wxT("\n\n");
 
   output << wxT("\\begin{document}\n");
@@ -6713,7 +6713,7 @@ bool Worksheet::ExportToWXMX(const wxString &file, bool markAsSaved)
 
               // Remove all files from our internal filesystem
               wxString memFsName = fsystem->FindFirst("*", wxFILE);
-              while(memFsName != wxEmptyString)
+              while(!memFsName.empty())
               {
                 wxString name = memFsName.Right(memFsName.Length()-7);
                 wxMemoryFSHandler::RemoveFile(name);
@@ -6729,7 +6729,7 @@ bool Worksheet::ExportToWXMX(const wxString &file, bool markAsSaved)
 
           // Move all files we have stored in memory during saving to zip file
           wxString memFsName = fsystem->FindFirst("*", wxFILE);
-          while(memFsName != wxEmptyString)
+          while(!memFsName.empty())
           {
             wxString name = memFsName.Right(memFsName.Length()-7);
             if(name != wxT("dummyfile"))
@@ -7840,7 +7840,7 @@ void Worksheet::DivideCell()
 
 void Worksheet::MergeCells()
 {
-  wxString newcell = wxEmptyString;
+  wxString newcell;
   Cell *tmp = m_cellPointers.m_selectionStart;
   if (!tmp)
     return;
@@ -8203,19 +8203,19 @@ void Worksheet::OnThumbtrack(wxScrollWinEvent &ev)
 wxString Worksheet::GetInputAboveCaret()
 {
   if (!m_hCaretActive || m_hCaretPosition == NULL)
-    return wxEmptyString;
+    return {};
 
   EditorCell *editor = dynamic_cast<EditorCell *>(m_hCaretPosition->GetEditable());
 
   if (editor != NULL)
     return editor->ToString();
-  return wxEmptyString;
+  return {};
 }
 
 wxString Worksheet::GetOutputAboveCaret()
 {
   if (!m_hCaretActive || m_hCaretPosition == NULL)
-    return wxEmptyString;
+    return {};
 
   Cell *selectionStart = m_cellPointers.m_selectionStart;
   Cell *selectionEnd = m_cellPointers.m_selectionEnd;
@@ -8237,7 +8237,7 @@ bool Worksheet::FindIncremental(const wxString &str, bool down, bool ignoreCase)
     SetActiveCell(SearchStart());
     SearchStart()->CaretToPosition(IndexSearchStartedAt());
   }
-  if (str != wxEmptyString)
+  if (!str.empty())
     return FindNext(str, down, ignoreCase, false);
   else
     return true;
@@ -8547,14 +8547,14 @@ bool Worksheet::Autocomplete(AutoComplete::autoCompletionType type)
          (currentCommand == wxT("batch")))
       {
         type = AutoComplete::loadfile;
-        if(partial == wxEmptyString)
+        if(partial.empty())
           partial = wxString("\"");
       }
 
       if(currentCommand == wxT("demo"))
       {
         type = AutoComplete::demofile;
-        if(partial == wxEmptyString)
+        if(partial.empty())
           partial = wxString("\"");
       }
 
@@ -8708,7 +8708,7 @@ void Worksheet::OnComplete(wxCommandEvent &event)
   EditorCell *editor = dynamic_cast<EditorCell *>(GetActiveCell());
   int caret = editor->GetCaretPosition();
 
-  if (editor->GetSelectionString() != wxEmptyString)
+  if (!editor->GetSelectionString().empty())
     editor->ReplaceSelection(editor->GetSelectionString(),
                              m_completions[event.GetId() - popid_complete_00], true, false, true);
   else

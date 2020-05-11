@@ -83,7 +83,7 @@ Dirstructure::Dirstructure()
 wxString Dirstructure::ResourcesDir() const
 {
   wxString exepath = wxStandardPaths::Get().GetExecutablePath();
-  if(!exepath.IsEmpty())
+  if(!exepath.empty())
   {
     // Our resources dir is somewhere near to the dir the binary can be found.
     wxFileName exe(exepath);
@@ -296,10 +296,10 @@ wxString Dirstructure::GnuplotDefaultLocation(wxString pathguess)
     // Find executable "gnuplot" in our list of paths
     gnuplot_binary = pathlist.FindAbsoluteValidPath(pathguess);
     // If not successful, Find executable "gnuplot.exe" in our list of paths
-    if(gnuplot_binary == wxEmptyString)
+    if(gnuplot_binary.empty())
       gnuplot_binary = pathlist.FindAbsoluteValidPath(pathguess + wxT(".exe"));
     // If not successful, use the original command (better than empty for error messages)
-    if(gnuplot_binary == wxEmptyString)
+    if(gnuplot_binary.empty())
     {
       wxLogMessage(_("Gnuplot not found, using the default: ") + pathguess);
       gnuplot_binary = pathguess;

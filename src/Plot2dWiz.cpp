@@ -236,7 +236,7 @@ void Plot2DWiz::Parse(wxString s)
   while (i < s.Length() && s.GetChar(i) != '[')
     i++;
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ',')
   {
     curr += s.GetChar(i);
@@ -244,7 +244,7 @@ void Plot2DWiz::Parse(wxString s)
   }
   text_ctrl_2->SetValue(curr);
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ',')
   {
     curr += s.GetChar(i);
@@ -252,7 +252,7 @@ void Plot2DWiz::Parse(wxString s)
   }
   text_ctrl_3->SetValue(curr);
   i++;
-  curr = wxEmptyString;
+  curr.clear();
   while (i < s.Length() && s.GetChar(i) != ']')
   {
     curr += s.GetChar(i);
@@ -266,7 +266,7 @@ void Plot2DWiz::Parse(wxString s)
     if (s.GetChar(i) == '[')
     {
       i++;
-      curr = wxEmptyString;
+      curr.clear();
       while (i < s.Length() && s.GetChar(i) != ',' && s.GetChar(i) != ']')
       {
         curr += s.GetChar(i);
@@ -276,7 +276,7 @@ void Plot2DWiz::Parse(wxString s)
       curr.Trim(false);
       if (curr == wxT("y"))
       {
-        curr = wxEmptyString;
+        curr.clear();
         i++;
         while (i < s.Length() && s.GetChar(i) != ',')
         {
@@ -285,7 +285,7 @@ void Plot2DWiz::Parse(wxString s)
         }
         text_ctrl_6->SetValue(curr);
         i++;
-        curr = wxEmptyString;
+        curr.clear();
         while (i < s.Length() && s.GetChar(i) != ']')
         {
           curr += s.GetChar(i);
@@ -299,7 +299,7 @@ void Plot2DWiz::Parse(wxString s)
         while (i < s.Length() && s.GetChar(i) != '"')
           i++;
         i++;
-        curr = wxEmptyString;
+        curr.clear();
         while (i < s.Length() && s.GetChar(i) != '"')
         {
           curr += s.GetChar(i);
@@ -312,7 +312,7 @@ void Plot2DWiz::Parse(wxString s)
         while (i < s.Length() && s.GetChar(i) != '"')
           i++;
         i++;
-        curr = wxEmptyString;
+        curr.clear();
         while (i < s.Length() && s.GetChar(i) != '"')
         {
           curr += s.GetChar(i);
@@ -322,7 +322,7 @@ void Plot2DWiz::Parse(wxString s)
       }
       else if (curr == wxT("nticks"))
       {
-        curr = wxEmptyString;
+        curr.clear();
         while (i < s.Length() && s.GetChar(i) != ',')
           i++;
         i++;

@@ -401,7 +401,7 @@ void Cell::Draw(wxPoint point)
     SetCurrentPoint(point);
 
   // Mark all cells that contain tooltips
-  if(!m_toolTip.IsEmpty() && (GetStyle() != TS_LABEL) && (GetStyle() != TS_USERLABEL) &&
+  if(!m_toolTip.empty() && (GetStyle() != TS_LABEL) && (GetStyle() != TS_USERLABEL) &&
      (*m_configuration)->ClipToDrawRegion() && !(*m_configuration)->GetPrinting())
   {
     wxRect rect = Cell::CropToUpdateRegion(GetRect());
@@ -426,7 +426,7 @@ void Cell::Draw(wxPoint point)
 
 void Cell::AddToolTip(const wxString &tip)
 {
-  if((!m_toolTip.IsEmpty()) && (!m_toolTip.EndsWith("\n")))
+  if((!m_toolTip.empty()) && (!m_toolTip.EndsWith("\n")))
     m_toolTip += "\n";
   m_toolTip += tip;
 }
@@ -603,7 +603,7 @@ bool Cell::IsOperator() const
  */
 wxString Cell::ToString()
 {
-  return wxEmptyString;
+  return {};
 }
 
 wxString Cell::VariablesAndFunctionsList()
@@ -661,7 +661,7 @@ wxString Cell::ListToString()
 
 wxString Cell::ToMatlab()
 {
-  return wxEmptyString;
+  return {};
 }
 
 wxString Cell::ListToMatlab()
@@ -702,7 +702,7 @@ wxString Cell::ListToMatlab()
 
 wxString Cell::ToTeX()
 {
-  return wxEmptyString;
+  return {};
 }
 
 wxString Cell::ListToTeX()
@@ -723,12 +723,12 @@ wxString Cell::ListToTeX()
 
 wxString Cell::ToXML()
 {
-  return wxEmptyString;
+  return {};
 }
 
 wxString Cell::ToMathML()
 {
-  return wxEmptyString;
+  return {};
 }
 
 wxString Cell::ListToMathML(bool startofline)
@@ -926,7 +926,7 @@ wxString Cell::ListToOMML(bool WXUNUSED(startofline))
     wxString token = tmp->ToOMML();
 
     // End exporting the equation if we reached the end of the equation.
-    if (token == wxEmptyString)
+    if (token.empty())
       break;
 
     retval += token;
@@ -938,7 +938,7 @@ wxString Cell::ListToOMML(bool WXUNUSED(startofline))
     tmp = tmp->m_next;
   }
 
-  if ((multiCell) && (retval != wxEmptyString))
+  if ((multiCell) && (!retval.empty()))
     return wxT("<m:r>") + retval + wxT("</m:r>");
   else
     return retval;
@@ -952,7 +952,7 @@ wxString Cell::ListToRTF(bool startofline)
   while (tmp != NULL)
   {
     wxString rtf = tmp->ToRTF();
-    if (rtf != wxEmptyString)
+    if (!rtf.empty())
     {
       if ((GetStyle() == TS_LABEL) || ((GetStyle() == TS_USERLABEL)))
       {
@@ -985,7 +985,7 @@ wxString Cell::ListToRTF(bool startofline)
         while (tmp != NULL)
         {
           // A non-equation item starts a new rtf item
-          if (tmp->ToOMML() == wxEmptyString)
+          if (tmp->ToOMML().empty())
             break;
 
           // A newline starts a new equation
@@ -1051,7 +1051,7 @@ wxString Cell::ListToXML()
  */
 wxString Cell::GetDiffPart()
 {
-  return wxEmptyString;
+  return {};
 }
 
 /***

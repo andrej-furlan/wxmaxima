@@ -175,7 +175,7 @@ void TextCell::SetValue(const wxString &text)
 
       number = m_text.Right(m_text.Length()-2);
 
-      bool isrnum = (number != wxEmptyString);
+      bool isrnum = (!number.empty());
      
       for (wxString::const_iterator it = number.begin(); it != number.end(); ++it)
         if(!wxIsdigit(*it))
@@ -196,7 +196,7 @@ void TextCell::SetValue(const wxString &text)
 
       number = m_text.Right(m_text.Length()-2);
 
-      bool isinum = (number != wxEmptyString);
+      bool isinum = (!number.empty());
      
       for (wxString::const_iterator it = number.begin(); it != number.end(); ++it)
         if(!wxIsdigit(*it))
@@ -212,9 +212,9 @@ void TextCell::SetValue(const wxString &text)
   
   if (m_textStyle == TS_NUMBER)
   {
-    m_numStart = wxEmptyString;
-    m_numEnd = wxEmptyString;
-    m_ellipsis = wxEmptyString;
+    m_numStart.clear();
+    m_numEnd.clear();
+    m_ellipsis.clear();
     unsigned int displayedDigits = (*m_configuration)->GetDisplayedDigits();
     if (m_displayedText.Length() > displayedDigits)
     {
@@ -226,9 +226,9 @@ void TextCell::SetValue(const wxString &text)
     }
     else
     {
-      m_numStart = wxEmptyString;
-      m_numEnd = wxEmptyString;
-      m_ellipsis = wxEmptyString;
+      m_numStart.clear();
+      m_numEnd.clear();
+      m_ellipsis.clear();
       if(
         (m_roundingErrorRegEx1.Matches(m_displayedText)) ||
         (m_roundingErrorRegEx2.Matches(m_displayedText)) ||
@@ -403,7 +403,7 @@ bool TextCell::NeedsRecalculation(int fontSize)
     (
       (m_textStyle == TS_LABEL) &&
       ((*m_configuration)->UseUserLabels()) &&
-    (m_userDefinedLabel != wxEmptyString)
+    (!m_userDefinedLabel.IsEmpty())
       ) ||
     (
       (m_textStyle == TS_NUMBER) &&
@@ -433,7 +433,7 @@ void TextCell::RecalculateWidths(int fontsize)
     if(
       (m_textStyle == TS_LABEL) &&
       (configuration->UseUserLabels()) &&
-      (m_userDefinedLabel != wxEmptyString)
+      (!m_userDefinedLabel.empty())
       )
       m_textStyle = TS_USERLABEL;
         
@@ -452,7 +452,7 @@ void TextCell::RecalculateWidths(int fontsize)
     
     m_lastCalculationFontSize = fontsize;
 
-    if(m_numStart != wxEmptyString)
+    if(!m_numStart.empty())
     {      
       double fontSize = GetScaledTextSize();
       {
@@ -501,7 +501,7 @@ void TextCell::RecalculateWidths(int fontsize)
       if ((m_textStyle == TS_LABEL) || (m_textStyle == TS_USERLABEL) || (m_textStyle == TS_MAIN_PROMPT))
       {
         wxString text = m_text;
-        if(!m_altText.IsEmpty())
+        if(!m_altText.empty())
           text = m_altText;
 
         if(m_textStyle == TS_USERLABEL)
@@ -517,7 +517,7 @@ void TextCell::RecalculateWidths(int fontsize)
         // We will decrease it before use
         m_fontSizeLabel = m_fontSize + 1;
         wxSize labelSize = GetTextSize(text);
-        wxASSERT_MSG((labelSize.GetWidth() > 0) || (m_displayedText == wxEmptyString),
+        wxASSERT_MSG((labelSize.GetWidth() > 0) || (m_displayedText.empty()),
                      _("Seems like something is broken with the maths font. Installing http://www.math.union.edu/~dpvc/jsmath/download/jsMath-fonts.html and checking \"Use JSmath fonts\" in the configuration dialogue should fix it."));
 
         while ((labelSize.GetWidth() >= m_width) && (m_fontSizeLabel > 2))
@@ -537,7 +537,7 @@ void TextCell::RecalculateWidths(int fontsize)
         m_center = m_height / 2;
       }
       // Check if we are using jsMath and have jsMath character
-      else if ((!m_altJsText.IsEmpty()) && configuration->CheckTeXFonts())
+      else if ((!m_altJsText.empty()) && configuration->CheckTeXFonts())
       {      
         wxSize sz = GetTextSize(m_altJsText);
         m_width = sz.GetWidth();
@@ -547,7 +547,7 @@ void TextCell::RecalculateWidths(int fontsize)
       }
 
       /// We are using a special symbol
-      else if (!m_altText.IsEmpty())
+      else if (!m_altText.empty())
       {
         wxSize sz = GetTextSize(m_altText);
         m_width = sz.GetWidth();
@@ -620,7 +620,7 @@ void TextCell::Draw(wxPoint point)
           }
         }
       }
-      else if (!m_numStart.IsEmpty())
+      else if (!m_numStart.empty())
       {
         dc->DrawText(m_numStart,
                      point.x + MC_TEXT_PADDING,
@@ -643,13 +643,13 @@ void TextCell::Draw(wxPoint point)
                      point.y - m_realCenter + MC_TEXT_PADDING);
       }
         /// Check if we are using jsMath and have jsMath character
-      else if ((!m_altJsText.IsEmpty()) && configuration->CheckTeXFonts())
+      else if ((!m_altJsText.empty()) && configuration->CheckTeXFonts())
         dc->DrawText(m_altJsText,
                     point.x + MC_TEXT_PADDING,
                     point.y - m_realCenter + MC_TEXT_PADDING);
 
         /// We are using a special symbol
-      else if (!m_altText.IsEmpty())
+      else if (!m_altText.empty())
         dc->DrawText(m_altText,
                     point.x + MC_TEXT_PADDING,
                     point.y - m_realCenter + MC_TEXT_PADDING);
@@ -727,7 +727,7 @@ void TextCell::SetFont(int fontsize)
   auto req = FontInfo::GetFor(font);
 
   // Use jsMath
-  if ((!m_altJsText.IsEmpty()) && configuration->CheckTeXFonts())
+  if ((!m_altJsText.empty()) && configuration->CheckTeXFonts())
   {
     req.FaceName(m_texFontname);
     font = FontCache::GetAFont(req);
@@ -793,12 +793,12 @@ bool TextCell::IsOperator() const
 wxString TextCell::ToString()
 {
   wxString text;
-  if (m_altCopyText != wxEmptyString)
+  if (!m_altCopyText.empty())
     text = m_altCopyText;
   else
   {
     text = m_text;
-    if(((*m_configuration)->UseUserLabels())&&(m_userDefinedLabel != wxEmptyString))
+    if(((*m_configuration)->UseUserLabels())&&(!m_userDefinedLabel.empty()))
       text = wxT("(") + m_userDefinedLabel + wxT(")");
     text.Replace(wxT("\u2212"), wxT("-")); // unicode minus sign
     text.Replace(wxT("\u2794"), wxT("-->"));
@@ -869,12 +869,12 @@ wxString TextCell::ToString()
 wxString TextCell::ToMatlab()
 {
 	wxString text;
-	if (m_altCopyText != wxEmptyString)
+    if (!m_altCopyText.empty())
 	  text = m_altCopyText;
 	else
 	{
 	  text = m_text;
-	  if(((*m_configuration)->UseUserLabels())&&(m_userDefinedLabel != wxEmptyString))
+      if(((*m_configuration)->UseUserLabels())&&(!m_userDefinedLabel.empty()))
 		text = wxT("(") + m_userDefinedLabel + wxT(")");
 	  text.Replace(wxT("\u2212"), wxT("-")); // unicode minus sign
 	  text.Replace(wxT("\u2794"), wxT("-->"));
@@ -950,7 +950,7 @@ wxString TextCell::ToTeX()
 {
   wxString text = m_displayedText;
 
-  if(((*m_configuration)->UseUserLabels())&&(m_userDefinedLabel != wxEmptyString))
+  if(((*m_configuration)->UseUserLabels())&&(!m_userDefinedLabel.empty()))
     text = wxT("(") + m_userDefinedLabel + wxT(")");
 
   if (!(*m_configuration)->CheckKeepPercent())
@@ -1133,7 +1133,7 @@ wxString TextCell::ToTeX()
         text = wxT(" ");
     }
     else
-      text = wxEmptyString;
+      text.clear();
   }
   else
   {
@@ -1302,7 +1302,7 @@ wxString TextCell::ToTeX()
   {
     if (GetStyle() == TS_FUNCTION)
     {
-      if (text != wxEmptyString)
+      if (!text.empty())
         text = wxT("\\operatorname{") + text + wxT("}");
     }
     else if (GetStyle() == TS_VARIABLE)
@@ -1360,11 +1360,11 @@ wxString TextCell::ToTeX()
 
 wxString TextCell::ToMathML()
 {
-  if(m_displayedText == wxEmptyString)
-    return wxEmptyString;
+  if(m_displayedText.empty())
+    return {};
   wxString text = XMLescape(m_displayedText);
 
-  if(((*m_configuration)->UseUserLabels())&&(m_userDefinedLabel != wxEmptyString))
+  if(((*m_configuration)->UseUserLabels())&&(!m_userDefinedLabel.empty()))
     text = XMLescape(wxT("(") + m_userDefinedLabel + wxT(")"));
 
   // If we didn't display a multiplication dot we want to do the same in MathML.
@@ -1373,7 +1373,7 @@ wxString TextCell::ToMathML()
     text.Replace(wxT("*"), wxT("&#8290;"));
     text.Replace(wxT("\u00B7"), wxT("&#8290;"));
     if (text != wxT ("&#8290;"))
-      text = wxEmptyString;
+      text.clear();
   }
   text.Replace(wxT("*"), wxT("\u00B7"));
 
@@ -1445,11 +1445,11 @@ wxString TextCell::ToOMML()
           ((m_previous != NULL) && (m_previous->GetStyle() != TS_LABEL) && (!m_previous->HardLineBreak())) &&
           (HardLineBreak())
           )
-    return wxEmptyString;
+    return {};
 
   // Labels are text-only.
   if ((GetStyle() == TS_LABEL) || (GetStyle() == TS_USERLABEL))
-    return wxEmptyString;
+    return {};
 
   wxString text = XMLescape(m_displayedText);
 
@@ -1459,7 +1459,7 @@ wxString TextCell::ToOMML()
     text.Replace(wxT("*"), wxT("&#8290;"));
     text.Replace(wxT("\u00B7"), wxT("&#8290;"));
     if (text != wxT ("&#8290;"))
-      text = wxEmptyString;
+      text.clear();
   }
   text.Replace(wxT("*"), wxT("\u00B7"));
 
@@ -1501,7 +1501,7 @@ wxString TextCell::ToOMML()
 
     case TS_LABEL:
     case TS_USERLABEL:
-      return wxEmptyString;
+      return {};
 
     case TS_STRING:
     default:
@@ -1517,10 +1517,10 @@ wxString TextCell::ToRTF()
   wxString retval;
   wxString text = m_displayedText;
 
-  if (m_displayedText == wxEmptyString)
+  if (m_displayedText.empty())
     return(wxT(" "));
   
-  if(((*m_configuration)->UseUserLabels())&&(m_userDefinedLabel != wxEmptyString))
+  if(((*m_configuration)->UseUserLabels())&&(!m_userDefinedLabel.empty()))
     text = wxT("(") + m_userDefinedLabel + wxT(")");
   
   text.Replace(wxT("-->"), wxT("\u2192"));
@@ -1584,13 +1584,13 @@ wxString TextCell::ToXML()
   
   wxString xmlstring = XMLescape(m_displayedText);
   // convert it, so that the XML configuration doesn't fail
-  if(m_userDefinedLabel != wxEmptyString)
+  if(!m_userDefinedLabel.empty())
     flags += wxT(" userdefinedlabel=\"") + XMLescape(m_userDefinedLabel) + wxT("\"");
 
-  if(m_altCopyText != wxEmptyString)
+  if(!m_altCopyText.empty())
     flags += wxT(" altCopy=\"") + XMLescape(m_altCopyText) + wxT("\"");
 
-  if(m_toolTip != wxEmptyString)
+  if(!m_toolTip.empty())
     flags += wxT(" tooltip=\"") + XMLescape(m_toolTip) + wxT("\"");
 
   return wxT("<") + tag + flags + wxT(">") + xmlstring + wxT("</") + tag + wxT(">");
@@ -1630,7 +1630,7 @@ void TextCell::SetAltText()
   else
   {
     m_altJsText = GetSymbolTeX();
-    if (m_altJsText != wxEmptyString)
+    if (!m_altJsText.empty())
     {
       if (m_text == wxT("+") || m_text == wxT("="))
         m_texFontname = CMR10;
@@ -1642,7 +1642,7 @@ void TextCell::SetAltText()
     m_altText = GetSymbolUnicode((*m_configuration)->CheckKeepPercent());
 // #if defined __WXMSW__
 //     m_altText = GetSymbolSymbol(configuration->CheckKeepPercent());
-//     if (m_altText != wxEmptyString)
+//     if (!m_altText.empty())
 //     {
 //       m_alt = true;
 //       m_fontname = wxT("Symbol");
@@ -1814,7 +1814,7 @@ wxString TextCell::GetSymbolUnicode(bool keepPercent) const
       return wxString(wxT("\u03C0"));
   }
 
-  return wxEmptyString;
+  return {};
 }
 
 wxString TextCell::GetGreekStringTeX() const
@@ -1927,7 +1927,7 @@ wxString TextCell::GetGreekStringTeX() const
   else if (txt == wxT("%Omega"))
     return wxT("\u00CA");
 
-  return wxEmptyString;
+  return {};
 }
 
 wxString TextCell::GetSymbolTeX() const
@@ -1965,7 +1965,7 @@ wxString TextCell::GetSymbolTeX() const
     return wxT("\u00C8");
 */
 
-  return wxEmptyString;
+  return {};
 }
 
 void TextCell::SetNextToDraw(Cell *next)

@@ -46,7 +46,7 @@ Svgout::Svgout(Configuration **configuration, wxString filename, double scale) :
   m_svgFormat = wxDataFormat(wxT("image/svg+xml"));
 
   m_filename = filename;
-  if (m_filename == wxEmptyString)
+  if (m_filename.empty())
     m_filename = wxFileName::CreateTempFileName(wxStandardPaths::Get().GetTempDir ()+wxT("/wxmaxima_"));
   {
     wxFileName name(m_filename);
@@ -331,7 +331,7 @@ Svgout::SVGDataObject *Svgout::GetDataObject()
       }
     free(data);
   }
-  if((m_filename != wxEmptyString) && (wxFileExists(m_filename)))
+  if((!m_filename.empty()) && (wxFileExists(m_filename)))
   {
     // Don't output error messages if the worst thing that can happen is that we
     // cannot clean up a temp file
@@ -339,7 +339,7 @@ Svgout::SVGDataObject *Svgout::GetDataObject()
 
     wxRemoveFile(m_filename);
   }
-  m_filename = wxEmptyString;
+  m_filename.clear();
   
   return new SVGDataObject(svgContents);
 }
@@ -351,7 +351,7 @@ bool Svgout::ToClipboard()
   {
     bool res = wxTheClipboard->SetData(GetDataObject());
     wxTheClipboard->Close();
-    m_filename = wxEmptyString;
+    m_filename.clear();
     return res;
   }
   return false;

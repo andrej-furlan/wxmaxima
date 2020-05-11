@@ -250,7 +250,7 @@ private:
 
     /*! The old contents of the cell start
 
-      if this field != wxEmptyString this field contains the old contents of the text
+      if this !field.empty() this field contains the old contents of the text
       cell pointed to by the field start.
     */
     const wxString m_oldText;

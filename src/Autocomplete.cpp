@@ -263,7 +263,7 @@ void AutoComplete::LoadSymbols_BackgroundTask()
       wxString sharedir = m_configuration->MaximaShareDir();
       sharedir.Replace("\n","");
       sharedir.Replace("\r","");
-      if(sharedir.IsEmpty())
+      if(sharedir.empty())
         wxLogMessage(_("Seems like the package with the maxima share files isn't installed."));
       else
       {
@@ -337,7 +337,7 @@ void AutoComplete::UpdateDemoFiles(wxString partial, wxString maximaDir)
     partial.Replace(wxFileName::GetPathSeparator(), "/");
     int pos;
     if ((pos = partial.Find(wxT('/'), true)) == wxNOT_FOUND)
-      partial = wxEmptyString;
+      partial.clear();
     else
       partial = partial.Left(pos);
     wxString prefix = partial + wxT("/");
@@ -350,7 +350,7 @@ void AutoComplete::UpdateDemoFiles(wxString partial, wxString maximaDir)
     }
   
     // Determine the name of the directory
-    if((partial != wxEmptyString) && wxDirExists(partial))
+    if((!partial.empty()) && wxDirExists(partial))
       partial += "/";
 
     // Remove all files from the maxima directory from the demo file list
@@ -380,7 +380,7 @@ void AutoComplete::UpdateGeneralFiles(wxString partial, wxString maximaDir)
     partial.Replace(wxFileName::GetPathSeparator(), "/");
     int pos;
     if ((pos = partial.Find(wxT('/'), true)) == wxNOT_FOUND)
-      partial = wxEmptyString;
+      partial.clear();
     else
       partial = partial.Left(pos);
     wxString prefix = partial + wxT("/");
@@ -393,7 +393,7 @@ void AutoComplete::UpdateGeneralFiles(wxString partial, wxString maximaDir)
     }
   
     // Determine the name of the directory
-    if((partial != wxEmptyString) && wxDirExists(partial))
+    if((!partial.empty()) && wxDirExists(partial))
       partial += "/";
   
     // Add all files from the maxima directory to the demo file list
@@ -421,7 +421,7 @@ void AutoComplete::UpdateLoadFiles(wxString partial, wxString maximaDir)
     partial.Replace(wxFileName::GetPathSeparator(), "/");
     int pos;
     if ((pos = partial.Find(wxT('/'), true)) == wxNOT_FOUND)
-      partial = wxEmptyString;
+      partial.clear();
     else
       partial = partial.Left(pos);
     wxString prefix = partial + wxT("/");
@@ -434,7 +434,7 @@ void AutoComplete::UpdateLoadFiles(wxString partial, wxString maximaDir)
     }
   
     // Determine the name of the directory
-    if((partial != wxEmptyString) && wxDirExists(partial))
+    if((!partial.empty()) && wxDirExists(partial))
       partial += "/";
 
     // Remove all files from the maxima directory from the load file list

@@ -128,7 +128,7 @@ void TableOfContents::UpdateDisplay()
   wxArrayString items;
   wxRegEx matcher;
 
-  if (regex != wxEmptyString)
+  if (!regex.empty())
     matcher.Compile(regex);
 
   // Create a wxArrayString containing all section/chapter/... titles we want
@@ -215,7 +215,7 @@ GroupCell *TableOfContents::GetCell(int index)
   int currentIndex = -1;
   wxString regex = m_regex->GetValue();
 
-  if (regex != wxEmptyString)
+  if (!regex.empty())
     matcher.Compile(regex);
 
   for (unsigned int i = 0; i < m_structure.size(); i++)

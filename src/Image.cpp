@@ -140,7 +140,7 @@ Image::~Image()
   #pragma omp taskwait
   #endif
   {
-    if(!m_gnuplotSource.IsEmpty())
+    if(!m_gnuplotSource.empty())
     {
       SuppressErrorDialogs logNull;
       wxLogMessage(wxString::Format(_("Trying to delete gnuplot file %s"), m_gnuplotSource.utf8_str()));
@@ -152,7 +152,7 @@ Image::~Image()
         wxRemoveFile(popoutname);    
     }
 
-    if(!m_gnuplotData.IsEmpty())
+    if(!m_gnuplotData.empty())
     {
       SuppressErrorDialogs logNull;
       wxLogMessage(wxString::Format(_("Trying to delete gnuplot file %s"), m_gnuplotData.utf8_str()));
@@ -402,7 +402,7 @@ void Image::LoadGnuplotSource_Backgroundtask(wxString gnuplotFilename, wxString 
                 {
                   wxString dataFileName;
                   dataFileName = replaceDataFileName.GetMatch(line);
-                  if(dataFileName != wxEmptyString)
+                  if(!dataFileName.empty())
                     wxLogMessage(_("Gnuplot Data File Name: ") + dataFileName);
                   replaceDataFileName.Replace(&line,wxT("'<DATAFILENAME>'"));
                 }
@@ -570,7 +570,7 @@ wxMemoryBuffer Image::GetGnuplotData()
 
 wxString Image::GnuplotData()
 {
-  if((!m_gnuplotData.IsEmpty()) && (!wxFileExists(m_gnuplotData)))
+  if((!m_gnuplotData.empty()) && (!wxFileExists(m_gnuplotData)))
   {
     #ifdef HAVE_OMP_HEADER
     omp_set_lock(&m_gnuplotLock);
@@ -593,7 +593,7 @@ wxString Image::GnuplotData()
         if(m_gnuplotData_Compressed.GetDataLen() <= 1)
         {
           wxLogMessage(_("No gnuplot data!"));
-          return wxEmptyString;
+          return {};
         }
         wxMemoryInputStream mstream(
           m_gnuplotData_Compressed.GetData(),
@@ -620,7 +620,7 @@ wxString Image::GnuplotData()
 
 wxString Image::GnuplotSource()
 {
-  if((!m_gnuplotSource.IsEmpty()) && (!wxFileExists(m_gnuplotSource)))
+  if((!m_gnuplotSource.empty()) && (!wxFileExists(m_gnuplotSource)))
   {
     #ifdef HAVE_OMP_HEADER
     omp_set_lock(&m_gnuplotLock);
@@ -644,7 +644,7 @@ wxString Image::GnuplotSource()
         if(m_gnuplotSource_Compressed.GetDataLen() <= 1)
         {
           wxLogMessage(_("No gnuplot source!"));
-          return wxEmptyString;
+          return {};
         }
         wxMemoryInputStream mstream(
           m_gnuplotSource_Compressed.GetData(),
@@ -833,7 +833,7 @@ void Image::InvalidBitmap()
   m_scaledBitmap.Create(m_width, m_height);
   
   wxString error;
-  if(m_imageName != wxEmptyString)
+  if(!m_imageName.empty())
     error = wxString::Format(_("Error: Cannot render %s."), m_imageName.utf8_str());
   else
     error = wxString::Format(_("Error: Cannot render the image."));

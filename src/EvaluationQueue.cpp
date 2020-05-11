@@ -144,7 +144,7 @@ void EvaluationQueue::AddTokens(GroupCell *cell)
     {
       token.Trim(true);
       token.Trim(false);
-      if (!token.IsEmpty())
+      if (!token.empty())
         m_commands.emplace_back(token, index);
       token.Clear();
       continue;
@@ -154,7 +154,7 @@ void EvaluationQueue::AddTokens(GroupCell *cell)
     {
       token.Trim(true);
       token.Trim(false);
-      if (!token.IsEmpty())
+      if (!token.empty())
         m_commands.emplace_back(token, index);
       token.Clear();
       continue;
@@ -162,7 +162,7 @@ void EvaluationQueue::AddTokens(GroupCell *cell)
   }
   token.Trim(true);
   token.Trim(false);
-  if(!token.IsEmpty())
+  if(!token.empty())
     m_commands.emplace_back(token, index);
 }
 

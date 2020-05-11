@@ -138,7 +138,7 @@ GroupCell::GroupCell(Configuration **config, GroupType groupType, CellPointers *
       break;
   }
 
-  if ((editor != NULL) && (initString != wxEmptyString))
+  if ((editor != NULL) && (!initString.empty()))
     editor->SetValue(initString);
 
   // when creating an image cell, if a string is provided
@@ -1456,7 +1456,7 @@ wxString GroupCell::ToRTF()
 wxString GroupCell::ToTeX(wxString imgDir, wxString filename, int *imgCounter)
 {
   wxASSERT_MSG((imgCounter != NULL), _(wxT("Bug: No image counter to write to!")));
-  if (imgCounter == NULL) return wxEmptyString;
+  if (imgCounter == NULL) return {};
   wxString str;
   switch (m_groupType)
   {
@@ -1465,7 +1465,7 @@ wxString GroupCell::ToTeX(wxString imgDir, wxString filename, int *imgCounter)
       break;
 
     case GC_TYPE_IMAGE:
-      if (imgDir != wxEmptyString)
+      if (!imgDir.empty())
       {
         Cell *copy = m_output->Copy();
         (*imgCounter)++;
@@ -1644,18 +1644,18 @@ wxString GroupCell::ToTeXCodeCell(wxString imgDir, wxString filename, int *imgCo
 wxString GroupCell::ToTeXImage(Cell *tmp, wxString imgDir, wxString filename, int *imgCounter)
 {
   wxASSERT_MSG((imgCounter != NULL), _("Bug: No image counter to write to!"));
-  if (imgCounter == NULL) return wxEmptyString;
+  if (imgCounter == NULL) return {};
 
   wxString str;
 
-  if (imgDir != wxEmptyString)
+  if (!imgDir.empty())
   {
     Cell *copy = tmp->Copy();
     (*imgCounter)++;
     wxString image = filename + wxString::Format(wxT("_%d"), *imgCounter);
     if (!wxDirExists(imgDir))
       if (!wxMkdir(imgDir))
-        return wxEmptyString;
+        return {};
 
     // Do we want to output LaTeX animations?
     bool AnimateLaTeX = true;

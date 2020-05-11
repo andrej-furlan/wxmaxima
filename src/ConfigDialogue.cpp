@@ -394,7 +394,7 @@ void ConfigDialogue::SetProperties()
   int bitmapScale = 3;
   bool incrementalSearch = true;
   int defaultFramerate = 2;
-  wxString texPreamble = wxEmptyString;
+  wxString texPreamble;
 
   int panelSize = 1;
   config->Read(wxT("maxima"), &mp);
@@ -658,7 +658,7 @@ wxPanel *ConfigDialogue::CreateStartupPanel()
       while(input.IsOk() && !input.Eof())
       {
         wxString line = text.ReadLine();
-        if((!input.Eof()) || (line != wxEmptyString))
+        if((!input.Eof()) || (!line.empty()))
           contents += line + wxT("\n");
       }
     }
@@ -687,7 +687,7 @@ wxPanel *ConfigDialogue::CreateStartupPanel()
                               "commands are required to end in a \";\" or a \"$\""));
   vsizer_maximaStartup->Add(startupText, wxSizerFlags().Border(wxALL,5));
   // Read maxima's startup file's contents
-  contents = wxEmptyString;
+  contents.clear();
   if(wxFileExists(m_startupFileName))
   {
     wxFileInputStream input(m_startupFileName);
@@ -697,7 +697,7 @@ wxPanel *ConfigDialogue::CreateStartupPanel()
       while(input.IsOk() && !input.Eof())
       {
         wxString line = text.ReadLine();
-        if((!input.Eof()) || (line != wxEmptyString))
+        if((!input.Eof()) || (!line.empty()))
           contents += line + wxT("\n");
       }
     }
@@ -1054,12 +1054,12 @@ wxPanel *ConfigDialogue::CreateStylePanel()
   wxStaticText *df = new wxStaticText(panel, -1, _("Documentation+Code font:"));
   m_getFont = new wxButton(panel, font_family, _("Choose font"), wxDefaultPosition, wxSize(250*GetContentScaleFactor(), -1));
   
-  if (m_configuration->FontName() != wxEmptyString)
+  if (!m_configuration->FontName().empty())
     m_getFont->SetLabel(m_configuration->FontName() + wxString::Format(wxT(" (%g)"), (double)m_configuration->GetDefaultFontSize()));
 
   m_mathFont = new wxStaticText(panel, -1, _("Math font:"));
   m_getMathFont = new wxButton(panel, button_mathFont, _("Choose font"), wxDefaultPosition, wxSize(250*GetContentScaleFactor(), -1));
-  if (!m_configuration->MathFontName().IsEmpty())
+  if (!m_configuration->MathFontName().empty())
     m_getMathFont->SetLabel(m_configuration->MathFontName() + wxString::Format(wxT(" (%g)"), (double)m_configuration->GetMathFontSize()));
 
   m_useJSMath = new wxCheckBox(panel, -1, _("Use jsMath fonts"));
@@ -1539,7 +1539,7 @@ void ConfigDialogue::LoadSave(wxCommandEvent &event)
                                    wxEmptyString, wxT("style.ini"), wxT("ini"),
                                    _("Config file (*.ini)|*.ini"),
                                    wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    if (file != wxEmptyString)
+    if (!file.empty())
       m_configuration->WriteStyles(file);
   }
   else
@@ -1548,7 +1548,7 @@ void ConfigDialogue::LoadSave(wxCommandEvent &event)
                                    wxEmptyString, wxT("style.ini"), wxT("ini"),
                                    _("Config file (*.ini)|*.ini"),
                                    wxFD_OPEN);
-    if (file != wxEmptyString)
+    if (!file.empty())
     {
       m_configuration->ReadStyles(file);
       wxCommandEvent dummy;
