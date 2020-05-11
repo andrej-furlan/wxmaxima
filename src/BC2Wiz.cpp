@@ -27,7 +27,7 @@ BC2Wiz::BC2Wiz(wxWindow *parent, int id, Configuration *cfg, const wxString &tit
         wxDialog(parent, id, title, pos, size, style)
 {
   label_2 = new wxStaticText(this, -1, _("Solution:"));
-  text_ctrl_1 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_1 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(230, -1));
   label_3 = new wxStaticText(this, -1, _("Point:"));
   text_ctrl_2 = new BTextCtrl(this, -1, cfg, wxT("x="), wxDefaultPosition,

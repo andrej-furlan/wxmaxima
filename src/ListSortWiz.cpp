@@ -51,7 +51,7 @@ ListSortWiz::ListSortWiz(Configuration *WXUNUSED(cfg),
   
   m_sortFunction    = new wxRadioButton(choicePanel,-1,_("A function f(a,b), named"));
   grid->Add(m_sortFunction, wxSizerFlags().Border(wxTOP|wxLEFT, 10));
-  m_CriterionFunc = new wxTextCtrl(choicePanel,-1,wxEmptyString,wxDefaultPosition,wxSize(300,wxDefaultSize.y));
+  m_CriterionFunc = new wxTextCtrl(choicePanel,-1,{},wxDefaultPosition,wxSize(300,wxDefaultSize.y));
   m_CriterionFunc->Connect(wxEVT_TEXT,
                            wxGridEventHandler(ListSortWiz::OnFunctionChange),
                            NULL, this);
@@ -59,7 +59,7 @@ ListSortWiz::ListSortWiz(Configuration *WXUNUSED(cfg),
 
   m_sortLambda      = new wxRadioButton(choicePanel,-1,_("Create f(a,b) on-the-fly, contents:"));
   grid->Add(m_sortLambda, wxSizerFlags().Border(wxTOP|wxLEFT, 10));
-  m_Criterion = new wxTextCtrl(choicePanel,-1,wxEmptyString,wxDefaultPosition,wxSize(300,wxDefaultSize.y));
+  m_Criterion = new wxTextCtrl(choicePanel,-1,{},wxDefaultPosition,wxSize(300,wxDefaultSize.y));
   m_Criterion->SetValue(wxT("a<b"));
   m_Criterion->Connect(wxEVT_TEXT,
                        wxGridEventHandler(ListSortWiz::OnLambdaChange),

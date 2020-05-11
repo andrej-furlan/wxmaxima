@@ -36,20 +36,13 @@ shown on the work sheet.
 class Style
 {
 public:
-  //! The constructor
-  Style():m_color(*wxBLACK),
-          m_fontSize(10),
-          m_bold(false),
-          m_italic(false),
-          m_underlined(false)
-    {
-    };
+  Style() = default;
   //! Read this style from a config source
-  void Read(wxConfigBase *config, wxString where);
+  void Read(wxConfigBase *config, const wxString &where);
   //! Write this style to a config source
-  void Write(wxConfigBase *config, wxString where);
+  void Write(wxConfigBase *config, const wxString &where);
   //! Set this style
-  void Set(wxString name,
+  void Set(const wxString &name,
            wxColor color,
            bool bold = false, bool italic = false, bool underlined = false,
            int fontSize = 10)
@@ -78,13 +71,13 @@ public:
   //! Set the font size of this style
   void FontSize(int size){m_fontSize = size;}
   //! The font name of this style
-  wxString FontName() const{return m_fontName;}
+  const wxString &FontName() const{return m_fontName;}
   //! Set the font name of this style
-  void FontName(wxString name){m_fontName = name;}
+  void FontName(const wxString &name){m_fontName = name;}
   //! Get the color of this style
   wxColor GetColor() const{return m_color;}
   //! Set the color of this style
-  wxString Name() const{return m_name;}
+  const wxString &Name() const{return m_name;}
   //! Set the color of this style
   void Color(wxColor color){m_color = color;}
   //! Set the color of this style
@@ -92,13 +85,13 @@ public:
   //! Get the color of this style
   wxColor Color() const{return m_color;}
 private:
-  wxColor m_color;
+  wxColor m_color = *wxBLACK;
   wxString m_fontName;
   wxString m_name;
-  int m_fontSize;
-  bool m_bold;
-  bool m_italic;
-  bool m_underlined;
+  int m_fontSize = 10;
+  bool m_bold = false;
+  bool m_italic = false;
+  bool m_underlined = false;
 };
 
 /*! All text styles known to wxMaxima

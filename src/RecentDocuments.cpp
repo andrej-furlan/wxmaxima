@@ -63,7 +63,7 @@ void RecentDocuments::AddDocument(wxString name)
 {
   wxFileName fle(name);
   fle.MakeAbsolute();
-  if((fle.GetFullPath() != wxEmptyString) && wxFileExists(fle.GetFullPath()))
+  if((!fle.GetFullPath().empty()) && wxFileExists(fle.GetFullPath()))
     name = fle.GetFullPath();
 
   std::list<wxString>::iterator it = m_listOfFiles.begin();

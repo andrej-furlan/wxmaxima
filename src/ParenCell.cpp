@@ -148,7 +148,7 @@ void ParenCell::SetFont(int fontsize)
   {
     req.Family(wxFONTFAMILY_MODERN)
       .Italic(false)
-      .FaceName(wxEmptyString)
+      .FaceName({})
       .Underlined(false);
     font = FontCache::GetAFont(req);
   }

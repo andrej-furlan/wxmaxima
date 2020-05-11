@@ -23,8 +23,8 @@
 #include "Gen2Wiz.h"
 #include <wx/persist/toplevel.h>
 
-Gen2Wiz::Gen2Wiz(wxString lab1, wxString lab2,
-                 wxString val1, wxString val2,
+Gen2Wiz::Gen2Wiz(const wxString &lab1, const wxString &lab2,
+                 const wxString &val1, const wxString &val2,
                  Configuration *cfg,
                  wxWindow *parent, int id, const wxString &title,
                  bool eq,
@@ -56,7 +56,7 @@ Gen2Wiz::Gen2Wiz(wxString lab1, wxString lab2,
   if(!warning.empty())
   {
     m_warningText = warning;
-    m_warning = new wxStaticText(this, -1, wxEmptyString);
+    m_warning = new wxStaticText(this, -1, {});
     m_warning->SetToolTip(warningToolTip);
   }
   else

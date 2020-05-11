@@ -572,8 +572,8 @@ void AutoComplete::AddSymbol_nowait(wxString fun, autoCompletionType type)
 
 wxString AutoComplete::FixTemplate(wxString templ)
 {
-  templ.Replace(wxT(" "), wxEmptyString);
-  templ.Replace(wxT(",..."), wxEmptyString);
+  templ.Replace(wxT(" "), {});
+  templ.Replace(wxT(",..."), {});
 
   /// This will change optional arguments
   m_args.ReplaceAll(&templ, wxT("<[\\1]>"));

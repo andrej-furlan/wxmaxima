@@ -32,7 +32,7 @@ Plot2DWiz::Plot2DWiz(wxWindow *parent, int id,
 {
   m_configuration = cfg;
   label_2 = new wxStaticText(this, -1, _("Expression(s):"));
-  text_ctrl_1 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_1 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(300, -1));
   button_3 = new wxButton(this, special, _("&Special"));
   label_3 = new wxStaticText(this, -1, _("Variable:"));
@@ -56,7 +56,7 @@ Plot2DWiz::Plot2DWiz(wxWindow *parent, int id,
                               wxSize(70, -1));
   check_box_2 = new wxCheckBox(this, -1, _("logscale"));
   label_9 = new wxStaticText(this, -1, _("Ticks:"));
-  text_ctrl_8 = new wxSpinCtrl(this, -1, wxEmptyString, wxDefaultPosition,
+  text_ctrl_8 = new wxSpinCtrl(this, -1, {}, wxDefaultPosition,
                                wxSize(70, -1), wxSP_ARROW_KEYS, 0, 1000, 10);
   text_ctrl_8->SetValue(10);
   label_10 = new wxStaticText(this, -1, _("Format:"));
@@ -67,7 +67,7 @@ Plot2DWiz::Plot2DWiz(wxWindow *parent, int id,
                   wxT("gnuplot"),
                   wxT("xmaxima")
           };
-  combo_box_1 = new wxComboBox(this, -1, wxEmptyString, wxDefaultPosition,
+  combo_box_1 = new wxComboBox(this, -1, {}, wxDefaultPosition,
                                wxSize(150, -1), 4,
                                combo_box_1_choices, wxCB_DROPDOWN);
   label_11 = new wxStaticText(this, -1, _("Options:"));
@@ -78,11 +78,11 @@ Plot2DWiz::Plot2DWiz(wxWindow *parent, int id,
                   wxT("set grid;"),
                   wxT("set polar; set zeroaxis;")
           };
-  combo_box_2 = new wxComboBox(this, combobox, wxEmptyString, wxDefaultPosition,
+  combo_box_2 = new wxComboBox(this, combobox, {}, wxDefaultPosition,
                                wxSize(280, -1), 4,
                                combo_box_2_choices, wxCB_DROPDOWN);
   label_12 = new wxStaticText(this, -1, _("File:"));
-  text_ctrl_9 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_9 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(280, -1));
   button_4 = new wxBitmapButton(this, file_browse_2d,
                                 wxArtProvider::GetBitmap(wxART_FILE_OPEN,
@@ -187,13 +187,13 @@ void Plot2DWiz::do_layout()
   Layout();
 }
 
-void Plot2DWiz::SetValue(wxString s)
+void Plot2DWiz::SetValue(const wxString &s)
 {
   if (s.StartsWith(wxT("plot2d")))
     Parse(s);
   else if (s.StartsWith(wxT("wxplot2d")))
   {
-    Parse(s.SubString(2, s.Length()));
+    Parse(s, 2);
     combo_box_1->SetValue(_("inline"));
   }
   else
@@ -202,16 +202,15 @@ void Plot2DWiz::SetValue(wxString s)
   text_ctrl_1->SetSelection(-1, -1);
 }
 
-void Plot2DWiz::Parse(wxString s)
+void Plot2DWiz::Parse(const wxString &s, size_t startPos)
 {
   int depth = 0;
-  unsigned int i = 0;
+  unsigned int i = 7 + startPos;
   wxString curr;
 
   check_box_1->SetValue(false);
   check_box_2->SetValue(false);
 
-  s = s.SubString(7, s.Length());
   // Function to plot
   do
   {
@@ -455,7 +454,7 @@ void Plot2DWiz::OnPopupMenu(wxCommandEvent &event)
       if (wiz->ShowModal() == wxID_OK)
       {
         if (text_ctrl_1->GetValue() == wxT("%"))
-          text_ctrl_1->SetValue(wxEmptyString);
+          text_ctrl_1->SetValue({});
         if (((text_ctrl_1->GetValue()).Strip()).Length())
           text_ctrl_1->AppendText(wxT(", "));
         text_ctrl_1->AppendText(wiz->GetValue());
@@ -469,7 +468,7 @@ void Plot2DWiz::OnPopupMenu(wxCommandEvent &event)
       if (wiz->ShowModal() == wxID_OK)
       {
         if (text_ctrl_1->GetValue() == wxT("%"))
-          text_ctrl_1->SetValue(wxEmptyString);
+          text_ctrl_1->SetValue({});
         if (((text_ctrl_1->GetValue()).Strip()).Length())
           text_ctrl_1->AppendText(wxT(", "));
         text_ctrl_1->AppendText(wiz->GetValue());
@@ -501,7 +500,7 @@ void Plot2DWiz::OnCombobox(wxCommandEvent &WXUNUSED(event))
 
 void Plot2DWiz::OnFileBrowse(wxCommandEvent &WXUNUSED(event))
 {
-  wxString file = wxFileSelector(_("Save plot to file"), wxEmptyString,
+  wxString file = wxFileSelector(_("Save plot to file"), {},
                                  wxT("plot2d.eps"), wxT("eps"),
                                  _("Postscript file (*.eps)|*.eps|All|*"),
                                  wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -529,22 +528,22 @@ Plot2DPar::Plot2DPar(wxWindow *parent, int id, Configuration *cfg, const wxStrin
         wxDialog(parent, id, title, pos, size, style)
 {
   label_2 = new wxStaticText(this, -1, wxT("x = "));
-  text_ctrl_1 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_1 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(230, -1));
   label_3 = new wxStaticText(this, -1, wxT("y = "));
-  text_ctrl_2 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_2 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(230, -1));
   label_4 = new wxStaticText(this, -1, _("Variable:"));
   text_ctrl_3 = new BTextCtrl(this, -1, cfg, wxT("t"), wxDefaultPosition,
                               wxSize(40, -1));
   label_5 = new wxStaticText(this, -1, _("From:"));
-  text_ctrl_4 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_4 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(70, -1));
   label_6 = new wxStaticText(this, -1, _("To:"));
-  text_ctrl_5 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_5 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(70, -1));
   label_7 = new wxStaticText(this, -1, _("Ticks:"));
-  spin_ctrl_1 = new wxSpinCtrl(this, -1, wxEmptyString, wxDefaultPosition,
+  spin_ctrl_1 = new wxSpinCtrl(this, -1, {}, wxDefaultPosition,
                                wxSize(70, -1), wxSP_ARROW_KEYS, 0, 1000, 300);
   spin_ctrl_1->SetValue(300);
   static_line_1 = new wxStaticLine(this, -1);
@@ -638,10 +637,10 @@ Plot2DDiscrete::Plot2DDiscrete(wxWindow *parent, int id,
         wxDialog(parent, id, title, pos, size, style)
 {
   label_2 = new wxStaticText(this, -1, wxT("x = "));
-  text_ctrl_1 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_1 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(230, -1));
   label_3 = new wxStaticText(this, -1, wxT("y = "));
-  text_ctrl_2 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_2 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(230, -1));
 
   static_line_1 = new wxStaticLine(this, -1);

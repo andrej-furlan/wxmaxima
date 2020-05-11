@@ -33,7 +33,7 @@ Gen1Wiz::Gen1Wiz(wxWindow *parent, int id, Configuration *cfg, const wxString &t
 {
   SetName(title);
   label_2 = new wxStaticText(this, -1, label);
-  text_ctrl_1 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_1 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(300, -1));
   text_ctrl_1 -> SetValue(val);
   static_line_1 = new wxStaticLine(this, -1);
@@ -49,7 +49,7 @@ Gen1Wiz::Gen1Wiz(wxWindow *parent, int id, Configuration *cfg, const wxString &t
   if(!warning.empty())
   {
     m_warningText = warning;
-    m_warning = new wxStaticText(this, -1, wxEmptyString);
+    m_warning = new wxStaticText(this, -1, {});
     m_warning->SetToolTip(warningToolTip);
   }
   else

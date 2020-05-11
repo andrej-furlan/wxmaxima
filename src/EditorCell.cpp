@@ -38,7 +38,7 @@
 #include <wx/tokenzr.h>
 
 EditorCell::EditorCell(Cell *parent, Configuration **config,
-                       CellPointers *cellPointers, wxString text) :
+                       CellPointers *cellPointers, const wxString &text) :
   Cell(parent, config, cellPointers),
   m_text(text),
   m_fontStyle(wxFONTSTYLE_NORMAL),
@@ -417,7 +417,7 @@ wxString EditorCell::ToTeX()
   {
     text.Replace(wxT("\u00a0"), wxT("~"));
     text.Replace(wxT("\\"), wxT("\\ensuremath{\\backslash}"));
-    text.Replace(wxT("\r"), wxEmptyString);
+    text.Replace(wxT("\r"), {});
     text.Replace(wxT("^"), wxT("\\^{}"));
     text.Replace(wxT("°"), wxT("\\ensuremath{^\\circ}"));
     text.Replace(wxT("\u2212"), wxT("-")); // unicode minus sign
@@ -846,7 +846,7 @@ void EditorCell::Draw(wxPoint point)
     //
     // Mark text that coincides with the selection
     //
-    if (m_cellPointers->m_selectionString != wxEmptyString)
+    if (!m_cellPointers->m_selectionString.empty())
     {
       long start = 0;
       wxString text(m_text);
@@ -3780,16 +3780,15 @@ void EditorCell::StyleTextTexts()
       {
         m_styledText.push_back(
           StyledText(
-            line +
             wxString::Format(
-              _(" ... + %i hidden lines"), m_text.Freq(wxT('\n'))),0,wxEmptyString)
+              _("%s ... + %i hidden lines"), line, m_text.Freq(wxT('\n'))), 0)
           );
         break;
       }
 
-      m_styledText.push_back(StyledText(line, 0, wxEmptyString));
+      m_styledText.push_back(StyledText(line, 0));
       if((lines.HasMoreTokens()))
-        m_styledText.push_back(StyledText(wxT("\n"), 0, wxEmptyString));
+        m_styledText.push_back(StyledText(wxT("\n"), 0));
     }
   }
   ResetSize();

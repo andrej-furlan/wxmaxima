@@ -93,7 +93,7 @@ public:
 
     If there is no such label or the label as hidden deep down inside the command
     (in which case we assume the user wanted to hide it and for example didn't use
-    it as a label at all) we return wxEmptyString.
+    it as a label at all) we return an empty string.
   */
   wxString GetUserLabel() const
   { return m_userLabel; }

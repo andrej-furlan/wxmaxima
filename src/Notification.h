@@ -48,9 +48,9 @@ public:
   Notification();
   //! A constructor that completely prepares the notification, but doesn't call Show() yet.
   explicit Notification(const wxString &title,
-                        const wxString &message=wxEmptyString,
+                        const wxString &message = {},
                         wxWindow *parent=NULL,
-                        int flags=wxICON_INFORMATION);
+                        int flags = wxICON_INFORMATION);
   //! Makes the notification appear.
   virtual bool Show(int duration = Timeout_Auto);
   //! Informs the notification which the main window is it notified for.

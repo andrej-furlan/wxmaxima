@@ -38,7 +38,7 @@ public:
             const wxPoint &pos = wxDefaultPosition,
             const wxSize &size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
 
-  void SetValue(wxString s);
+  void SetValue(const wxString &s);
 
   wxString GetValue();
 
@@ -57,7 +57,7 @@ private:
 
   void OnPopupMenu(wxCommandEvent &event);
 
-  void Parse(wxString s);
+  void Parse(const wxString &s, size_t startPos = 0);
 
   enum
   {

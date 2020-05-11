@@ -42,22 +42,16 @@
 
 ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellpointers) : Cell(parent, config, cellpointers)
 {
-  m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
-  m_drawRectangle = true;
   m_imageBorderWidth = 1;
-  m_drawBoundingBox = false;
 }
 
-ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, wxString type) :
+ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, const wxString &type) :
   Cell(parent, config, cellPointers),
   m_image(new Image(m_configuration, image, type))
 {
-  m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
-  m_drawRectangle = true;
   m_imageBorderWidth = 1;
-  m_drawBoundingBox = false;
 }
 
 ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointers, const wxBitmap &bitmap) :
@@ -65,30 +59,24 @@ ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointer
   m_image(new Image(m_configuration, bitmap))
 
 {
-  m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
-  m_drawRectangle = true;
   m_imageBorderWidth = 1;
-  m_drawBoundingBox = false;
 }
 
-int ImgCell::s_counter = 0;
+int ImgCell::s_counter;
 
 // constructor which load image
-ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointers, wxString image, std::shared_ptr<wxFileSystem> filesystem, bool remove)
+ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointers, const wxString &image, std::shared_ptr<wxFileSystem> filesystem, bool remove)
   : Cell(parent, config, cellPointers)
 {
-  m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
-  m_drawRectangle = true;
   if (!image.empty())
     m_image = std::make_shared<Image>(m_configuration, image, filesystem, remove);
   else
     m_image = std::make_shared<Image>(m_configuration);
-  m_drawBoundingBox = false;
 }
 
-void ImgCell::LoadImage(wxString image, bool remove)
+void ImgCell::LoadImage(const wxString &image, bool remove)
 {
   m_image = std::make_shared<Image>(m_configuration, remove, image);
 }
@@ -99,13 +87,11 @@ void ImgCell::SetBitmap(const wxBitmap &bitmap)
   m_image = std::make_shared<Image>(m_configuration, bitmap);
 }
 
-ImgCell::ImgCell(const ImgCell &cell):
- ImgCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+ImgCell::ImgCell(const ImgCell &cell) :
+    ImgCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   m_drawRectangle = cell.m_drawRectangle;
-  m_drawBoundingBox = false;
   m_image = std::make_shared<Image>(*cell.m_image);
 }
 
@@ -245,7 +231,7 @@ wxString ImgCell::ToTeX()
   return _(" (Graphics) ");
 }
 
-wxSize ImgCell::ToImageFile(wxString filename)
+wxSize ImgCell::ToImageFile(const wxString &filename)
 {
   return m_image->ToImageFile(filename);
 }

@@ -87,10 +87,7 @@ void PlotFormatWiz::do_layout()
 
 wxString PlotFormatWiz::GetValue()
 {
-  wxString s;
-  s = wxT("set_plot_option(['plot_format, '");
-  s += combo_box_1->GetValue();
-  s += wxT("])$");
-  return s;
+  return wxString::Format(wxT("set_plot_option(['plot_format, '%s])$"),
+                          combo_box_1->GetValue());
 }
 

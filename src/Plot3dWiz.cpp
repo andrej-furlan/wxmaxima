@@ -31,31 +31,31 @@ Plot3DWiz::Plot3DWiz(wxWindow *parent, int id,
         wxDialog(parent, id, title, pos, size, style)
 {
   label_2 = new wxStaticText(this, -1, _("Expression"));
-  text_ctrl_1 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition);
+  text_ctrl_1 = new BTextCtrl(this, -1, cfg, {});
   label_3 = new wxStaticText(this, -1, _("Variable:"));
   text_ctrl_2 = new BTextCtrl(this, -1, cfg, wxT("x"), wxDefaultPosition,
                               wxSize(40, -1));
   label_4 = new wxStaticText(this, -1, _("From:"));
-  text_ctrl_3 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_3 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(70, -1));
   label_5 = new wxStaticText(this, -1, _("To:"));
-  text_ctrl_4 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_4 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(70, -1));
   label_6 = new wxStaticText(this, -1, _("Variable:"));
   text_ctrl_5 = new BTextCtrl(this, -1, cfg, wxT("y"), wxDefaultPosition,
                               wxSize(40, -1));
   label_7 = new wxStaticText(this, -1, _("From:"));
-  text_ctrl_6 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_6 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(70, -1));
   label_8 = new wxStaticText(this, -1, _("To:"));
-  text_ctrl_7 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_7 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(70, -1));
   label_9 = new wxStaticText(this, -1, _("Grid:"));
-  text_ctrl_8 = new wxSpinCtrl(this, -1, wxEmptyString, wxDefaultPosition,
+  text_ctrl_8 = new wxSpinCtrl(this, -1, {}, wxDefaultPosition,
                                wxSize(70, -1), wxSP_ARROW_KEYS, 0, 100, 30);
   text_ctrl_8->SetValue(30);
   label_10 = new wxStaticText(this, -1, wxT("x"));
-  text_ctrl_9 = new wxSpinCtrl(this, -1, wxEmptyString, wxDefaultPosition,
+  text_ctrl_9 = new wxSpinCtrl(this, -1, {}, wxDefaultPosition,
                                wxSize(70, -1), wxSP_ARROW_KEYS, 0, 100, 30);
   text_ctrl_9->SetValue(30);
   label_11 = new wxStaticText(this, -1, _("Format:"));
@@ -66,7 +66,7 @@ Plot3DWiz::Plot3DWiz(wxWindow *parent, int id,
                   wxT("gnuplot"),
                   wxT("xmaxima")
           };
-  combo_box_1 = new wxComboBox(this, -1, wxEmptyString, wxDefaultPosition,
+  combo_box_1 = new wxComboBox(this, -1, {}, wxDefaultPosition,
                                wxSize(150, -1), 4, combo_box_1_choices,
                                wxCB_DROPDOWN);
   label_12 = new wxStaticText(this, -1, _("Options:"));
@@ -79,12 +79,12 @@ Plot3DWiz::Plot3DWiz(wxWindow *parent, int id,
                   wxT("set mapping spherical"),
                   wxT("set mapping cylindrical")
           };
-  combo_box_2 = new wxComboBox(this, combobox, wxEmptyString, wxDefaultPosition,
+  combo_box_2 = new wxComboBox(this, combobox, {}, wxDefaultPosition,
                                wxSize(250, -1), 6, combo_box_2_choices,
                                wxCB_DROPDOWN);
   check_box_1 = new wxCheckBox(this, -1, _("&pm3d"));
   label_13 = new wxStaticText(this, -1, _("Plot to file:"));
-  text_ctrl_10 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_10 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                                wxSize(250, -1));
   button_3 = new wxBitmapButton(this, file_browse_3d,
                                 wxArtProvider::GetBitmap(wxART_FILE_OPEN,
@@ -187,13 +187,13 @@ void Plot3DWiz::do_layout()
   Layout();
 }
 
-void Plot3DWiz::SetValue(wxString s)
+void Plot3DWiz::SetValue(const wxString &s)
 {
   if (s.StartsWith(wxT("plot3d")))
     Parse(s);
   else if (s.StartsWith(wxT("wxplot3d")))
   {
-    Parse(s.SubString(2, s.Length()));
+    Parse(s, 2);
     combo_box_1->SetValue(_("inline"));
   }
   else
@@ -202,13 +202,12 @@ void Plot3DWiz::SetValue(wxString s)
   text_ctrl_1->SetSelection(-1, -1);
 }
 
-void Plot3DWiz::Parse(wxString s)
+void Plot3DWiz::Parse(const wxString &s, size_t startPos)
 {
-  unsigned int i = 0;
+  unsigned int i = startPos + 7;
   wxString curr;
-  s = s.SubString(7, s.Length());
   // Function to plot
-  if (s.StartsWith(wxT("[")))
+  if (s.GetChar(i) == '[')
   {
     int depth = 0;
     do
@@ -446,7 +445,7 @@ void Plot3DWiz::OnCombobox(wxCommandEvent &WXUNUSED(event))
 
 void Plot3DWiz::OnFileBrowse(wxCommandEvent &WXUNUSED(event))
 {
-  wxString file = wxFileSelector(_("Save plot to file"), wxEmptyString,
+  wxString file = wxFileSelector(_("Save plot to file"), {},
                                  wxT("plot3d.eps"), wxT("eps"),
                                  _("Postscript file (*.eps)|*.eps|All|*"),
                                  wxFD_SAVE | wxFD_OVERWRITE_PROMPT);

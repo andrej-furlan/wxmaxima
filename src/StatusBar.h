@@ -98,9 +98,8 @@ private:
   //! Does the icon show that we currently transmit data?
   bool m_icon_shows_transmit;
 
-  wxBitmap GetImage(wxString name,
-                    unsigned char *data_128, size_t len_128
-    );
+  wxBitmap GetImage(const wxString &name,
+                    unsigned char *data_128, size_t len_128);
   
   //! The currently shown network status bitmap
   wxStaticBitmap *m_networkStatus;

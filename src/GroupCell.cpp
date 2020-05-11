@@ -39,7 +39,7 @@
 #include "BitmapOut.h"
 #include "list"
 
-GroupCell::GroupCell(Configuration **config, GroupType groupType, CellPointers *cellPointers, wxString initString) :
+GroupCell::GroupCell(Configuration **config, GroupType groupType, CellPointers *cellPointers, const wxString &initString) :
   Cell(this, config, cellPointers)
 {
   m_nextToDraw = NULL;
@@ -159,7 +159,7 @@ GroupCell::GroupCell(Configuration **config, GroupType groupType, CellPointers *
 }
 
 GroupCell::GroupCell(const GroupCell &cell):
-  GroupCell(cell.m_configuration, cell.m_groupType, cell.m_cellPointers, wxEmptyString)
+  GroupCell(cell.m_configuration, cell.m_groupType, cell.m_cellPointers)
 {
   m_nextToDraw = NULL;
   CopyCommonData(cell);
@@ -188,7 +188,7 @@ void GroupCell::SetCellStyle(int style)
     break;
 
   case GC_TYPE_TEXT:
-    m_inputLabel -> SetValue(wxEmptyString);
+    m_inputLabel -> SetValue({});
     m_groupType = GC_TYPE_TEXT;
     if(m_inputLabel != NULL)
       m_inputLabel->SetType(MC_TYPE_TEXT);
@@ -197,7 +197,7 @@ void GroupCell::SetCellStyle(int style)
     RemoveOutput();
    break;
   case GC_TYPE_TITLE:
-    m_inputLabel -> SetValue(wxEmptyString);
+    m_inputLabel -> SetValue({});
     m_groupType = GC_TYPE_TITLE;
     if(m_inputLabel != NULL)
       m_inputLabel->SetType(MC_TYPE_TITLE);
@@ -206,7 +206,7 @@ void GroupCell::SetCellStyle(int style)
     RemoveOutput();
     break;
   case GC_TYPE_SECTION:
-    m_inputLabel -> SetValue(wxEmptyString);
+    m_inputLabel -> SetValue({});
     m_groupType = GC_TYPE_SECTION;
     if(m_inputLabel != NULL)
       m_inputLabel->SetType(MC_TYPE_SECTION);
@@ -215,7 +215,7 @@ void GroupCell::SetCellStyle(int style)
     RemoveOutput();
     break;
   case GC_TYPE_SUBSECTION:
-    m_inputLabel -> SetValue(wxEmptyString);
+    m_inputLabel -> SetValue({});
     m_groupType = GC_TYPE_SUBSECTION;
     if(m_inputLabel != NULL)
       m_inputLabel->SetType(MC_TYPE_SUBSECTION);
@@ -224,7 +224,7 @@ void GroupCell::SetCellStyle(int style)
     RemoveOutput();
     break;
   case GC_TYPE_SUBSUBSECTION:
-    m_inputLabel -> SetValue(wxEmptyString);
+    m_inputLabel -> SetValue({});
     m_groupType = GC_TYPE_SUBSUBSECTION;
     if(m_inputLabel != NULL)
       m_inputLabel->SetType(MC_TYPE_SUBSUBSECTION);
@@ -233,7 +233,7 @@ void GroupCell::SetCellStyle(int style)
     RemoveOutput();
     break;
   case GC_TYPE_HEADING5:
-    m_inputLabel -> SetValue(wxEmptyString);
+    m_inputLabel -> SetValue({});
     m_groupType = GC_TYPE_HEADING5;
     if(m_inputLabel != NULL)
       m_inputLabel->SetType(MC_TYPE_HEADING5);
@@ -242,7 +242,7 @@ void GroupCell::SetCellStyle(int style)
     RemoveOutput();
     break;
   case GC_TYPE_HEADING6:
-    m_inputLabel -> SetValue(wxEmptyString);
+    m_inputLabel -> SetValue({});
     m_groupType = GC_TYPE_HEADING6;
     if(m_inputLabel != NULL)
       m_inputLabel->SetType(MC_TYPE_HEADING6);
@@ -1405,7 +1405,7 @@ wxString GroupCell::ToString()
 
 wxString GroupCell::ToTeX()
 {
-  return ToTeX(wxEmptyString, wxEmptyString, NULL);
+  return ToTeX({}, {}, NULL);
 }
 
 wxString GroupCell::ToRTF()
@@ -1453,7 +1453,7 @@ wxString GroupCell::ToRTF()
   return retval;
 }
 
-wxString GroupCell::ToTeX(wxString imgDir, wxString filename, int *imgCounter)
+wxString GroupCell::ToTeX(const wxString &imgDir, const wxString &filename, int *imgCounter)
 {
   wxASSERT_MSG((imgCounter != NULL), _(wxT("Bug: No image counter to write to!")));
   if (imgCounter == NULL) return {};
@@ -1541,7 +1541,7 @@ wxString GroupCell::ToTeX(wxString imgDir, wxString filename, int *imgCounter)
   return str;
 }
 
-wxString GroupCell::ToTeXCodeCell(wxString imgDir, wxString filename, int *imgCounter)
+wxString GroupCell::ToTeXCodeCell(const wxString &imgDir, const wxString &filename, int *imgCounter)
 {
   wxString str;
   Configuration *configuration = (*m_configuration);
@@ -1971,7 +1971,7 @@ wxString GroupCell::GetToolTip(const wxPoint &point)
 
     // If a cell contains a cell containing a tooltip the tooltip of the
     // containing cell will be overridden.
-    if(tmp->GetToolTip(point) != wxEmptyString)
+    if(!tmp->GetToolTip(point).empty())
       retval = tmp->GetToolTip(point);
 
     tmp = tmp->m_next;
@@ -2558,7 +2558,7 @@ wxAccStatus GroupCell::GetDescription(int childId, wxString *description)
     }
   }
   
-  *description = wxEmptyString;
+  description->clear();
   return wxACC_FAIL;
 }
 

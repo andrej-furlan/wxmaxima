@@ -73,7 +73,7 @@ public:
   explicit Image(Configuration **config);
 
   //! A constructor that loads the compressed file from a wxMemoryBuffer
-  Image(Configuration **config, wxMemoryBuffer image, wxString type);
+  Image(Configuration **config, wxMemoryBuffer image, const wxString &type);
 
   /*! A constructor that loads a bitmap
 
@@ -89,7 +89,7 @@ public:
     \param filesystem The filesystem to load it from
     \param remove true = Delete the file after loading it
    */
-  Image(Configuration **config, wxString image, std::shared_ptr<wxFileSystem> filesystem, bool remove = true);
+  Image(Configuration **config, const wxString &image, std::shared_ptr<wxFileSystem> filesystem, bool remove = true);
 
   ~Image();
 
@@ -118,8 +118,8 @@ public:
     a .wxmx file and has never been created from maxima the file is created by this 
     function.
 
-    If the file cannot be created (for example if no gnuplot source exists/ 
-    is known) this function returns wxEmptyString.
+    If the file cannot be created (for example if no gnuplot source exists/
+    is known) this function returns an empty string.
    */
   wxString GnuplotSource();
   /*! Returns the gnuplot data file name of this image
@@ -129,7 +129,7 @@ public:
     function.
 
     If the file cannot be created (for example if no gnuplot source exists/ 
-    is known) this function returns wxEmptyString.
+    is known) this function returns an empty string.
    */
   wxString GnuplotData();
 
@@ -178,9 +178,9 @@ public:
   void Recalculate(double scale = 1.0);
 
   //! The width of the scaled image
-  long m_width;
+  long m_width = 1;
   //! The height of the scaled image
-  long m_height;
+  long m_height = 1;
 
   //! Returns the original image in its compressed form
   wxMemoryBuffer GetCompressedImage();
@@ -215,21 +215,22 @@ public:
 
   //! Can this image be exported in SVG format?
   bool CanExportSVG() const {return m_svgRast != NULL;}
+
 protected:
   //! A zipped version of the gnuplot commands that produced this image.
   wxMemoryBuffer m_gnuplotSource_Compressed;
   //! A zipped version of the gnuplot data needed in order to create this image.
   wxMemoryBuffer m_gnuplotData_Compressed;
   //! The width of the unscaled image
-  size_t m_originalWidth;
+  size_t m_originalWidth = 640;
   //! The height of the unscaled image
-  size_t m_originalHeight;
+  size_t m_originalHeight = 480;
   //! The bitmap, scaled down to the screen size
   wxBitmap m_scaledBitmap;
   //! The file extension for the current image type
   wxString m_extension;
   //! Does this image contain an actual image?
-  bool m_isOk;
+  bool m_isOk = false;
   //! The gnuplot source file for this image, if any.
   wxString m_gnuplotSource;
   //! The gnuplot data file for this image, if any.
@@ -244,22 +245,21 @@ private:
   static wxMemoryBuffer ReadCompressedImage(wxInputStream *data);  
   Configuration **m_configuration;
   //! The upper width limit for displaying this image
-  double m_maxWidth;
+  double m_maxWidth = -1;
   //! The upper height limit for displaying this image
-  double m_maxHeight;
+  double m_maxHeight = -1;
   //! The name of the image, if known.
   wxString m_imageName;
   
-  NSVGimage* m_svgImage;
-  struct NSVGrasterizer* m_svgRast;
+  NSVGimage* m_svgImage = {};
+  NSVGrasterizer* m_svgRast = {};
 
   std::shared_ptr<wxFileSystem> m_fs_keepalive_gnuplotdata;
   std::shared_ptr<wxFileSystem> m_fs_keepalive_imagedata;
   #ifdef HAVE_OMP_HEADER
   omp_lock_t m_gnuplotLock;
   omp_lock_t m_imageLoadLock;
-  #endif
-  
+  #endif  
 };
 
 #endif // IMAGE_H

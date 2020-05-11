@@ -174,11 +174,9 @@ void wxMaxima::ConfigChanged()
                                        defaultPlotWidth,
                                        defaultPlotHeight);
 
-  if (m_worksheet->m_currentFile != wxEmptyString)
+  if (!m_worksheet->m_currentFile.empty())
   {
-    wxString filename(m_worksheet->m_currentFile);
-
-    SetCWD(filename);
+    SetCWD(m_worksheet->m_currentFile);
   }
   m_symbolsPane->UpdateUserSymbols();
 }
@@ -1178,10 +1176,10 @@ TextCell *wxMaxima::ConsoleAppend(wxString s, CellType type, const wxString &use
   // that can contain it we need to create such a cell.
   if (m_worksheet->GetTree() == NULL)
     m_worksheet->InsertGroupCells(
-      new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE, &m_worksheet->m_cellPointers, wxEmptyString));
+      new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE, &m_worksheet->m_cellPointers));
 
   m_dispReadOut = false;
-  s.Replace(m_promptSuffix, wxEmptyString);
+  s.Replace(m_promptSuffix, {});
 
   // If the string we have to append only contains whitespace we return immediately.
   // TODO: Is a printf(false,"~%")$ a real use-case?
@@ -1298,7 +1296,7 @@ TextCell *wxMaxima::DoRawConsoleAppend(wxString s, CellType type)
   // that can contain it we need to create such a cell.
   if (m_worksheet->GetTree() == NULL)
     m_worksheet->InsertGroupCells(
-      new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE, &m_worksheet->m_cellPointers, wxEmptyString));
+      new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE, &m_worksheet->m_cellPointers));
 
   if (s.empty())
     return NULL;
@@ -1423,16 +1421,16 @@ void wxMaxima::StripLispComments(wxString &s)
     m_blankStatementRegEx.Replace(&s, wxT(";"));
 }
 
-void wxMaxima::SendMaxima(wxString s, bool addToHistory)
+void wxMaxima::SendMaxima(const wxString &str, bool addToHistory)
 {
   // Normally we catch parenthesis errors before adding cells to the
   // evaluation queue. But if the error is introduced only after the
   // cell is placed in the evaluation queue we need to catch it here.
   int index;
-  wxString parenthesisError = GetUnmatchedParenthesisState(s,index);
+  wxString parenthesisError = GetUnmatchedParenthesisState(str, index);
   if (parenthesisError.empty())
   {
-    s = m_worksheet->UnicodeToMaxima(s);
+    wxString s = m_worksheet->UnicodeToMaxima(str);
 
     if ((m_xmlInspector) && (IsPaneDisplayed(menu_pane_xmlInspector)))
       m_xmlInspector->Add_ToMaxima(s);
@@ -2443,7 +2441,7 @@ void wxMaxima::ReadStatusBar(wxString &data)
         LeftStatusText(contents->GetContent(), false);
     }
     // Remove the status bar info from the data string
-    data = data.Right(data.Length()-end-m_statusbarSuffix.Length());
+    data.Remove(0, end + m_statusbarSuffix.Length());
   }
 }
 
@@ -2471,7 +2469,7 @@ void wxMaxima::ReadMath(wxString &data)
   if(end >= 0)
   {
     wxString o = data.Left(end + mthTagLen);
-    data = data.Right(data.Length() - end - mthTagLen);
+    data.Remove(0, end + mthTagLen);
     o.Trim(true);
     o.Trim(false);
     if (o.Length() > 0)
@@ -2511,11 +2509,11 @@ void wxMaxima::ReadLoadSymbols(wxString &data)
   if (end != wxNOT_FOUND)
   {
     // Put the symbols into a separate string
-    wxString symbols = data.Left( end + m_symbolsSuffix.Length());
+    wxString symbols = data.Left(end + m_symbolsSuffix.Length());
     m_worksheet->AddSymbols(symbols);
 
     // Remove the symbols from the data string
-    data = data.Right(data.Length()-end-m_symbolsSuffix.Length());
+    data.Remove(0, end + m_symbolsSuffix.Length());
   }
 }
 
@@ -2645,7 +2643,7 @@ void wxMaxima::ReadVariables(wxString &data)
       wxLogMessage(_("Maxima has sent a new variable value."));
 
     // Remove the symbols from the data string
-    data = data.Right(data.Length()-end-m_variablesSuffix.Length());
+    data.Remove(0, end + m_variablesSuffix.Length());
     TriggerEvaluation();
     QueryVariableValue();
   }
@@ -2662,7 +2660,7 @@ void wxMaxima::ReadAddVariables(wxString &data)
   {
     wxLogMessage(_("Maxima sends us a new set of variables for the watch list."));
     wxXmlDocument xmldoc;
-    wxString xml = data.Left( end + m_addVariablesSuffix.Length());
+    wxString xml = data.Left(end + m_addVariablesSuffix.Length());
     wxStringInputStream xmlStream(xml);
     xmldoc.Load(xmlStream, wxT("UTF-8"));
     wxXmlNode *node = xmldoc.GetRoot();
@@ -2683,7 +2681,7 @@ void wxMaxima::ReadAddVariables(wxString &data)
         var = var->GetNext();
       }
     }
-    data = data.Right(data.Length()-end-m_addVariablesSuffix.Length());
+    data.Remove(0, end + m_addVariablesSuffix.Length());
   }
 }
 
@@ -2737,7 +2735,7 @@ void wxMaxima::ReadPrompt(wxString &data)
 
   wxString o = data.SubString(m_promptPrefix.Length(), end - 1);
   // Remove the prompt we will process from the string.
-  data = data.Right(data.Length()-end-m_promptSuffix.Length());
+  data.Remove(0, end + m_promptSuffix.Length());
   if(data == wxT(" "))
     data.clear();
 
@@ -2844,7 +2842,7 @@ void wxMaxima::ReadPrompt(wxString &data)
         DoConsoleAppend(o, MC_TYPE_PROMPT);
       else
         DoRawConsoleAppend(o, MC_TYPE_PROMPT);
-      m_worksheet->m_configuration->SetDefaultCellToolTip(wxEmptyString);
+      m_worksheet->m_configuration->SetDefaultCellToolTip({});
   }
     if (m_worksheet->ScrolledAwayFromEvaluation())
     {
@@ -4133,12 +4131,15 @@ void wxMaxima::CompileHelpFileAnchors()
   #endif
 }
 
-void wxMaxima::ShowMaximaHelp(wxString keyword)
+void wxMaxima::ShowMaximaHelp(const wxString &text)
 {
-  if(keyword.StartsWith("(%i"))
-    keyword = "inchar";
-  if(keyword.StartsWith("(%o"))
-    keyword = "outchar";
+  wxString str;
+  if(text.StartsWith("(%i"))
+    str = "inchar";
+  else if(text.StartsWith("(%o"))
+    str = "outchar";
+  else
+    str = text;
   wxString MaximaHelpFile = GetMaximaHelpFile();
 #ifdef __WINDOWS__
   // replace \ with / als directory separator
@@ -4147,15 +4148,15 @@ void wxMaxima::ShowMaximaHelp(wxString keyword)
   
   if((!(MaximaHelpFile.Lower().EndsWith(wxT(".html")))) && (!MaximaHelpFile.empty()))
   {
-    ShowHTMLHelp(MaximaHelpFile,keyword);
+    ShowHTMLHelp(MaximaHelpFile,str);
   }
   else
   {
     wxBusyCursor crs;
     CompileHelpFileAnchors();
-    keyword = m_worksheet->m_helpFileAnchors[keyword];
-    if(keyword.empty())
-      keyword = "Function-and-Variable-Index";
+    str = m_worksheet->m_helpFileAnchors[str];
+    if(str.empty())
+      str = "Function-and-Variable-Index";
     if(!MaximaHelpFile.empty())
     {
       // A Unix absolute path starts with a "/", so a valid file URI
@@ -4168,8 +4169,8 @@ void wxMaxima::ShowMaximaHelp(wxString keyword)
                                    wxString("/") +
 #endif
                                    MaximaHelpFile;
-      if(!keyword.empty()) {
-        maximaHelpfileURI = maximaHelpfileURI + "#" + keyword;
+      if(!str.empty()) {
+        maximaHelpfileURI = maximaHelpfileURI + "#" + str;
       }
       wxLogMessage(wxString::Format(_("Opening help file %s"),maximaHelpfileURI.utf8_str()));
       {
@@ -4182,7 +4183,7 @@ void wxMaxima::ShowMaximaHelp(wxString keyword)
     else
     {
       wxLogMessage(_(wxT("No offline manual found ⇒ Redirecting to the maxima homepage")));
-      wxLaunchDefaultBrowser("http://maxima.sourceforge.net/docs/manual/maxima_singlepage.html#"+keyword);
+      wxLaunchDefaultBrowser("http://maxima.sourceforge.net/docs/manual/maxima_singlepage.html#"+str);
     }
   }
 }
@@ -4947,12 +4948,12 @@ bool wxMaxima::OpenFile(const wxString &file, const wxString &command)
   m_autoSaveTimer.StartOnce(180000);
 
   if (m_worksheet)m_worksheet->TreeUndo_ClearBuffers();
-  if (m_worksheet->m_currentFile != wxEmptyString)
+  if (!m_worksheet->m_currentFile.empty())
   {
     wxString filename(m_worksheet->m_currentFile);
     SetCWD(filename);
   }
-  if (m_worksheet->m_tableOfContents != NULL)
+  if (m_worksheet->m_tableOfContents)
   {
     m_worksheet->m_scheduleUpdateToc = false;
     m_worksheet->m_tableOfContents->UpdateTableOfContents(m_worksheet->GetTree(), m_worksheet->GetHCaret());
@@ -5458,7 +5459,7 @@ void wxMaxima::FileMenu(wxCommandEvent &event)
       }
 
       wxString file = wxFileSelector(_("Open"), m_lastPath,
-                                     wxEmptyString, wxEmptyString,
+                                     {}, {},
                                      _("All openable types (*.wxm, *.wxmx, *.mac, *.out, *.xml)|*.wxm;*.wxmx;*.mac;*.out;*.xml|"
                                       "wxMaxima document (*.wxm, *.wxmx)|*.wxm;*.wxmx|"
                                       "Maxima session (*.mac)|*.mac|"
@@ -5472,11 +5473,11 @@ void wxMaxima::FileMenu(wxCommandEvent &event)
         // reusing the old one.
         #ifdef __WXOSX__
         if(m_worksheet->IsEmpty())
-          OpenFile(file, wxEmptyString);
+          OpenFile(file);
         else
           wxGetApp().NewWindow(file);
         #else
-        OpenFile(file, wxEmptyString);
+        OpenFile(file);
         #endif
       }
     }
@@ -5612,7 +5613,7 @@ void wxMaxima::FileMenu(wxCommandEvent &event)
     case menu_load_id:
     {
       wxString file = wxFileSelector(_("Load Package"), m_lastPath,
-                                     wxEmptyString, wxEmptyString,
+                                     {}, {},
                                      _("Maxima package (*.mac)|*.mac|"
                                                "Lisp package (*.lisp)|*.lisp|All|*"),
                                      wxFD_OPEN);
@@ -5624,7 +5625,7 @@ void wxMaxima::FileMenu(wxCommandEvent &event)
     case menu_batch_id:
     {
       wxString file = wxFileSelector(_("Batch File"), m_lastPath,
-                                     wxEmptyString, wxEmptyString,
+                                     {}, {},
                                      _("Maxima package (*.mac)|*.mac"),
                                      wxFD_OPEN);
       if(!file.empty())
@@ -6121,7 +6122,7 @@ void wxMaxima::MaximaMenu(wxCommandEvent &event)
       break;
     case menu_fun_def:
       cmd = GetTextFromUser(_("Show the definition of function:"),
-                            _("Function"), m_worksheet->m_configuration, wxEmptyString, this);
+                            _("Function"), m_worksheet->m_configuration, {}, this);
       if (cmd.Length())
       {
         cmd = wxT("fundef(") + cmd + wxT(");");
@@ -6377,7 +6378,7 @@ void wxMaxima::EquationsMenu(wxCommandEvent &event)
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Equations:"),
                                  _("Variables:"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Eliminate"), true);
       //wiz->Centre(wxBOTH);
@@ -6523,7 +6524,7 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
     case menu_map_mat:
     {
       Gen3Wiz *wiz = new Gen3Wiz(_("Resulting Matrix name (may be empty):"), _("Function:"), _("Matrix:"),
-                                 wxEmptyString, wxEmptyString, expr,
+                                 {}, {}, expr,
                                  m_worksheet->m_configuration,
                                  this, -1, _("Matrix map"));
       //wiz->Centre(wxBOTH);
@@ -6594,7 +6595,7 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
     case menu_gen_mat:
     {
       Gen4Wiz *wiz = new Gen4Wiz(_("Array:"), _("Rows:"), _("Columns:"), _("Name:"),
-                                 expr, wxT("3"), wxT("3"), wxEmptyString,
+                                 expr, wxT("3"), wxT("3"), {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Generate Matrix"));
       wiz->SetValue(expr);
@@ -6614,7 +6615,7 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
     case menu_gen_mat_lambda:
     {
       Gen4Wiz *wiz = new Gen4Wiz(_("matrix[i,j]:"), _("Rows:"), _("Columns:"), _("Name:"),
-                                 expr, wxT("3"), wxT("3"), wxEmptyString,
+                                 expr, wxT("3"), wxT("3"), {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Generate Matrix"));
       wiz->SetValue(expr);
@@ -6635,7 +6636,7 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
     case menu_map:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Function:"), _("List(s):"),
-                                 wxEmptyString, expr,
+                                 {}, expr,
                                  m_worksheet->m_configuration,
                                  this, -1, _("Map"));
       //wiz->Centre(wxBOTH);
@@ -6688,7 +6689,7 @@ void wxMaxima::AlgebraMenu(wxCommandEvent &event)
   }
 }
 
-void wxMaxima::AddDrawParameter(wxString cmd, int dimensionsOfNewDrawCommand)
+void wxMaxima::AddDrawParameter(const wxString &cmd, int dimensionsOfNewDrawCommand)
 {
   if(!m_drawPane)
     return;
@@ -6698,11 +6699,12 @@ void wxMaxima::AddDrawParameter(wxString cmd, int dimensionsOfNewDrawCommand)
 
   if(dimensions < 2)
   {
+    wxString newCmd;
     if(dimensionsOfNewDrawCommand < 3)
-      cmd = wxT("wxdraw2d(\n    ") + cmd + wxT("\n)$");
+      newCmd = wxT("wxdraw2d(\n    ") + cmd + wxT("\n)$");
     else
-      cmd = wxT("wxdraw3d(\n    ") + cmd + wxT("\n)$");
-    m_worksheet->OpenHCaret(cmd);
+      newCmd = wxT("wxdraw3d(\n    ") + cmd + wxT("\n)$");
+    m_worksheet->OpenHCaret(newCmd);
     m_worksheet->GetActiveCell()->SetCaretPosition(
       m_worksheet->GetActiveCell()->GetCaretPosition() - 3);
   }
@@ -7070,7 +7072,7 @@ void wxMaxima::ListMenu(wxCommandEvent &event)
   case menu_list_rest:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("List"), _("n"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Return the list without its last n elements"),
                                  true);
@@ -7094,7 +7096,7 @@ void wxMaxima::ListMenu(wxCommandEvent &event)
   case menu_list_restN:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("List"), _("n"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Return the list without its first n elements"),
                                  true);
@@ -7114,7 +7116,7 @@ void wxMaxima::ListMenu(wxCommandEvent &event)
   case menu_list_lastn:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("List"), _("Number of elements"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Extract the last n elements from a list"),
                                  true);
@@ -7131,7 +7133,7 @@ void wxMaxima::ListMenu(wxCommandEvent &event)
   case menu_list_nth:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("List"), _("element number n"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Extract the nth element from a list. Slow for n>>0"),
                                  true,
@@ -7163,7 +7165,7 @@ void wxMaxima::ListMenu(wxCommandEvent &event)
   case menu_list_map:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Function"), _("List"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Apply a function to each list element"), true);
       //wiz->Centre(wxBOTH);
@@ -7179,7 +7181,7 @@ void wxMaxima::ListMenu(wxCommandEvent &event)
   case menu_list_use_actual_values:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Equation"), _("List with values"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Introduce a list of actual values into an equation"), true);
       wiz->SetLabel2ToolTip(_("The list with values can be generated by \"solve()\" or using "
@@ -7197,7 +7199,7 @@ void wxMaxima::ListMenu(wxCommandEvent &event)
   case menu_list_extract_value:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("List"), _("Variable name"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1,
                                  _("Extract a variable's value from a list of variable values"),
@@ -7215,7 +7217,7 @@ void wxMaxima::ListMenu(wxCommandEvent &event)
   case menu_list_as_function_arguments:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Function name"), _("List"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1,
                                  _("Use a list as parameter list for a function"),
@@ -7443,7 +7445,7 @@ void wxMaxima::SimplifyMenu(wxCommandEvent &event)
       cmd = GetTextFromUser(_("Enter an equation for rational simplification:"),
                             _("Tellrat"),
                             m_worksheet->m_configuration,
-                            wxEmptyString, this);
+                            {}, this);
       if (cmd.Length())
       {
         cmd = wxT("tellrat(") + cmd + wxT(");");
@@ -7517,7 +7519,7 @@ void wxMaxima::CalculusMenu(wxCommandEvent &event)
     case menu_lcm:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Polynomial 1:"), _("Polynomial 2:"),
-                                 wxEmptyString, wxEmptyString,
+                                 {}, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("LCM"), true);
       //wiz->Centre(wxBOTH);
@@ -7533,7 +7535,7 @@ void wxMaxima::CalculusMenu(wxCommandEvent &event)
     case menu_gcd:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Polynomial 1:"), _("Polynomial 2:"),
-                                 wxEmptyString, wxEmptyString,
+                                 {}, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("GCD"), true);
       //wiz->Centre(wxBOTH);
@@ -7549,7 +7551,7 @@ void wxMaxima::CalculusMenu(wxCommandEvent &event)
     case menu_divide:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Polynomial 1:"), _("Polynomial 2:"),
-                                 expr, wxEmptyString,
+                                 expr, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Divide"), true);
       //wiz->Centre(wxBOTH);
@@ -8080,7 +8082,7 @@ void wxMaxima::HelpMenu(wxCommandEvent &event)
       if (expr == wxT("%"))
         cmd = GetTextFromUser(_("Show an example for the command:"), _("Example"),
                               m_worksheet->m_configuration,
-                              wxEmptyString, this);
+                              {}, this);
       else
         cmd = expr;
       if (cmd.Length())
@@ -8094,7 +8096,7 @@ void wxMaxima::HelpMenu(wxCommandEvent &event)
       if (expr == wxT("%"))
         cmd = GetTextFromUser(_("Show all commands similar to:"), _("Apropos"),
                               m_worksheet->m_configuration,
-                              wxEmptyString, this);
+                              {}, this);
       else
         cmd = expr;
       if (cmd.Length())
@@ -8253,7 +8255,7 @@ void wxMaxima::StatsMenu(wxCommandEvent &event)
     case menu_stats_tt2:
     {
       Gen2Wiz *wiz = new Gen2Wiz(_("Sample 1:"), _("Sample 2:"),
-                                 wxEmptyString, wxEmptyString,
+                                 {}, {},
                                  m_worksheet->m_configuration,
                                  this, -1,
                                  _("Two sample t-test"), true);
@@ -8308,7 +8310,7 @@ void wxMaxima::StatsMenu(wxCommandEvent &event)
     case menu_stats_readm:
     {
       wxString file = wxFileSelector(_("Open matrix"), m_lastPath,
-                                     wxEmptyString, wxEmptyString,
+                                     {}, {},
                                      _("Data file (*.csv, *.tab, *.txt)|*.csv;*.tab;*.txt"),
                                      wxFD_OPEN);
       if (!file.empty())
@@ -8343,7 +8345,7 @@ void wxMaxima::StatsMenu(wxCommandEvent &event)
       Gen4Wiz *wiz = new Gen4Wiz(_("Data Matrix:"), _("Condition:"),
                                  _("Include columns:"), _("Matrix name:"),
                                  expr, wxT("col[1]#'NA"),
-                                 wxEmptyString, wxEmptyString,
+                                 {}, {},
                                  m_worksheet->m_configuration,
                                  this, -1, _("Select Subsample"), true);
       //wiz->Centre(wxBOTH);
@@ -9120,7 +9122,7 @@ wxString wxMaxima::GetUnmatchedParenthesisState(wxString text,int &index)
   text.Trim(true);
   text.Trim(false);
   if(text.empty())
-    return (wxEmptyString);
+    return {};
   if (text.EndsWith(wxT("\\")))
     return (_("Cell ends in a backslash"));
 
@@ -9586,7 +9588,7 @@ void wxMaxima::InsertMenu(wxCommandEvent &event)
     case menu_format_image:
     {
       wxString file = wxFileSelector(_("Insert Image"), m_lastPath,
-                                     wxEmptyString, wxEmptyString,
+                                     {}, {},
                                      _("Image files (*.png, *.jpg, *.bmp, *.xpm, *.gif, *.svg, *.svgz)|*.png;*.jpg;*.bmp;*.xpm;*.gif;*.svg;*.svgz"),
                                      wxFD_OPEN);
       if (!file.empty())
@@ -9639,7 +9641,7 @@ void wxMaxima::InsertMenu(wxCommandEvent &event)
     // don't do anything else
   }
   else
-    m_worksheet->OpenHCaret(wxEmptyString, type);
+    m_worksheet->OpenHCaret({}, type);
 }
 
 void wxMaxima::ResetTitle(bool saved, bool force)
@@ -9677,12 +9679,12 @@ void wxMaxima::ResetTitle(bool saved, bool force)
 #if defined __WXOSX__
 #if defined __WXOSX_COCOA__
     OSXSetModified(!saved);
-    if (m_worksheet->m_currentFile != wxEmptyString)
+    if (!m_worksheet->m_currentFile.empty())
       SetRepresentedFilename(m_worksheet->m_currentFile);
 #else
     WindowRef win = (WindowRef)MacGetTopLevelWindowRef();
     SetWindowModified(win,!saved);
-    if (m_worksheet->m_currentFile != wxEmptyString)
+    if (!m_worksheet->m_currentFile.empty())
     {
       FSRef fsref;
       wxMacPathToFSRef(m_worksheet->m_currentFile, &fsref);

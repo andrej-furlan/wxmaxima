@@ -53,19 +53,19 @@ public:
      \todo I guess we could increase the performance further by putting the 
      most-frequently-used tags to the front of the list.
    */
-  MathParser(Configuration **cfg, Cell::CellPointers *cellPointers, wxString zipfile = wxEmptyString);
+  MathParser(Configuration **cfg, Cell::CellPointers *cellPointers, const wxString &zipfile = {});
   //! This class doesn't have a copy constructor
   MathParser(const MathParser&) = delete;
   //! This class doesn't have a = operator
   MathParser& operator=(const MathParser&) = delete;
   ~MathParser();
 
-  void SetUserLabel(wxString label){ m_userDefinedLabel = label; }
+  void SetUserLabel(const wxString &label){ m_userDefinedLabel = label; }
   /***
    * Parse the string s, which is (correct) xml fragment.
    * Put the result in line.
    */
-  Cell *ParseLine(wxString s, CellType style = MC_TYPE_DEFAULT);
+  Cell *ParseLine(const wxString &s, CellType style = MC_TYPE_DEFAULT);
   /***
    * Parse the node and return the corresponding tag.
    */

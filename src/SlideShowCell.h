@@ -63,14 +63,14 @@ public:
   SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, int framerate = -1);
   SlideShow(const SlideShow &cell);
   //! A constructor that loads the compressed file from a wxMemoryBuffer
-  SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, wxString type);
-  SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxString image, bool remove);
+  SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, const wxString &type);
+  SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, const wxString &image, bool remove);
 
   Cell *Copy() override {return new SlideShow(*this);}
   ~SlideShow();
   SlideShow &operator=(const SlideShow&) = delete;
   void LoadImages(wxMemoryBuffer imageData);
-  void LoadImages(wxString imageFile);
+  void LoadImages(const wxString &imageFile);
 
   //! A class that publishes wxm data to the clipboard
   static wxDataFormat m_gifFormat;
@@ -103,7 +103,7 @@ public:
    */
   virtual void ClearCache() override;
 
-  void LoadImages(wxArrayString images, bool deleteRead);
+  void LoadImages(const wxArrayString &images, bool deleteRead);
 
   int GetDisplayedIndex() const
   { return m_displayed; }
@@ -117,10 +117,10 @@ public:
   { return m_size; }
 
   //! Exports the image the slideshow currently displays
-  wxSize ToImageFile(wxString file);
+  wxSize ToImageFile(const wxString &file);
 
   //! Exports the whole animation as animated gif
-  wxSize ToGif(wxString file);
+  wxSize ToGif(const wxString &file);
 
   bool CopyToClipboard()  override;
   
@@ -160,7 +160,7 @@ public:
       return (!m_images[m_displayed]->GnuplotSource().empty());
     }
 
-  void GnuplotSource(int image, wxString gnuplotFilename, wxString dataFilename, std::shared_ptr<wxFileSystem> filesystem)
+  void GnuplotSource(int image, const wxString &gnuplotFilename, const wxString &dataFilename, std::shared_ptr<wxFileSystem> filesystem)
     {
       m_images[image]->GnuplotSource(gnuplotFilename, dataFilename, filesystem);
     }

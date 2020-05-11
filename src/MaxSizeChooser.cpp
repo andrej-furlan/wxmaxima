@@ -32,10 +32,10 @@ MaxSizeChooser::MaxSizeChooser(wxWindow *parent, int id,
   wxStaticText *widthText = new wxStaticText(this, -1, wxT("Max width [in cm]:"));
   wxStaticText *heightText = new wxStaticText(this, -1, wxT("Max height [in cm]:"));
 
-  m_width = new wxSpinCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxSize(100, -1),wxSP_VERTICAL,
+  m_width = new wxSpinCtrl(this, -1, {}, wxDefaultPosition, wxSize(100, -1),wxSP_VERTICAL,
                            -1, 1000);
   m_width->SetValue(width);
-  m_height = new wxSpinCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxSize(100, -1),wxSP_VERTICAL,
+  m_height = new wxSpinCtrl(this, -1, {}, wxDefaultPosition, wxSize(100, -1),wxSP_VERTICAL,
                             -1, 1000);
   m_height->SetValue(height);
 

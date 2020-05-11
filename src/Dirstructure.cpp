@@ -90,7 +90,7 @@ wxString Dirstructure::ResourcesDir() const
     
     // We only need the drive and the directory part of the path to the binary
     exe.ClearExt();
-    exe.SetName(wxEmptyString);
+    exe.SetName({});
     
     // If the binary is in a source or bin folder the resources dir is one level above
     wxArrayString dirs = exe.GetDirs();

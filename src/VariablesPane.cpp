@@ -156,48 +156,48 @@ void Variablespane::OnRightClick(wxGridEvent &event)
   std::unique_ptr<wxMenu> popupMenu(new wxMenu);
   if(m_vars["values"] != 1)
     popupMenu->Append(varID_values,
-                      _("List of user variables"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of user variables"));
   if(m_vars["functions"] != 1)
     popupMenu->Append(varID_functions,
-                      _("List of user functions"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of user functions"));
   if(m_vars["arrays"] != 1)
     popupMenu->Append(varID_arrays,
-                      _("List of arrays"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of arrays"));
   if(m_vars["myoptions"] != 1)
     popupMenu->Append(varID_myoptions,
-                      _("List of changed options"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of changed options"));
   if(m_vars["rules"] != 1)
     popupMenu->Append(varID_rules,
-                      _("List of user rules"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of user rules"));
   if(m_vars["aliases"] != 1)
     popupMenu->Append(varID_aliases,
-                      _("List of user aliases"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of user aliases"));
   if(m_vars["structures"] != 1)
     popupMenu->Append(varID_structs,
-                      _("List of structs"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of structs"));
   if(m_vars["gradefs"] != 1)
     popupMenu->Append(varID_gradefs,
-                      _("List of user-defined derivatives"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of user-defined derivatives"));
   if(m_vars["props"] != 1)
     popupMenu->Append(varID_prop,
-                      _("List of user-defined properties"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of user-defined properties"));
   if(m_vars["gradefs"] != 1)
     popupMenu->Append(varID_gradefs,
-                      _("List of user-defined let rule packages"), wxEmptyString, wxITEM_NORMAL);
+                      _("List of user-defined let rule packages"));
   popupMenu->AppendSeparator();    
   if(GetGridCursorRow()>=0)
   {
     popupMenu->Append(varID_delete_row,
-                      _("Remove"), wxEmptyString, wxITEM_NORMAL);
+                      _("Remove"));
   }
   
   if(GetNumberRows()>2)
   {
     popupMenu->Append(varID_clear,
-                      _("Remove all"), wxEmptyString, wxITEM_NORMAL);
+                      _("Remove all"));
   }
   popupMenu->Append(varID_add_all,
-                    _("Add all"), wxEmptyString, wxITEM_NORMAL);
+                    _("Add all"));
 
   if (popupMenu->GetMenuItemCount() > 0)
     PopupMenu(popupMenu.get());  
@@ -226,7 +226,7 @@ void Variablespane::OnTextChange(wxGridEvent &event)
   }
   else
   {
-    if(GetCellValue(event.GetRow(),0) != wxEmptyString)
+    if(!GetCellValue(event.GetRow(),0).empty())
     {
       SetCellTextColour(event.GetRow(),0,*wxRED);
       SetCellTextColour(event.GetRow(),1,*wxLIGHT_GREY);
@@ -236,7 +236,7 @@ void Variablespane::OnTextChange(wxGridEvent &event)
   }
   RefreshAttr(event.GetRow(), 0);
 
-  if((GetNumberRows() == 0) || (GetCellValue(GetNumberRows()-1,0) != wxEmptyString))
+  if((GetNumberRows() == 0) || (!GetCellValue(GetNumberRows()-1,0).empty()))
     AppendRows();
   else
     for(int i = 0; i < GetNumberRows() - 1; i++)
@@ -261,7 +261,7 @@ void Variablespane::OnTextChange(wxGridEvent &event)
   EndBatch();
 }
 
-void Variablespane::VariableValue(wxString var, wxString val)
+void Variablespane::VariableValue(const wxString &var, const wxString &val)
 {
   for(int i = 0; i < GetNumberRows(); i++)
     if(GetCellValue(i,0) == UnescapeVarname(var))
@@ -272,7 +272,7 @@ void Variablespane::VariableValue(wxString var, wxString val)
     }
 }
 
-void Variablespane::VariableUndefined(wxString var)
+void Variablespane::VariableUndefined(const wxString &var)
 {
   for(int i = 0; i < GetNumberRows(); i++)
     if(GetCellValue(i,0) == UnescapeVarname(var))
@@ -306,43 +306,39 @@ wxArrayString Variablespane::GetVarnames()
   return retVal;
 }
 
-wxString Variablespane::InvertCase(wxString var)
+wxString Variablespane::InvertCase(const wxString &var)
 {
   wxString retval;
-  for (wxString::const_iterator it = var.begin(); it != var.end(); ++it)
+  for (auto ch : var)
   {
-    if(wxIsupper(*it))
-      retval += wxString(*it).Lower();
+    if (wxIsupper(ch))
+      retval += wxTolower(ch);
+    else if (wxIslower(ch))
+      retval += wxToupper(ch);
     else
-    {
-      if(wxIslower(*it))
-        retval += wxString(*it).Upper();
-      else
-        retval += *it;
-    }
-      
+      retval += ch;
   }
   return retval;
 }
 
-void Variablespane::AddWatchCode(wxString code)
+void Variablespane::AddWatchCode(const wxString &code)
 {
+  bool lastEscape = false;
   wxString unescapedCode;
-  for (wxString::const_iterator it = code.begin(); it != code.end(); ++it)
+  for (auto ch : code)
   {
-    if(*it != '\\')
-      unescapedCode+=*it;
+    if (ch == '\\' && !lastEscape)
+      lastEscape = true;
     else
     {
-      ++it;
-      if(it != code.end())
-        unescapedCode += *it;
+      unescapedCode += ch;
+      lastEscape = false;
     }
   }
   AddWatch(unescapedCode);
 }
 
-void Variablespane::AddWatch(wxString watch)
+void Variablespane::AddWatch(const wxString &watch)
 {
   BeginBatch();
   SetCellValue(GetNumberRows()-1,0,watch);
@@ -351,17 +347,14 @@ void Variablespane::AddWatch(wxString watch)
   EndBatch();
 }
 
-wxString Variablespane::UnescapeVarname(wxString var)
+wxString Variablespane::UnescapeVarname(const wxString &var)
 {
-  if(var.StartsWith(wxT("$")))
-    var = var.Right(var.Length()-1);
-  else
-    var = "?" + var;
-  return var;
+  return var.StartsWith(wxT("$")) ? var.Right(var.Length()-1) : var;
 }
 
-wxString Variablespane::EscapeVarname(wxString var)
+wxString Variablespane::EscapeVarname(const wxString &v)
 {
+  wxString var = v;
   var.Replace("\\","\\\\");
   var.Replace("+","\\+");
   var.Replace("#","\\#");
@@ -390,25 +383,21 @@ wxString Variablespane::EscapeVarname(wxString var)
   var.Replace("]","\\]");
   var.Replace(" ","\\ ");
   if(var.StartsWith("\\?"))
-    var = var.Right(var.Length()-1);
+    var.Remove(0, 1);
   if(!var.StartsWith(wxT("?")))
-    var = "$" + var;
+    var.Prepend("$");
   return var;
 }
 
-bool Variablespane::IsValidVariable(wxString var)
+bool Variablespane::IsValidVariable(const wxString &var)
 {
-  for (wxString::const_iterator it = var.begin(); it != var.end(); ++it)
-  {
-    if(!wxIsprint(*it))
-      return false;
-  }
-
-  if(var.empty())
+  if (!std::all_of(var.begin(), var.end(), wxIsprint))
     return false;
-  if((var[0] >= '0') && (var[0] <= '9'))
-    return false;    
-  if(var.Contains(":"))
+  if (var.empty())
+    return false;
+  if ((var[0] >= '0') && (var[0] <= '9'))
+    return false;
+  if (std::find(var.begin(), var.end(), ':') != var.end())
     return false;
   return true;
 }
@@ -417,7 +406,7 @@ void Variablespane::ResetValues()
 {
   for(int i = 0; i < GetNumberRows(); i++)
   {
-    if(GetCellValue(i,0) != wxEmptyString)
+    if(!GetCellValue(i,0).empty())
     {
       SetCellTextColour(i,1,*wxLIGHT_GREY);
       SetCellValue(i,1,_("Undefined"));

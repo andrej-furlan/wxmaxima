@@ -32,7 +32,7 @@
 #include "wx/config.h"
 
 TextCell::TextCell(Cell *parent, Configuration **config, CellPointers *cellPointers,
-                   wxString text, TextStyle style) : Cell(parent, config, cellPointers)
+                   const wxString &text, TextStyle style) : Cell(parent, config, cellPointers)
 {
   m_nextToDraw = NULL;
   switch(m_textStyle = style)
@@ -112,7 +112,7 @@ void TextCell::SetValue(const wxString &text)
   m_text = text;
   ResetSize();
   m_text.Replace(wxT("\xDCB6"), wxT("\u00A0")); // A non-breakable space
-  m_text.Replace(wxT("\n"), wxEmptyString);
+  m_text.Replace(wxT("\n"), {});
   m_text.Replace(wxT("-->"), wxT("\u2794"));
   m_text.Replace(wxT(" -->"), wxT("\u2794"));
   m_text.Replace(wxT(" \u2212\u2192 "), wxT("\u2794"));
@@ -375,7 +375,7 @@ double TextCell::GetScaledTextSize() const
 
 }
 
-wxSize TextCell::GetTextSize(wxString const &text)
+wxSize TextCell::GetTextSize(const wxString &text)
 {
   wxDC *dc = (*m_configuration)->GetDC();
   double fontSize = GetScaledTextSize();
@@ -403,7 +403,7 @@ bool TextCell::NeedsRecalculation(int fontSize)
     (
       (m_textStyle == TS_LABEL) &&
       ((*m_configuration)->UseUserLabels()) &&
-    (!m_userDefinedLabel.IsEmpty())
+    (!m_userDefinedLabel.empty())
       ) ||
     (
       (m_textStyle == TS_NUMBER) &&
@@ -735,7 +735,7 @@ void TextCell::SetFont(int fontsize)
   
   if (!font.IsOk())
   {
-    req.Family(wxFONTFAMILY_MODERN).FaceName(wxEmptyString);
+    req.Family(wxFONTFAMILY_MODERN).FaceName({});
     font = FontCache::GetAFont(req);
   }
   

@@ -74,8 +74,8 @@ void ActualValuesStorageWiz::OnValueChange(wxGridEvent &event)
 {
   if(event.GetRow() >= m_grid->GetNumberRows() - 1)
   {
-    if((m_grid->GetCellValue(event.GetRow(),0) != wxEmptyString) ||
-       (m_grid->GetCellValue(event.GetRow(),1) != wxEmptyString))
+    if((!m_grid->GetCellValue(event.GetRow(),0).empty()) ||
+       (!m_grid->GetCellValue(event.GetRow(),1).empty()))
       m_grid->AppendRows();
     else
     {
@@ -110,8 +110,8 @@ wxString ActualValuesStorageWiz::GetValue()
   wxString retval = wxT("[");
   for(int i = 0;i < m_grid->GetNumberRows(); i++)
   {
-    if((m_grid->GetCellValue(i,0) != wxEmptyString) ||
-       (m_grid->GetCellValue(i,1) != wxEmptyString))
+    if((!m_grid->GetCellValue(i,0).empty()) ||
+       (!m_grid->GetCellValue(i,1).empty()))
     {
       if (!firstline)
         retval += wxT(",\n");

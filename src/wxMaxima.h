@@ -102,7 +102,7 @@ class wxMaxima : public wxMaximaFrame
 public:
 
   wxMaxima(wxWindow *parent, int id, wxLocale *locale, const wxString title,
-           const wxString &filename = wxEmptyString,
+           const wxString &filename = {},
            const wxPoint pos = wxDefaultPosition, const wxSize size = wxDefaultSize);
   
   virtual ~wxMaxima();
@@ -174,7 +174,7 @@ public:
   
   void StripLispComments(wxString &s);
 
-  void SendMaxima(wxString s, bool addToHistory = false);
+  void SendMaxima(const wxString &str, bool addToHistory = false);
 
   //! Open a file
   bool OpenFile(const wxString &file, const wxString &command ={});
@@ -267,7 +267,7 @@ private:
 
   /*! A human-readable presentation of eventual unmatched-parenthesis type errors
 
-    If text doesn't contain any error this function returns wxEmptyString
+    If text doesn't contain any error this function returns an empty string
   */
   wxString GetUnmatchedParenthesisState(wxString text,int &index);
   //! The buffer all text from maxima is stored in before converting it to a wxString.
@@ -299,7 +299,7 @@ protected:
   wxString GetMaximaHelpFile2();
 
   //! Show the help for maxima
-  void ShowMaximaHelp(wxString = {});
+  void ShowMaximaHelp(const wxString &text = {});
 
   //! Show the help for wxMaxima
   void ShowWxMaximaHelp();
@@ -422,7 +422,7 @@ protected:
     \param dimensionsOfNewDrawCommand The number of dimensions the new draw command needs to 
                                       have if we need to create one..
    */
-  void AddDrawParameter(wxString cmd, int dimensionsOfNewDrawCommand = 2);
+  void AddDrawParameter(const wxString &cmd, int dimensionsOfNewDrawCommand = 2);
 
   /* Append something to the console. Might be Text or XML maths.
 
@@ -691,7 +691,7 @@ protected:
     If we just want to look if maxima's current output contains an ending tag
     this is the place we can search in fast.
 
-    wxEmptyString means that the current output isn't long enought to make 
+    Empty string means that the current output isn't long enought to make
     creating this string worthwile.
    */
   wxString m_currentOutputEnd;
@@ -822,6 +822,8 @@ public:
     \param wxmLen  The length of wxmData
    */
   void NewWindow(const wxString &file = {}, bool evalOnStartup = false, bool exitAfterEval = false, unsigned char *wxmData = NULL, int wxmLen = 0);
+  void NewWindow(unsigned char *wxmData, int wxmLen)
+  { NewWindow({}, false, false, wxmData, wxmLen); }
 
   static std::vector<wxMaxima *> m_topLevelWindows;
   static void DelistTopLevelWindow(wxMaxima *);

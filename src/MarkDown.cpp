@@ -36,8 +36,9 @@ MarkDownParser::MarkDownParser(Configuration *cfg)
   m_configuration = cfg;
 }
 
-wxString MarkDownParser::MarkDown(wxString str)
+wxString MarkDownParser::MarkDown(const wxString &md)
 {
+  wxString str = md;
   // Replace all markdown equivalents of arrows and similar symbols by the
   // according symbols
   for (replaceList::const_iterator it = regexReplaceList.begin();

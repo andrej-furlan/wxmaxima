@@ -26,7 +26,7 @@ LogPane::LogPane(wxWindow *parent, wxWindowID id, bool becomeLogTarget) : wxPane
   m_logPanelTarget = NULL;
   wxBoxSizer *vbox  = new wxBoxSizer(wxVERTICAL);
 
-  m_textCtrl = new wxTextCtrl(this, -1, wxEmptyString, wxDefaultPosition,
+  m_textCtrl = new wxTextCtrl(this, -1, {}, wxDefaultPosition,
 					wxDefaultSize,
 					wxTE_MULTILINE | wxTE_READONLY | wxHSCROLL);
 

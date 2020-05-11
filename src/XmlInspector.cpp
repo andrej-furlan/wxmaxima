@@ -32,7 +32,7 @@
 #include <wx/regex.h>
 
 XmlInspector::XmlInspector(wxWindow *parent, int id) : wxRichTextCtrl(parent, id,
-                                                                      wxEmptyString,
+                                                                      {},
                                                                       wxDefaultPosition,
                                                                       wxSize(wxSystemSettings::GetMetric ( wxSYS_SCREEN_X )/10,
                     wxSystemSettings::GetMetric ( wxSYS_SCREEN_Y )/10),
@@ -80,7 +80,7 @@ void XmlInspector::Update()
   {
     if(m_state != toMaxima)
     {
-      if(GetValue() != wxEmptyString)
+      if(!GetValue().empty())
       {
         Newline();Newline();
       }
@@ -109,7 +109,7 @@ void XmlInspector::Update()
   {
     if(m_state != fromMaxima)
     {
-      if(GetValue() != wxEmptyString)
+      if(!GetValue().empty())
       {
         Newline();Newline();
       }
@@ -168,7 +168,7 @@ wxString XmlInspector::IndentString(int level)
   return result;
 }
 
-void XmlInspector::Add_ToMaxima(wxString text)
+void XmlInspector::Add_ToMaxima(const wxString &text)
 {
   if(!m_toMaxima.empty())
   {
@@ -180,7 +180,7 @@ void XmlInspector::Add_ToMaxima(wxString text)
   m_updateNeeded = true;
 }
 
-void XmlInspector::Add_FromMaxima(wxString text)
+void XmlInspector::Add_FromMaxima(const wxString &text)
 {
   m_fromMaxima += text;
   m_updateNeeded = true;

@@ -72,11 +72,11 @@ public:
   //! Called if a printable char was entered
   void OnChar(wxKeyEvent &event);
   //! Add a variable whose name contains all the escapes maxima needs to the variables list
-  void AddWatchCode(wxString code);
+  void AddWatchCode(const wxString &code);
   //! Add a variable without escapes to the list.
-  void AddWatch(wxString watch);
+  void AddWatch(const wxString &watch);
   //! Is this string a valid variable name?
-  bool IsValidVariable(wxString var);
+  bool IsValidVariable(const wxString &var);
   //! Returns a list of all variable names in a format maxima understands
   wxArrayString GetEscapedVarnames();
   //! Returns the variable list in a human-readable format
@@ -86,17 +86,17 @@ public:
   //! Remove all entries from the variables list
   void Clear();
   //! Convert a human-readable variable name to one maxima understands
-  wxString EscapeVarname(wxString var);
+  wxString EscapeVarname(const wxString &var);
   //! Convert a variable name maxima understands to human-readable
-  wxString UnescapeVarname(wxString var);
+  wxString UnescapeVarname(const wxString &var);
   //! Tell the variables pane about a variable value
-  void VariableValue(wxString var, wxString val);
+  void VariableValue(const wxString &var, const wxString &val);
   //! Sets the variable var to "undefined"
-  void VariableUndefined(wxString var);
+  void VariableUndefined(const wxString &var);
   //! The destructor
   ~Variablespane();
 private:
-  wxString InvertCase(wxString var);
+  wxString InvertCase(const wxString &var);
   WX_DECLARE_STRING_HASH_MAP(int, IntHash);
   //! A list of all symbols that can be entered using Esc-Codes
   IntHash m_vars;

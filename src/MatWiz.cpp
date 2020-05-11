@@ -59,7 +59,7 @@ void MatWiz::set_properties()
     for (int i = 0; i < m_height; i++)
       for (int j = 0; j <= i; j++)
       {
-        m_inputs[i * m_width + j]->SetValue(wxEmptyString);
+        m_inputs[i * m_width + j]->SetValue({});
         m_inputs[i * m_width + j]->Enable(false);
       }
   }
@@ -68,7 +68,7 @@ void MatWiz::set_properties()
     for (int i = 0; i < m_height; i++)
       for (int j = 0; j < i; j++)
       {
-        m_inputs[i * m_width + j]->SetValue(wxEmptyString);
+        m_inputs[i * m_width + j]->SetValue({});
         m_inputs[i * m_width + j]->Enable(false);
       }
   }
@@ -78,7 +78,7 @@ void MatWiz::set_properties()
       for (int j = 0; j < m_width; j++)
         if (i != j)
         {
-          m_inputs[i * m_width + j]->SetValue(wxEmptyString);
+          m_inputs[i * m_width + j]->SetValue({});
           m_inputs[i * m_width + j]->Enable(false);
         }
   }
@@ -188,7 +188,7 @@ MatDim::MatDim(wxWindow *parent, int id,
   choice_1 = new wxChoice(this, -1, wxDefaultPosition,
                           wxSize(150, -1), 4, choice_1_choices);
   label_0 = new wxStaticText(this, -1, _("Name:"));
-  text_ctrl_0 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_0 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(70, -1));
   static_line_1 = new wxStaticLine(this, -1);
 #if defined __WXMSW__

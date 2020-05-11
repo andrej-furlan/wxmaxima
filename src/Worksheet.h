@@ -144,8 +144,8 @@ private:
   class wxmDataObject : public wxCustomDataObject
   {
   public:
-    explicit wxmDataObject(wxString data);
-
+    explicit wxmDataObject(wxString &&data);
+    explicit wxmDataObject(const wxString &data);
     wxmDataObject();
 
   private:
@@ -155,8 +155,8 @@ private:
   class MathMLDataObject2 : public wxCustomDataObject
   {
   public:
-    explicit MathMLDataObject2(wxString data);
-
+    explicit MathMLDataObject2(wxString &&data);
+    explicit MathMLDataObject2(const wxString &data);
     MathMLDataObject2();
 
   private:
@@ -168,8 +168,8 @@ private:
   class RtfDataObject : public wxCustomDataObject
   {
   public:
-    explicit RtfDataObject(wxString data);
-
+    explicit RtfDataObject(wxString &&data);
+    explicit RtfDataObject(const wxString &data);
     RtfDataObject();
 
   private:
@@ -179,8 +179,8 @@ private:
   class RtfDataObject2 : public wxCustomDataObject
   {
   public:
-    explicit RtfDataObject2(wxString data);
-
+    explicit RtfDataObject2(wxString &&data);
+    explicit RtfDataObject2(const wxString &data);
     RtfDataObject2();
 
   private:
@@ -776,7 +776,7 @@ public:
 
     Does convert the not equal sign to a '#' and similar.
    */
-  wxString UnicodeToMaxima(wxString s);
+  wxString UnicodeToMaxima(const wxString &s);
 
   //! Scroll to the start of the worksheet.
   void ScrollToStart()
@@ -1446,7 +1446,7 @@ public:
   { m_autocomplete->AddSymbol(fun, type); }
 
   //! Add a xml-encoded list of symbols to the autocompletion list
-  void AddSymbols(wxString xml)
+  void AddSymbols(const wxString &xml)
   { m_autocomplete->AddSymbols(xml); }
 
   void SetActiveCellText(const wxString &text);
@@ -1471,7 +1471,7 @@ public:
   @{
   */
   //! Remember the answer to the LastQuestion().
-  void SetAnswer(wxString answer);
+  void SetAnswer(const wxString &answer);
   //! Mark the current question from maxima as "answered"..
   void QuestionAnswered();
 

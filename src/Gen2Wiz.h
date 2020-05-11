@@ -31,13 +31,13 @@
 class Gen2Wiz : public wxDialog
 {
 public:
-  Gen2Wiz(wxString lab1, wxString lab2,
-          wxString val1, wxString val2,
+  Gen2Wiz(const wxString &lab1, const wxString &lab2,
+          const wxString &val1, const wxString &val2,
           Configuration *cfg,
           wxWindow *parent, int id, const wxString &title,
           bool eq = false,
-          const wxString &warning = wxEmptyString,
-          const wxString &warningToolTip = wxEmptyString,
+          const wxString &warning = {},
+          const wxString &warningToolTip = {},
           const wxPoint &pos = wxDefaultPosition,
           const wxSize &size = wxDefaultSize,
           long style = wxMINIMIZE_BOX | wxMAXIMIZE_BOX | wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX | wxCLIP_CHILDREN);

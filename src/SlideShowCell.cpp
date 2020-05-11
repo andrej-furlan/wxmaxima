@@ -82,14 +82,14 @@ SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPoi
     ReloadTimer();
 }
 
-SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, wxString WXUNUSED(type)):
+SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, const wxString &WXUNUSED(type)):
   SlideShow(parent, config, cellPointers)
 {
   m_nextToDraw = NULL;
   LoadImages(image);
 }
 
-SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxString image, bool remove):
+SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, const wxString &image, bool remove):
   SlideShow(parent, config, cellPointers)
 {
   m_nextToDraw = NULL;
@@ -188,7 +188,7 @@ void SlideShow::LoadImages(wxMemoryBuffer imageData)
   }
 }
 
-void SlideShow::LoadImages(wxString imageFile)
+void SlideShow::LoadImages(const wxString &imageFile)
 {
   wxImage images;
   size_t count = wxImage::GetImageCount(imageFile);
@@ -203,7 +203,7 @@ void SlideShow::LoadImages(wxString imageFile)
   }
 }
 
-void SlideShow::LoadImages(wxArrayString images, bool deleteRead)
+void SlideShow::LoadImages(const wxArrayString &images, bool deleteRead)
 {
   wxString gnuplotFilename;
   wxString dataFilename;
@@ -404,12 +404,12 @@ wxString SlideShow::ToXML()
       // Anonymize the name of our temp directory for saving
       wxString gnuplotSource;
       wxString gnuplotData;
-      if(m_images[i]->GnuplotData() != wxEmptyString)
+      if(!m_images[i]->GnuplotData().empty())
       {
         wxFileName gnuplotDataFile(m_images[i]->GnuplotData());
         gnuplotData = gnuplotDataFile.GetFullName();
       }
-      if(m_images[i]->GnuplotSource() != wxEmptyString)
+      if(!m_images[i]->GnuplotSource().empty())
       {
         wxFileName gnuplotSourceFile(m_images[i]->GnuplotSource());
         gnuplotSource = gnuplotSourceFile.GetFullName();
@@ -467,7 +467,7 @@ wxString SlideShow::ToXML()
   return wxT("\n<slide") + flags + wxT(">") + images + wxT("</slide>");
 }
 
-wxSize SlideShow::ToImageFile(wxString file)
+wxSize SlideShow::ToImageFile(const wxString &file)
 {
   return m_images[m_displayed]->ToImageFile(file);
 }
@@ -539,7 +539,7 @@ wxString SlideShow::GetToolTip(const wxPoint &point)
     return {};
 }
 
-wxSize SlideShow::ToGif(wxString file)
+wxSize SlideShow::ToGif(const wxString &file)
 {
   // Show a busy cursor as long as we export a .gif file (which might be a lengthy
   // action).

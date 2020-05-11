@@ -50,7 +50,7 @@ protected:
   class RegexReplacer : public wxRegEx
   {
   public:
-    RegexReplacer(wxString From, wxString To) :
+    RegexReplacer(const wxString &From, const wxString &To) :
       wxRegEx(From),
       replaceBy(To)
     {
@@ -72,7 +72,7 @@ public:
 
   virtual ~MarkDownParser();
 
-  wxString MarkDown(wxString str);
+  wxString MarkDown(const wxString &str);
 
   //! A list of things we want to replace.
   replaceList RegexReplaceList() const

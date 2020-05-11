@@ -1397,21 +1397,20 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
   {
     if (IsSelected(MC_TYPE_IMAGE) || IsSelected(MC_TYPE_SLIDE))
     {
-      popupMenu->Append(wxID_COPY, _("Copy"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_image, _("Save Image..."), wxEmptyString, wxITEM_NORMAL);
+      popupMenu->Append(wxID_COPY, _("Copy"));
+      popupMenu->Append(popid_image, _("Save Image..."));
       if (IsSelected(MC_TYPE_SLIDE))
       {
-        popupMenu->Append(popid_animation_save, _("Save Animation..."), wxEmptyString, wxITEM_NORMAL);
-        popupMenu->Append(popid_copy_animation, _("Copy Animation"),
-                          wxEmptyString, wxITEM_NORMAL);
-        popupMenu->Append(popid_animation_start, _("Start Animation"), wxEmptyString, wxITEM_NORMAL);
+        popupMenu->Append(popid_animation_save, _("Save Animation..."));
+        popupMenu->Append(popid_copy_animation, _("Copy Animation"));
+        popupMenu->Append(popid_animation_start, _("Start Animation"));
       }
       else
       {
         if(dynamic_cast<GroupCell *>(m_cellPointers.m_selectionStart->GetGroup())->GetGroupType() == GC_TYPE_IMAGE)
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_maxsizechooser, _("Restrict Maximum size"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_maxsizechooser, _("Restrict Maximum size"));
         }
       }
       if(
@@ -1419,7 +1418,7 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
          m_cellPointers.m_selectionStart->CanPopOut()))
       {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_popup_gnuplot, _("Popout interactively"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_popup_gnuplot, _("Popout interactively"));
       }
     }
     else if (m_cellPointers.m_selectionStart != NULL)
@@ -1438,37 +1437,31 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
 
         if (CanCopy())
         {
-          popupMenu->Append(wxID_COPY, _("Copy"), wxEmptyString, wxITEM_NORMAL);
-		  popupMenu->Append(popid_copy_matlab, _("Copy for Octave/Matlab"), wxEmptyString, wxITEM_NORMAL);
-		  popupMenu->Append(popid_copy_tex, _("Copy as LaTeX"), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_copy_text, _("Copy as plain text"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(wxID_COPY, _("Copy"));
+          popupMenu->Append(popid_copy_matlab, _("Copy for Octave/Matlab"));
+          popupMenu->Append(popid_copy_tex, _("Copy as LaTeX"));
+          popupMenu->Append(popid_copy_text, _("Copy as plain text"));
           if (m_cellPointers.m_selectionStart == m_cellPointers.m_selectionEnd)
-            popupMenu->Append(popid_copy_mathml, _("Copy as MathML (e.g. to word processor)"), wxEmptyString,
-                              wxITEM_NORMAL);
-          popupMenu->Append(popid_copy_image, _("Copy as Image"),
-                            wxEmptyString, wxITEM_NORMAL);
+            popupMenu->Append(popid_copy_mathml, _("Copy as MathML (e.g. to word processor)"));
+          popupMenu->Append(popid_copy_image, _("Copy as Image"));
           if((GetSelectionStart() != NULL) && (GetSelectionStart() == GetSelectionEnd()) &&
              (GetSelectionStart()->GetType() == MC_TYPE_SLIDE))
-            popupMenu->Append(popid_copy_animation, _("Copy Animation"),
-                              wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_copy_svg, _("Copy as SVG"),
-                            wxEmptyString, wxITEM_NORMAL);
+            popupMenu->Append(popid_copy_animation, _("Copy Animation"));
+          popupMenu->Append(popid_copy_svg, _("Copy as SVG"));
 #if wxUSE_ENH_METAFILE
-          popupMenu->Append(popid_copy_emf, _("Copy as EMF"),
-                            wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_copy_emf, _("Copy as EMF"));
 #endif
-          popupMenu->Append(popid_copy_rtf, _("Copy as RTF"),
-                            wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_copy_rtf, _("Copy as RTF"));
           if (CanDeleteSelection())
-            popupMenu->Append(popid_delete, _("Delete Selection"), wxEmptyString, wxITEM_NORMAL);
+            popupMenu->Append(popid_delete, _("Delete Selection"));
         }
         popupMenu->AppendSeparator();
-        popupMenu->Append(popid_evaluate, _("Evaluate Cell(s)"), wxEmptyString, wxITEM_NORMAL);
+        popupMenu->Append(popid_evaluate, _("Evaluate Cell(s)"));
         if(m_cellPointers.m_selectionStart == m_cellPointers.m_selectionEnd)
-          popupMenu->Append(ToolBar::tb_evaluate_rest, _("Evaluate Cells Below"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(ToolBar::tb_evaluate_rest, _("Evaluate Cells Below"));
 
         if (CanMergeSelection())
-          popupMenu->Append(popid_merge_cells, _("Merge Cells"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_merge_cells, _("Merge Cells"));
 
         // Add a "evaluate this <sectioning unit>" context menu entry.
         GroupCell *group;
@@ -1479,37 +1472,32 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
         if (StartOfSectioningUnit(group)->GetGroupType() == GC_TYPE_TITLE)
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Part\tShift+Ctrl+Enter"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Part\tShift+Ctrl+Enter"));
         }
         if (StartOfSectioningUnit(group)->GetGroupType() == GC_TYPE_SECTION)
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Section\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Section\tShift+Ctrl+Enter"));
         }
         if (StartOfSectioningUnit(group)->GetGroupType() == GC_TYPE_SUBSECTION)
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Subsection\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Subsection\tShift+Ctrl+Enter"));
         }
         if (StartOfSectioningUnit(group)->GetGroupType() == GC_TYPE_SUBSUBSECTION)
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Sub-Subsection\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Sub-Subsection\tShift+Ctrl+Enter"));
         }
         if (StartOfSectioningUnit(group)->GetGroupType() == GC_TYPE_HEADING5)
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 5\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 5\tShift+Ctrl+Enter"));
         }
         if (StartOfSectioningUnit(group)->GetGroupType() == GC_TYPE_HEADING6)
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 6\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 6\tShift+Ctrl+Enter"));
         }
         popupMenu->AppendCheckItem(popid_auto_answer, _("Automatically answer questions"),
                                    _("Automatically fill in answers known from the last run"));
@@ -1517,49 +1505,43 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
         if(dynamic_cast<GroupCell *>(m_cellPointers.m_selectionStart)->GetGroupType() == GC_TYPE_IMAGE)
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_maxsizechooser, _("Restrict Maximum size"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_maxsizechooser, _("Restrict Maximum size"));
         }
         if(
           ((m_cellPointers.m_selectionStart != NULL) &&
            (m_cellPointers.m_selectionStart->CanPopOut())))
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_popup_gnuplot, _("Popout interactively"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_popup_gnuplot, _("Popout interactively"));
         }
       }
       else
       {
         if (CanCopy(true))
         {
-          popupMenu->Append(wxID_COPY, _("Copy"), wxEmptyString, wxITEM_NORMAL);
-		  popupMenu->Append(popid_copy_matlab, _("Copy for Octave/Matlab"), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_copy_tex, _("Copy as LaTeX"), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_copy_text, _("Copy as plain text"), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_copy_mathml, _("Copy as MathML (e.g. to word processor)"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(wxID_COPY, _("Copy"));
+          popupMenu->Append(popid_copy_matlab, _("Copy for Octave/Matlab"));
+          popupMenu->Append(popid_copy_tex, _("Copy as LaTeX"));
+          popupMenu->Append(popid_copy_text, _("Copy as plain text"));
+          popupMenu->Append(popid_copy_mathml, _("Copy as MathML (e.g. to word processor)"));
 
-          popupMenu->Append(popid_copy_image, _("Copy as Image"),
-                            wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_copy_image, _("Copy as Image"));
           if((GetSelectionStart() != NULL) && (GetSelectionStart() == GetSelectionEnd()) &&
              (GetSelectionStart()->GetType() == MC_TYPE_SLIDE))
-            popupMenu->Append(popid_copy_animation, _("Copy Animation"),
-                              wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_copy_svg, _("Copy as SVG"),
-                            wxEmptyString, wxITEM_NORMAL);
+            popupMenu->Append(popid_copy_animation, _("Copy Animation"));
+          popupMenu->Append(popid_copy_svg, _("Copy as SVG"));
   #if wxUSE_ENH_METAFILE
-          popupMenu->Append(popid_copy_emf, _("Copy as EMF"),
-                            wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_copy_emf, _("Copy as EMF"));
 #endif
-          popupMenu->Append(popid_copy_rtf, _("Copy as RTF"),
-                            wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_copy_rtf, _("Copy as RTF"));
           if (CanDeleteSelection())
-            popupMenu->Append(popid_delete, _("Delete Selection"), wxEmptyString, wxITEM_NORMAL);
+            popupMenu->Append(popid_delete, _("Delete Selection"));
         }
         if(IsSelected(MC_TYPE_LABEL))
         {
           if(popupMenu->GetMenuItemCount()>0)
             popupMenu->AppendSeparator();
-          popupMenu->Append(popid_add_watch_label, _("Add to watchlist"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_add_watch_label, _("Add to watchlist"));
         }
 
         if (
@@ -1570,27 +1552,27 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
         {
           if(popupMenu->GetMenuItemCount()>0)
             popupMenu->AppendSeparator();
-          popupMenu->Append(popid_add_watch, _("Add to watchlist"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_add_watch, _("Add to watchlist"));
         }
         
         if (IsSelected(MC_TYPE_DEFAULT) || IsSelected(MC_TYPE_LABEL))
         {
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_float, _("To Float"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_float, _("To Float"));
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_solve, _("Solve..."), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_solve_num, _("Find Root..."), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_solve, _("Solve..."));
+          popupMenu->Append(popid_solve_num, _("Find Root..."));
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_simplify, _("Simplify Expression"), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_factor, _("Factor Expression"), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_expand, _("Expand Expression"), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_subst, _("Substitute..."), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_simplify, _("Simplify Expression"));
+          popupMenu->Append(popid_factor, _("Factor Expression"));
+          popupMenu->Append(popid_expand, _("Expand Expression"));
+          popupMenu->Append(popid_subst, _("Substitute..."));
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_integrate, _("Integrate..."), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_diff, _("Differentiate..."), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_integrate, _("Integrate..."));
+          popupMenu->Append(popid_diff, _("Differentiate..."));
           popupMenu->AppendSeparator();
-          popupMenu->Append(popid_plot2d, _("Plot 2d..."), wxEmptyString, wxITEM_NORMAL);
-          popupMenu->Append(popid_plot3d, _("Plot 3d..."), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_plot2d, _("Plot 2d..."));
+          popupMenu->Append(popid_plot3d, _("Plot 3d..."));
         }
       }
       if (
@@ -1627,33 +1609,33 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
 
     else if (m_hCaretActive == true)
     {
-      popupMenu->Append(wxID_PASTE, _("Paste"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(wxID_SELECTALL, _("Select All"), wxEmptyString, wxITEM_NORMAL);
+      popupMenu->Append(wxID_PASTE, _("Paste"));
+      popupMenu->Append(wxID_SELECTALL, _("Select All"));
       popupMenu->AppendSeparator();
-      popupMenu->Append(popid_insert_text, _("Insert Text Cell"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_insert_title, _("Insert Title Cell"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_insert_section, _("Insert Section Cell"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_insert_subsection, _("Insert Subsection Cell"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_insert_subsubsection, _("Insert Subsubsection Cell"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_insert_heading5, _("Insert Heading5 Cell"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_insert_heading6, _("Insert Heading6 Cell"), wxEmptyString, wxITEM_NORMAL);
+      popupMenu->Append(popid_insert_text, _("Insert Text Cell"));
+      popupMenu->Append(popid_insert_title, _("Insert Title Cell"));
+      popupMenu->Append(popid_insert_section, _("Insert Section Cell"));
+      popupMenu->Append(popid_insert_subsection, _("Insert Subsection Cell"));
+      popupMenu->Append(popid_insert_subsubsection, _("Insert Subsubsection Cell"));
+      popupMenu->Append(popid_insert_heading5, _("Insert Heading5 Cell"));
+      popupMenu->Append(popid_insert_heading6, _("Insert Heading6 Cell"));
         popupMenu->AppendSeparator();
-        popupMenu->Append(ToolBar::tb_evaltillhere, _("Evaluate Cells Above"), wxEmptyString, wxITEM_NORMAL);
-        popupMenu->Append(ToolBar::tb_evaluate_rest, _("Evaluate Cells Below"), wxEmptyString, wxITEM_NORMAL);
+        popupMenu->Append(ToolBar::tb_evaltillhere, _("Evaluate Cells Above"));
+        popupMenu->Append(ToolBar::tb_evaluate_rest, _("Evaluate Cells Below"));
     }
   }
 
     // popup menu in active cell
   else
   {
-    popupMenu->Append(wxID_CUT, _("Cut"), wxEmptyString, wxITEM_NORMAL);
-    popupMenu->Append(wxID_COPY, _("Copy"), wxEmptyString, wxITEM_NORMAL);
-    popupMenu->Append(wxID_PASTE, _("Paste"), wxEmptyString, wxITEM_NORMAL);
+    popupMenu->Append(wxID_CUT, _("Cut"));
+    popupMenu->Append(wxID_COPY, _("Copy"));
+    popupMenu->Append(wxID_PASTE, _("Paste"));
     popupMenu->AppendSeparator();
-    popupMenu->Append(wxID_SELECTALL, _("Select All"), wxEmptyString, wxITEM_NORMAL);
+    popupMenu->Append(wxID_SELECTALL, _("Select All"));
     if ((clickInSelection) &&
         dynamic_cast<GroupCell *>(GetActiveCell()->GetGroup())->GetGroupType() == GC_TYPE_CODE)
-      popupMenu->Append(popid_comment_selection, _("Comment Selection"), wxEmptyString, wxITEM_NORMAL);
+      popupMenu->Append(popid_comment_selection, _("Comment Selection"));
     wxString selectionString = GetActiveCell()->GetSelectionString();
     if(selectionString.empty())
       selectionString = GetActiveCell()->GetWordUnderCaret();
@@ -1663,10 +1645,10 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
        !selectionString.Contains(":") &&
        ((selectionString[0] < '0') || (selectionString[0] > '9'))
       )
-      popupMenu->Append(popid_add_watch, _("Add to watchlist"), wxEmptyString, wxITEM_NORMAL);
+      popupMenu->Append(popid_add_watch, _("Add to watchlist"));
 
     if (!clickInSelection)
-      popupMenu->Append(popid_divide_cell, _("Divide Cell"), wxEmptyString, wxITEM_NORMAL);
+      popupMenu->Append(popid_divide_cell, _("Divide Cell"));
 
     GroupCell *group = NULL;
     if (GetActiveCell() != NULL)
@@ -1687,27 +1669,22 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
       switch (StartOfSectioningUnit(group)->GetGroupType())
       {
         case GC_TYPE_TITLE:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Part\tShift+Ctrl+Enter"), wxEmptyString, wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Part\tShift+Ctrl+Enter"));
           break;
         case GC_TYPE_SECTION:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Section\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Section\tShift+Ctrl+Enter"));
           break;
         case GC_TYPE_SUBSECTION:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Subsection\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Subsection\tShift+Ctrl+Enter"));
           break;
         case GC_TYPE_SUBSUBSECTION:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Sub-Subsection\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Sub-Subsection\tShift+Ctrl+Enter"));
           break;
         case GC_TYPE_HEADING5:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 5\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 5\tShift+Ctrl+Enter"));
           break;
         case GC_TYPE_HEADING6:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 6\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 6\tShift+Ctrl+Enter"));
           break;
       default:{}
       }
@@ -1764,66 +1741,62 @@ void Worksheet::OnMouseRightDown(wxMouseEvent &event)
         case GC_TYPE_TITLE:
           if (group->GetHiddenTree() != NULL)
             popupMenu->Append(popid_unfold,
-                              _("Unhide Part"), wxEmptyString, wxITEM_NORMAL);
+                              _("Unhide Part"));
           else
             popupMenu->Append(popid_fold,
-                              _("Hide Part"), wxEmptyString, wxITEM_NORMAL);
+                              _("Hide Part"));
           break;
         case GC_TYPE_SECTION:
           if (group->GetHiddenTree() != NULL)
             popupMenu->Append(popid_unfold,
-                              _("Unhide Section"), wxEmptyString, wxITEM_NORMAL);
+                              _("Unhide Section"));
           else
             popupMenu->Append(popid_fold,
-                              _("Hide Section"), wxEmptyString, wxITEM_NORMAL);
+                              _("Hide Section"));
           break;
         case GC_TYPE_SUBSECTION:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Subsection\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Subsection\tShift+Ctrl+Enter"));
           if (group->GetHiddenTree() != NULL)
             popupMenu->Append(popid_unfold,
-                              _("Unhide Subsection"), wxEmptyString, wxITEM_NORMAL);
+                              _("Unhide Subsection"));
           else
             popupMenu->Append(popid_fold,
-                              _("Hide Subsection"), wxEmptyString, wxITEM_NORMAL);
+                              _("Hide Subsection"));
           break;
         case GC_TYPE_SUBSUBSECTION:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Sub-Subsection\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Sub-Subsection\tShift+Ctrl+Enter"));
           if (group->GetHiddenTree() != NULL)
             popupMenu->Append(popid_unfold,
-                              _("Unhide Subsubsection"), wxEmptyString, wxITEM_NORMAL);
+                              _("Unhide Subsubsection"));
           else
             popupMenu->Append(popid_fold,
-                              _("Hide Subsubsection"), wxEmptyString, wxITEM_NORMAL);
+                              _("Hide Subsubsection"));
           break;
         case GC_TYPE_HEADING5:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 5\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 5\tShift+Ctrl+Enter"));
           if (group->GetHiddenTree() != NULL)
             popupMenu->Append(popid_unfold,
-                              _("Unhide Heading 5"), wxEmptyString, wxITEM_NORMAL);
+                              _("Unhide Heading 5"));
           else
             popupMenu->Append(popid_fold,
-                              _("Hide Heading 5"), wxEmptyString, wxITEM_NORMAL);
+                              _("Hide Heading 5"));
           break;
         case GC_TYPE_HEADING6:
-          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 6\tShift+Ctrl+Enter"), wxEmptyString,
-                            wxITEM_NORMAL);
+          popupMenu->Append(popid_evaluate_section, _("Evaluate Heading 6\tShift+Ctrl+Enter"));
           if (group->GetHiddenTree() != NULL)
             popupMenu->Append(popid_unfold,
-                              _("Unhide Heading 6"), wxEmptyString, wxITEM_NORMAL);
+                              _("Unhide Heading 6"));
           else
             popupMenu->Append(popid_fold,
-                              _("Hide Heading 6"), wxEmptyString, wxITEM_NORMAL);
+                              _("Hide Heading 6"));
           break;
         default:
           if (group->GetHiddenTree() != NULL)
             popupMenu->Append(popid_unfold,
-                              _("Unhide contents"), wxEmptyString, wxITEM_NORMAL);
+                              _("Unhide contents"));
           else
             popupMenu->Append(popid_fold,
-                              _("Hide contents"), wxEmptyString, wxITEM_NORMAL);
+                              _("Hide contents"));
       }
     }
   }
@@ -2634,7 +2607,7 @@ bool Worksheet::CopyTeX()
     int imgCtr;
     while (gc != NULL)
     {
-      s += gc->ToTeX(wxEmptyString,wxEmptyString,&imgCtr);
+      s += gc->ToTeX({}, {}, &imgCtr);
       if (gc == m_cellPointers.m_selectionEnd)
         break;
       gc = gc->GetNext();
@@ -3037,7 +3010,7 @@ void Worksheet::DeleteRegion(GroupCell *start, GroupCell *end, UndoActions *undo
   SetSaved(false);
 }
 
-void Worksheet::SetAnswer(wxString answer)
+void Worksheet::SetAnswer(const wxString &answer)
 {
   GroupCell *answerCell = GetWorkingGroup();
   if(answerCell == NULL)
@@ -4145,14 +4118,14 @@ void Worksheet::OnCharNoActive(wxKeyEvent &event)
     case WXK_RETURN:
       ScrolledAwayFromEvaluation();
       if (m_cellPointers.m_selectionStart == NULL || m_cellPointers.m_selectionEnd == NULL)
-        OpenHCaret(wxEmptyString);
+        OpenHCaret();
       else
         OpenHCaret(GetString());
       break;
 
       // ESCAPE is handled by the new cell
     case WXK_ESCAPE:
-      OpenHCaret(wxEmptyString);
+      OpenHCaret();
       if (GetActiveCell() != NULL)
         Autocomplete(AutoComplete::esccommand);
       break;
@@ -4630,6 +4603,7 @@ bool Worksheet::CopySVG()
 
   return retval;
 }
+
 #if wxUSE_ENH_METAFILE
 bool Worksheet::CopyEMF()
 {
@@ -4756,7 +4730,7 @@ Cell *Worksheet::CopySelection(Cell *start, Cell *end, bool asData)
 void Worksheet::AddLineToFile(wxTextFile &output, const wxString &s)
 {
   if (s == wxT("\n") || s.empty())
-    output.AddLine(wxEmptyString);
+    output.AddLine({});
   else
   {
     wxStringTokenizer lines(s, wxT("\n"), wxTOKEN_RET_EMPTY_ALL);
@@ -6289,8 +6263,9 @@ bool Worksheet::ExportToTeX(const wxString &file)
   return done;
 }
 
-wxString Worksheet::UnicodeToMaxima(wxString s)
+wxString Worksheet::UnicodeToMaxima(const wxString &str)
 {
+  wxString s = str;
   s.Replace(wxT("\u2052"), "-"); // commercial minus sign
   s.Replace(wxT("\uFE63"), "-"); // unicode small minus sign
   s.Replace(wxT("\uFF0D"), "-"); // unicode big minus sign
@@ -6298,8 +6273,7 @@ wxString Worksheet::UnicodeToMaxima(wxString s)
   s.Replace(wxT("\uFB29"), "+"); // hebrew alternate plus
 
   wxString retval;
-  
-  for (auto const &tok : MaximaTokenizer(s, m_configuration).PopTokens())
+  for (auto const &tok : MaximaTokenizer(std::move(s), m_configuration).PopTokens())
   {
     auto &tokenString = tok.GetText();
     switch(tok.GetStyle())
@@ -6442,7 +6416,7 @@ bool Worksheet::ExportToMAC(const wxString &file)
   }
   ExportToMAC(backupfile, GetTree(), wxm, cellMap, fixReorderedIndices);
 
-  AddLineToFile(backupfile, wxEmptyString);
+  AddLineToFile(backupfile, {});
   if (wxm)
   {
     AddLineToFile(backupfile, wxT("/* Old versions of Maxima abort on loading files that end in a comment. */"));
@@ -7738,7 +7712,7 @@ void Worksheet::PasteFromClipboard()
   // Check if the clipboard contains an image.
   else if (wxTheClipboard->IsSupported(wxDF_BITMAP))
   {
-    OpenHCaret(wxEmptyString, GC_TYPE_IMAGE);
+    OpenHCaret({}, GC_TYPE_IMAGE);
     GroupCell *group = dynamic_cast<GroupCell *>(GetActiveCell()->GetGroup());
 
     if (group != NULL)
@@ -8332,7 +8306,7 @@ bool Worksheet::FindNext(const wxString &str, bool down, bool ignoreCase, bool w
         {
           LoggingMessageDialog dialog(m_findDialog,
                                  _("Wrapped search"),
-                                 wxEmptyString, wxCENTER | wxOK);
+                                 {}, wxCENTER | wxOK);
           dialog.ShowModal();
         }
         return true;
@@ -8835,59 +8809,71 @@ void Worksheet::OnFollow()
 }
 
 Worksheet::MathMLDataObject::MathMLDataObject() : wxCustomDataObject(m_mathmlFormat)
-{
-}
+{}
 
-Worksheet::MathMLDataObject::MathMLDataObject(const wxString &data) : wxCustomDataObject(m_mathmlFormat),
-                                                               m_databuf(data.utf8_str())
-
+Worksheet::MathMLDataObject::MathMLDataObject(const wxString &data) :
+    MathMLDataObject()
 {
+  m_databuf = data.utf8_str();
   SetData(m_databuf.length(), m_databuf.data());
 }
 
 Worksheet::wxmDataObject::wxmDataObject() : wxCustomDataObject(m_wxmFormat)
-{
-}
+{}
 
-Worksheet::wxmDataObject::wxmDataObject(wxString data) : wxCustomDataObject(m_wxmFormat)
+Worksheet::wxmDataObject::wxmDataObject(wxString &&data) : wxmDataObject()
 {
   data += wxT('\0');
   m_databuf = data.utf8_str();
   SetData(m_databuf.length(), m_databuf.data());
 }
+
+Worksheet::wxmDataObject::wxmDataObject(const wxString &data) :
+    wxmDataObject(wxString(data))
+{}
 
 Worksheet::MathMLDataObject2::MathMLDataObject2() : wxCustomDataObject(m_mathmlFormat2)
-{
-}
+{}
 
-Worksheet::MathMLDataObject2::MathMLDataObject2(wxString data) : wxCustomDataObject(m_mathmlFormat2)
+Worksheet::MathMLDataObject2::MathMLDataObject2(wxString &&data) :
+    MathMLDataObject2()
 {
   data += wxT('\0');
   m_databuf = data.utf8_str();
   SetData(m_databuf.length(), m_databuf.data());
 }
+
+Worksheet::MathMLDataObject2::MathMLDataObject2(const wxString &data) :
+    MathMLDataObject2(wxString(data))
+{}
 
 Worksheet::RtfDataObject::RtfDataObject() : wxCustomDataObject(m_rtfFormat)
-{
-}
+{}
 
-Worksheet::RtfDataObject::RtfDataObject(wxString data) : wxCustomDataObject(m_rtfFormat)
+Worksheet::RtfDataObject::RtfDataObject(wxString &&data) : RtfDataObject()
 {
   data += wxT('\0');
   m_databuf = data.utf8_str();
   SetData(m_databuf.length(), m_databuf.data());
 }
+
+Worksheet::RtfDataObject::RtfDataObject(const wxString &data) :
+    RtfDataObject(wxString(data))
+{}
 
 Worksheet::RtfDataObject2::RtfDataObject2() : wxCustomDataObject(m_rtfFormat2)
-{
-}
+{}
 
-Worksheet::RtfDataObject2::RtfDataObject2(wxString data) : wxCustomDataObject(m_rtfFormat2)
+Worksheet::RtfDataObject2::RtfDataObject2(wxString &&data) : RtfDataObject2()
 {
   data += wxT('\0');
   m_databuf = data.utf8_str();
   SetData(m_databuf.length(), m_databuf.data());
 }
+
+Worksheet::RtfDataObject2::RtfDataObject2(const wxString &data) :
+    RtfDataObject2(wxString(data))
+{}
 
 wxString Worksheet::RTFStart()
 {
@@ -9134,7 +9120,7 @@ wxAccStatus Worksheet::AccessibilityInfo::HitTest (const wxPoint &pt,
 
 wxAccStatus Worksheet::AccessibilityInfo::GetDescription(int childId, wxString *description)
 {
-  if(description == NULL)
+  if(!description)
     return wxACC_FAIL;
 
   if(childId == 0)
@@ -9149,7 +9135,7 @@ wxAccStatus Worksheet::AccessibilityInfo::GetDescription(int childId, wxString *
       return child->GetDescription(childId, description);
     else
     {
-      *description = wxEmptyString;
+      description->clear();
       return wxACC_FAIL;
     }
   }

@@ -35,7 +35,7 @@ SeriesWiz::SeriesWiz(wxWindow *parent, int id,
         wxDialog(parent, id, title, pos, size, style)
 {
   label_2 = new wxStaticText(this, -1, _("Expression:"));
-  text_ctrl_1 = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  text_ctrl_1 = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                               wxSize(230, -1));
   label_3 = new wxStaticText(this, -1, _("Variable:"));
   text_ctrl_2 = new BTextCtrl(this, -1, cfg, wxT("x"), wxDefaultPosition,

@@ -266,7 +266,7 @@ bool AutocompletePopup::Create(wxWindow* parent)
                                    wxLC_REPORT |
                                    wxLC_NO_HEADER |
                                    wxLC_SINGLE_SEL);
-  InsertColumn(0,wxEmptyString);
+  InsertColumn(0, wxEmptyString);
   UpdateResults();
   SetColumnWidth(0, wxLIST_AUTOSIZE);
 

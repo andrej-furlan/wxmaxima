@@ -45,7 +45,7 @@ LicenseDialog::LicenseDialog(wxWindow *parent) :
   wxString licenseText;
 
   m_license = new wxTextCtrl(this, -1,
-                             wxEmptyString, wxDefaultPosition,
+                             {}, wxDefaultPosition,
                              wxDefaultSize,
                              wxTE_MULTILINE | wxHSCROLL | wxTE_READONLY);
   

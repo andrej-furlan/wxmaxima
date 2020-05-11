@@ -39,7 +39,7 @@ TableOfContents::TableOfContents(wxWindow *parent, int id, Configuration **confi
           wxDefaultPosition, wxDefaultSize,
           wxLC_SINGLE_SEL | wxLC_ALIGN_LEFT | wxLC_REPORT | wxLC_NO_HEADER
   );
-  m_displayedItems->AppendColumn(wxEmptyString);
+  m_displayedItems->AppendColumn({});
   m_regex = new wxTextCtrl(this, structure_regex_id);
 
   // A box whose 1st row is growable 
@@ -290,12 +290,12 @@ void TableOfContents::OnMouseRightDown(wxListEvent &event)
   {
 
     if (m_cellRightClickedOn->GetHiddenTree())
-      popupMenu->Append(popid_Unfold, _("Unhide"), wxEmptyString, wxITEM_NORMAL);
+      popupMenu->Append(popid_Unfold, _("Unhide"));
     else
     {
-      popupMenu->Append(popid_Fold, _("Hide"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_SelectTocChapter, _("Select"), wxEmptyString, wxITEM_NORMAL);
-      popupMenu->Append(popid_EvalTocChapter, _("Evaluate"), wxEmptyString, wxITEM_NORMAL);
+      popupMenu->Append(popid_Fold, _("Hide"));
+      popupMenu->Append(popid_SelectTocChapter, _("Select"));
+      popupMenu->Append(popid_EvalTocChapter, _("Evaluate"));
     }
   }
 

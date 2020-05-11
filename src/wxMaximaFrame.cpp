@@ -1446,8 +1446,7 @@ void wxMaximaFrame::UpdateRecentDocuments()
         modified.FormatTime() + wxT(")");
 
       if (!separatorAdded)
-        m_recentDocumentsMenu->Append(menu_recent_document_separator,
-                                      wxEmptyString, wxEmptyString, wxITEM_SEPARATOR);
+        m_recentDocumentsMenu->Append(menu_recent_document_separator);
       separatorAdded = true;
       m_recentDocumentsMenu->Append(i, label);
       unsavedDocuments.pop_front();
@@ -1500,7 +1499,7 @@ void wxMaximaFrame::ReReadConfig()
       wxLogMessage(wxString::Format(_("Re-Reading the config from %s."),
                      Configuration::m_configfileLocation_override.utf8_str()));
       wxConfig::Set(new wxConfig(wxT("wxMaxima"),
-                                 wxEmptyString, Configuration::m_configfileLocation_override));
+                                 {}, Configuration::m_configfileLocation_override));
     }
   }
   #endif
@@ -2031,8 +2030,8 @@ void wxMaximaFrame::SymbolsPane::OnMenu(wxCommandEvent &event)
 void wxMaximaFrame::SymbolsPane::OnMouseRightDown(wxMouseEvent &WXUNUSED(event))
 {
   std::unique_ptr<wxMenu> popupMenu(new wxMenu());
-  popupMenu->Append(menu_additionalSymbols, _("Add more symbols"), wxEmptyString, wxITEM_NORMAL);
-  popupMenu->Append(enable_unicodePane, _("Show all unicode symbols"), wxEmptyString, wxITEM_NORMAL);
+  popupMenu->Append(menu_additionalSymbols, _("Add more symbols"));
+  popupMenu->Append(enable_unicodePane, _("Show all unicode symbols"));
   PopupMenu(dynamic_cast<wxMenu *>(&(*popupMenu)));
 }
 

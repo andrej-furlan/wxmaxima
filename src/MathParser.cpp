@@ -79,7 +79,7 @@ wxXmlNode *MathParser::GetNextTag(wxXmlNode *node)
   return SkipWhitespaceNode(node);
 }
 
-MathParser::MathParser(Configuration **cfg, Cell::CellPointers *cellPointers, wxString zipfile)
+MathParser::MathParser(Configuration **cfg, Cell::CellPointers *cellPointers, const wxString &zipfile)
 {
   m_configuration = cfg;
   m_cellPointers = cellPointers;
@@ -279,11 +279,11 @@ Cell *MathParser::ParseImageTag(wxXmlNode *node)
         imageCell = new SlideShow(NULL, m_configuration, m_cellPointers, filename, false);
     }
   }
-  wxString gnuplotSource = node->GetAttribute(wxT("gnuplotsource"), wxEmptyString);
-  wxString gnuplotData = node->GetAttribute(wxT("gnuplotdata"), wxEmptyString);
+  wxString gnuplotSource = node->GetAttribute(wxT("gnuplotsource"));
+  wxString gnuplotData = node->GetAttribute(wxT("gnuplotdata"));
   if(imageCell->GetType() == MC_TYPE_IMAGE)
   {
-    if((imageCell != NULL) && (gnuplotSource != wxEmptyString))
+    if((imageCell != NULL) && (!gnuplotSource.empty()))
     {
       dynamic_cast<ImgCell *>(imageCell)->GnuplotSource(gnuplotSource, gnuplotData, m_fileSystem);
     }
@@ -323,7 +323,7 @@ Cell *MathParser::ParseOutputLabelTag(wxXmlNode *node)
     // Backwards compatibility to 17.04/17.12:
     // If we cannot find the user-defined label's text but still know that there
     // is one it's value has been saved as "automatic label" instead.
-    if(user_lbl == wxEmptyString)
+    if(!user_lbl.empty())
     {
       user_lbl = dynamic_cast<TextCell *>(tmp)->GetValue();
       user_lbl = user_lbl.substr(1,user_lbl.Length() - 2);
@@ -509,13 +509,13 @@ Cell *MathParser::ParseEditorTag(wxXmlNode *node)
   else if (type == wxT("heading6"))
     editor->SetType(MC_TYPE_HEADING6);
 
-  wxString text = wxEmptyString;
+  wxString text;
   wxXmlNode *line = node->GetChildren();
   while (line)
   {
     if (line->GetName() == wxT("line"))
     {
-      if (!text.IsEmpty())
+      if (!text.empty())
         text += wxT("\n");
       text += line->GetNodeContent();
     }
@@ -602,12 +602,12 @@ Cell *MathParser::ParseSubSupTag(wxXmlNode *node)
   subsup->SetBase(HandleNullPointer(ParseTag(child, false)));
   child = GetNextTag(child);
   wxString pos;
-  if((child != NULL) && (child->GetAttribute("pos", wxEmptyString) != wxEmptyString))
+  if(child && !child->GetAttribute("pos").empty())
   {
     while(child != NULL)
     {
       Cell *cell = HandleNullPointer(ParseTag(child, false));
-      pos = child->GetAttribute("pos", wxEmptyString);
+      pos = child->GetAttribute("pos");
       if(pos == "presub")
         subsup->SetPreSub(cell);
       if(pos == "presup")
@@ -726,7 +726,7 @@ Cell *MathParser::ParseText(wxXmlNode *node, TextStyle style)
 {
   wxString str;
   TextCell *retval = NULL;
-  if ((node != NULL) && ((str = node->GetContent()) != wxEmptyString))
+  if (node && !((str = node->GetContent()).empty()))
   {
     str.Replace(wxT("-"), wxT("\u2212")); // unicode minus sign
 
@@ -798,7 +798,7 @@ Cell *MathParser::ParseCharCode(wxXmlNode *node)
 {
   TextCell *cell = new TextCell(NULL, m_configuration, m_cellPointers);
   wxString str;
-  if ((node != NULL) && ((str = node->GetContent()) != wxEmptyString))
+  if (node && !(str = node->GetContent()).empty())
   {
     long code;
     if (str.ToLong(&code))
@@ -1056,47 +1056,46 @@ Cell *MathParser::ParseTag(wxXmlNode *node, bool all)
   return retval;
 }
 
-Cell *MathParser::ParseLine(wxString s, CellType style)
+Cell *MathParser::ParseLine(const wxString &s, CellType style)
 {
   m_ParserStyle = style;
   m_FracStyle = FracCell::FC_NORMAL;
   m_highlight = false;
   Cell *cell = NULL;
 
-  int showLength;
+  size_t showLength;
 
   switch ((*m_configuration)->ShowLength())
   {
-    case 0:
-      showLength = 6000;
-      break;
-    case 1:
-      showLength = 20000;
-      break;
-    case 2:
-      showLength = 250000;
-      break;
-    case 3:
-      showLength = 0;
-      break;
+  case 0:
+    showLength = 6000;
+    break;
+  case 1:
+    showLength = 20000;
+    break;
+  case 2:
+    showLength = 250000;
+    break;
+  case 3:
+    showLength = 0;
+    break;
   default:
-      showLength = 50000;    
+    showLength = 50000;
   }
 
-  m_graphRegex.Replace(&s, wxT("\uFFFD"));
-
-  if (((long) s.Length() < showLength) || (showLength == 0))
+  if (s.Length() < showLength || showLength == 0)
   {
+    wxString line = s;
+    m_graphRegex.Replace(&line, wxT("\uFFFD"));
 
     wxXmlDocument xml;
-
-    wxStringInputStream xmlStream(s);
+    wxStringInputStream xmlStream(line);
 
     xml.Load(xmlStream, wxT("UTF-8"), wxXMLDOC_KEEP_WHITESPACE_NODES);
 
     wxXmlNode *doc = xml.GetRoot();
 
-    if (doc != NULL)
+    if (doc)
       cell = ParseTag(doc->GetChildren());
   }
   else
@@ -1115,4 +1114,3 @@ Cell *MathParser::ParseLine(wxString s, CellType style)
 wxRegEx MathParser::m_graphRegex(wxT("[[:cntrl:]]"));
 MathParser::MathCellFunctionHash MathParser::m_innerTags;
 MathParser::GroupCellFunctionHash MathParser::m_groupTags;
-

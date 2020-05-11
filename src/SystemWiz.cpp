@@ -31,7 +31,7 @@ SysWiz::SysWiz(wxWindow *parent, int id, Configuration *cfg, const wxString &tit
     m_inputs.push_back(new BTextCtrl(this, -1, cfg, wxT("0"), wxDefaultPosition,
                                      wxSize(230, -1)));
   }
-  variables = new BTextCtrl(this, -1, cfg, wxEmptyString, wxDefaultPosition,
+  variables = new BTextCtrl(this, -1, cfg, {}, wxDefaultPosition,
                             wxSize(230, -1));
   static_line_1 = new wxStaticLine(this, -1);
 #if defined __WXMSW__

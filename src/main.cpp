@@ -133,7 +133,7 @@ bool MyApp::OnInit()
     }
     #endif
     #endif
-    wxConfig::Set(new wxConfig(wxT("wxMaxima"), wxEmptyString, m_configFileName));
+    wxConfig::Set(new wxConfig(wxT("wxMaxima"), {}, m_configFileName));
     
     m_locale.AddCatalogLookupPathPrefix(m_dirstruct.LocaleDir());
     m_locale.AddCatalogLookupPathPrefix(m_dirstruct.LocaleDir() + wxT("/wxwin"));
@@ -225,7 +225,7 @@ bool MyApp::OnInit()
     wxFileName configFile(ini);
     configFile.MakeAbsolute();
     Configuration::m_configfileLocation_override = configFile.GetFullPath();
-    wxConfig::Set(new wxConfig(wxT("wxMaxima"), wxEmptyString,
+    wxConfig::Set(new wxConfig(wxT("wxMaxima"), {},
                                Configuration::m_configfileLocation_override));
   }
   else
@@ -428,39 +428,31 @@ void MyApp::OnFileMenu(wxCommandEvent &ev)
   switch (ev.GetId())
   {
   case wxMaxima::menu_help_numberformats:
-    NewWindow(wxEmptyString, false, false,
-              numberFormats_wxm_gz, numberFormats_wxm_gz_len);
+    NewWindow(numberFormats_wxm_gz, numberFormats_wxm_gz_len);
     break;
   case wxMaxima::menu_help_3d:
-    NewWindow(wxEmptyString, false, false,
-              displaying3DCurves_wxm_gz, displaying3DCurves_wxm_gz_len);
+    NewWindow(displaying3DCurves_wxm_gz, displaying3DCurves_wxm_gz_len);
     break;
 
   case wxMaxima::menu_help_varnames:
-    NewWindow(wxEmptyString, false, false,
-              variableNames_wxm_gz, variableNames_wxm_gz_len);
+    NewWindow(variableNames_wxm_gz, variableNames_wxm_gz_len);
     break;
 
   case wxMaxima::menu_help_listaccess:
-    NewWindow(wxEmptyString, false, false,
-              fastListAccess_wxm_gz, fastListAccess_wxm_gz_len);
+    NewWindow(fastListAccess_wxm_gz, fastListAccess_wxm_gz_len);
     break;
 
   case wxMaxima::menu_help_fittingData:
-    NewWindow(wxEmptyString, false, false,
-              fittingEquations_wxm_gz, fittingEquations_wxm_gz_len);
+    NewWindow(fittingEquations_wxm_gz, fittingEquations_wxm_gz_len);
     break;
   case wxMaxima::menu_help_solving:
-    NewWindow(wxEmptyString, false, false,
-              solvingEquations_wxm_gz, solvingEquations_wxm_gz_len);
+    NewWindow(solvingEquations_wxm_gz, solvingEquations_wxm_gz_len);
     break;
   case wxMaxima::menu_help_diffequations:
-    NewWindow(wxEmptyString, false, false,
-              diffEquations_wxm_gz, diffEquations_wxm_gz_len);
+    NewWindow(diffEquations_wxm_gz, diffEquations_wxm_gz_len);
     break;
   case wxMaxima::menu_help_tolerances:
-    NewWindow(wxEmptyString, false, false,
-              toleranceCalculations_wxm_gz, toleranceCalculations_wxm_gz_len);
+    NewWindow(toleranceCalculations_wxm_gz, toleranceCalculations_wxm_gz_len);
     break;
     case wxID_NEW:
     {
