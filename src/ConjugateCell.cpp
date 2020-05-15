@@ -28,47 +28,38 @@
 
 #include "ConjugateCell.h"
 
-ConjugateCell::ConjugateCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_innerCell(std::make_shared<TextCell>(parent, config, cellPointers, "")),
-  m_open(std::make_shared<TextCell>(parent, config, cellPointers, "conjugate(")),
-  m_close(std::make_shared<TextCell>(parent, config, cellPointers, ")"))
+ConjugateCell::ConjugateCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_innerCell(new TextCell(parent, config, "")),
+  m_open(new TextCell(parent, config, "conjugate(")),
+  m_close(new TextCell(parent, config, ")"))
 {
-  m_nextToDraw = NULL;
   static_cast<TextCell&>(*m_open).DontEscapeOpeningParenthesis();
-  m_last = NULL;
 }
 
 // Old cppcheck bugs:
 // cppcheck-suppress uninitMemberVar symbolName=ConjugateCell::m_open
 // cppcheck-suppress uninitMemberVar symbolName=ConjugateCell::m_close
 ConjugateCell::ConjugateCell(const ConjugateCell &cell):
- ConjugateCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+ ConjugateCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
-  if(cell.m_innerCell)
+  if (cell.m_innerCell)
     SetInner(cell.m_innerCell->CopyList());
 }
 
 ConjugateCell::~ConjugateCell()
-{
-  if(this == m_cellPointers->m_selectionStart)
-    m_cellPointers->m_selectionStart = NULL;
-  if(this == m_cellPointers->m_selectionEnd)
-    m_cellPointers->m_selectionEnd = NULL;
-  MarkAsDeleted();
-}
+{}
 
-void ConjugateCell::SetInner(Cell *inner)
+void ConjugateCell::SetInner(OwningCellPtr inner)
 {
-  if (inner == NULL)
+  if (!inner)
     return;
-  m_innerCell = std::shared_ptr<Cell>(inner);
 
-  m_last = m_innerCell.get();
-  if (m_last != NULL)
-    while (m_last->m_next != NULL)
+  m_innerCell = std::move(inner);
+  m_last = m_innerCell;
+  if (m_last)
+    while (m_last->m_next)
       m_last = m_last->m_next;
 }
 
@@ -184,8 +175,8 @@ bool ConjugateCell::BreakUp()
   {
     m_isBrokenIntoLines = true;
     m_open->SetNextToDraw(m_innerCell.get());
-    wxASSERT_MSG(m_last != NULL, _("Bug: No last cell in a conjugateCell!"));
-    if (m_last != NULL)
+    wxASSERT_MSG(m_last, _("Bug: No last cell in a conjugateCell!"));
+    if (m_last)
       m_last->SetNextToDraw(m_close.get());
     m_close->SetNextToDraw(m_nextToDraw);
     m_nextToDraw = m_open.get();

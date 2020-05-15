@@ -45,25 +45,21 @@
   If it isn't broken into multiple cells m_nextToDraw points to the 
   cell that follows this Cell. 
  */
-class ExptCell : public Cell
+class ExptCell final : public Cell
 {
 public:
-  ExptCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  ExptCell(Cell *parent, Configuration **config);
   ExptCell(const ExptCell &cell);
-  Cell *Copy() override {return new ExptCell(*this);}
+  OwningCellPtr Copy() override {return OwningCellPtr{new ExptCell(*this)};}
   ~ExptCell();
 
-  //! This class can be derived from wxAccessible which has no copy constructor
-  ExptCell &operator=(const ExptCell&) = delete;
+  InnerCellIterator InnerBegin() const override { return {&m_baseCell, &m_close+1}; }
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_baseCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_close); }
+  //! Set the mantissa and return it
+  Cell *SetBase(OwningCellPtr base);
 
-  //! Set the mantissa
-  void SetBase(Cell *base);
-
-  //! Set the exponent
-  void SetPower(Cell *power);
+  //! Set the exponent and return it
+  Cell *SetPower(OwningCellPtr power);
 
   //! By how much do we want to rise the power?
   double PowRise() const {return Scale_Px(.3 * m_fontSize);}
@@ -72,7 +68,7 @@ public:
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 
@@ -88,10 +84,7 @@ public:
 
   wxString GetDiffPart() override;
 
-  void IsMatrix(bool isMatrix)
-  {
-    m_isMatrix = isMatrix;
-  }
+  void IsMatrix(bool isMatrix) {m_isMatrix = isMatrix;}
 
   bool BreakUp() override;
 
@@ -100,16 +93,16 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_baseCell;
-  std::shared_ptr<Cell> m_exptCell;
-  std::shared_ptr<Cell> m_exp;
-  std::shared_ptr<Cell> m_open;
-  std::shared_ptr<Cell> m_close;
-  Cell *m_expt_last;
-  Cell *m_base_last;
+  OwningCellPtr m_baseCell;
+  OwningCellPtr m_exptCell;
+  OwningCellPtr m_exp;
+  OwningCellPtr m_open;
+  OwningCellPtr m_close;
+  CellPtr m_expt_last;
+  CellPtr m_base_last;
   bool m_isMatrix;
   int m_expt_yoffset;
 };

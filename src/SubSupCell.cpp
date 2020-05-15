@@ -34,15 +34,13 @@
 
 #define SUBSUP_DEC 3
 
-SubSupCell::SubSupCell(Cell *parent, Configuration **config,CellPointers *cellPointers) : Cell(parent, config, cellPointers)
+SubSupCell::SubSupCell(Cell *parent, Configuration **config) : Cell(parent, config)
 {
-  m_nextToDraw = NULL;
 }
 
 SubSupCell::SubSupCell(const SubSupCell &cell):
- SubSupCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+ SubSupCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if(cell.m_baseCell)
     SetBase(cell.m_baseCell->CopyList());
@@ -57,65 +55,60 @@ SubSupCell::SubSupCell(const SubSupCell &cell):
 }
 
 SubSupCell::~SubSupCell()
-{
-  MarkAsDeleted();
-}
+{}
 
-void SubSupCell::SetPreSup(Cell *index)
+void SubSupCell::SetPreSup(OwningCellPtr index)
 {
   if (!index)
     return;
   wxASSERT(!m_preSupCell);
-  m_preSupCell = std::shared_ptr<Cell>(index);
+  m_preSupCell = std::move(index);
   m_scriptCells.push_back(m_preSupCell);
 }
 
-void SubSupCell::SetPreSub(Cell *index)
+void SubSupCell::SetPreSub(OwningCellPtr index)
 {
   if (!index)
     return;
   wxASSERT(!m_preSubCell);
-  m_preSubCell = std::shared_ptr<Cell>(index);
+  m_preSubCell = std::move(index);
   m_scriptCells.push_back(m_preSubCell);
 }
 
-void SubSupCell::SetPostSup(Cell *index)
+void SubSupCell::SetPostSup(OwningCellPtr index)
 {
   if (!index)
     return;
   wxASSERT(!m_postSupCell);
-  m_postSupCell = std::shared_ptr<Cell>(index);
+  m_postSupCell = std::move(index);
   m_scriptCells.push_back(m_postSupCell);
 }
 
-void SubSupCell::SetPostSub(Cell *index)
+void SubSupCell::SetPostSub(OwningCellPtr index)
 {
   if (!index)
     return;
   wxASSERT(!m_postSubCell);
-  m_postSubCell = std::shared_ptr<Cell>(index);
+  m_postSubCell = std::move(index);
   m_scriptCells.push_back(m_postSubCell);
 }
 
-void SubSupCell::SetIndex(Cell *index)
+void SubSupCell::SetIndex(OwningCellPtr index)
 {
-  if (index == NULL)
-    return;
-  m_postSubCell = std::shared_ptr<Cell>(index);
+  if (index)
+    m_postSubCell = std::move(index);
 }
 
-void SubSupCell::SetBase(Cell *base)
+void SubSupCell::SetBase(OwningCellPtr base)
 {
-  if (base == NULL)
-    return;
-  m_baseCell = std::shared_ptr<Cell>(base);
+  if (base)
+    m_baseCell = std::move(base);
 }
 
-void SubSupCell::SetExponent(Cell *expt)
+void SubSupCell::SetExponent(OwningCellPtr expt)
 {
-  if (expt == NULL)
-    return;
-  m_postSupCell = std::shared_ptr<Cell>(expt);
+  if (expt)
+    m_postSupCell = std::move(expt);
 }
 
 void SubSupCell::RecalculateWidths(int fontsize)

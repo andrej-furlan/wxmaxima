@@ -25,29 +25,25 @@
 
 #include "Cell.h"
 
-class SubCell : public Cell
+class SubCell final : public Cell
 {
 public:
-  SubCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  SubCell(Cell *parent, Configuration **config);
   SubCell(const SubCell &cell);
-  Cell *Copy() override {return new SubCell(*this);}
-
+  OwningCellPtr Copy() override {return OwningCellPtr{new SubCell(*this)};}
   ~SubCell();
 
-  SubCell operator=(const SubCell&) = delete;
+  InnerCellIterator InnerBegin() const override { return {&m_baseCell, &m_indexCell+1}; }\
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_baseCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_indexCell); }
+  void SetBase(OwningCellPtr base);
 
-  void SetBase(Cell *base);
-
-  void SetIndex(Cell *index);
+  Cell *SetIndex(OwningCellPtr index);
 
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 
@@ -66,11 +62,11 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
   
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_baseCell;
-  std::shared_ptr<Cell> m_indexCell;
+  OwningCellPtr m_baseCell;
+  OwningCellPtr m_indexCell;
 };
 
 #endif // SUBCELL_H

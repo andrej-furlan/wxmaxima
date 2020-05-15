@@ -189,7 +189,7 @@ wxMaxima::wxMaxima(wxWindow *parent, int id, wxLocale *locale, const wxString ti
                 MyApp::m_topLevelWindows.empty()),
   m_openFile(filename),
   m_gnuplotcommand("gnuplot"),
-  m_parser(&m_worksheet->m_configuration, &m_worksheet->m_cellPointers)
+  m_parser(&m_worksheet->m_configuration)
 {
   #ifdef HAVE_OMP_HEADER
   omp_init_lock(&m_helpFileAnchorsLock);
@@ -1178,7 +1178,7 @@ TextCell *wxMaxima::ConsoleAppend(wxString s, CellType type, const wxString &use
   // that can contain it we need to create such a cell.
   if (m_worksheet->GetTree() == NULL)
     m_worksheet->InsertGroupCells(
-      new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE, &m_worksheet->m_cellPointers, wxEmptyString));
+      new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE));
 
   m_dispReadOut = false;
   s.Replace(m_promptSuffix, wxEmptyString);
@@ -1270,25 +1270,22 @@ TextCell *wxMaxima::ConsoleAppend(wxString s, CellType type, const wxString &use
 void wxMaxima::DoConsoleAppend(wxString s, CellType type, bool newLine,
                                bool bigSkip, const wxString &userLabel)
 {
-  Cell *cell;
-
   if (s.IsEmpty())
     return;
 
   s.Replace(wxT("\n"), wxT(" "), true);
 
   m_parser.SetUserLabel(userLabel);
-  cell = m_parser.ParseLine(s, type);
+  Cell::OwningCellPtr cell = m_parser.ParseLine(s, type);
 
-  wxASSERT_MSG(cell != NULL, _("There was an error in generated XML!\n\n"
-                               "Please report this as a bug."));
-  if (cell == NULL)
-  {
+  wxASSERT_MSG(cell, _("There was an error in generated XML!\n\n"
+                       "Please report this as a bug."));
+  if (!cell)
     return;
-  }
 
   cell->SetSkip(bigSkip);
-  m_worksheet->InsertLine(cell, newLine || cell->BreakLineHere());
+  newLine = newLine || cell->BreakLineHere(); // Note: after the move, cell is null!
+  m_worksheet->InsertLine(std::move(cell), newLine);
 }
 
 TextCell *wxMaxima::DoRawConsoleAppend(wxString s, CellType type)
@@ -1296,9 +1293,9 @@ TextCell *wxMaxima::DoRawConsoleAppend(wxString s, CellType type)
   TextCell *cell = NULL;
   // If we want to append an error message to the worksheet and there is no cell
   // that can contain it we need to create such a cell.
-  if (m_worksheet->GetTree() == NULL)
+  if (!m_worksheet->GetTree())
     m_worksheet->InsertGroupCells(
-      new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE, &m_worksheet->m_cellPointers, wxEmptyString));
+      new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_CODE));
 
   if (s.IsEmpty())
     return NULL;
@@ -1307,18 +1304,16 @@ TextCell *wxMaxima::DoRawConsoleAppend(wxString s, CellType type)
 
   if (type == MC_TYPE_MAIN_PROMPT)
   {
-    cell = new TextCell(m_worksheet->GetTree(), &(m_worksheet->m_configuration), &m_worksheet->m_cellPointers, s);
+    auto cell = MakeOwned<TextCell>(m_worksheet->GetTree(), &(m_worksheet->m_configuration), s);
     cell->SetType(type);
-    m_worksheet->InsertLine(cell, true);
+    m_worksheet->InsertLine(std::move(cell), true);
   }
-
   else
   {
-
     TextCell *incompleteTextCell =
-      dynamic_cast<TextCell *>(m_worksheet->m_cellPointers.m_currentTextCell);
+      m_worksheet->m_cellPointers.m_currentTextCell.CastAs<TextCell *>();
 
-    if(incompleteTextCell != NULL)
+    if (incompleteTextCell)
     {
       int pos = s.Find("\n");
       wxString newVal = incompleteTextCell->GetValue();
@@ -1344,7 +1339,8 @@ TextCell *wxMaxima::DoRawConsoleAppend(wxString s, CellType type)
 
     wxStringTokenizer tokens(s, wxT("\n"));
     int count = 0;
-    Cell *tmp = NULL, *lst = NULL;
+    OwningCellPtr newCell;
+    Cell *lst = {};
     while (tokens.HasMoreTokens())
     {
       wxString token = tokens.GetNextToken();
@@ -1357,30 +1353,29 @@ TextCell *wxMaxima::DoRawConsoleAppend(wxString s, CellType type)
       }
       else
       {
-        cell = new TextCell(m_worksheet->GetTree(), &(m_worksheet->m_configuration),
-                            &m_worksheet->m_cellPointers,
-                            token);
-
-        cell->SetType(type);
+        newCell.reset(
+          (cell = new TextCell(m_worksheet->GetTree(), &(m_worksheet->m_configuration),
+                               token)));
+        newCell->SetType(type);
 
         if (tokens.HasMoreTokens())
-          cell->SetSkip(false);
+          newCell->SetSkip(false);
 
-        if (lst == NULL)
-          tmp = lst = cell;
+        if (!lst)
+          lst = newCell.get();
         else
         {
-          lst->AppendCell(cell);
+          lst->AppendCell(std::move(newCell));
           cell->ForceBreakLine(true);
           lst = cell;
         }
       }
       count++;
     }
-    m_worksheet->InsertLine(tmp, true);
+    m_worksheet->InsertLine(std::move(newCell), true);
   }
 
-  if(cell)
+  if (cell)
   {
     m_worksheet->m_configuration->AdjustWorksheetSize();
     m_worksheet->Recalculate(cell->GetGroup());
@@ -3124,8 +3119,7 @@ bool wxMaxima::OpenMACFile(const wxString &file, Worksheet *document, bool clear
 
           document->InsertGroupCells(
             cell = new GroupCell(&(document->m_configuration),
-                                 GC_TYPE_TEXT, &document->m_cellPointers,
-                                 line),
+                                 GC_TYPE_TEXT, line),
             last);
           last = cell;
         }
@@ -3171,8 +3165,7 @@ bool wxMaxima::OpenMACFile(const wxString &file, Worksheet *document, bool clear
         line.Trim(false);
         GroupCell *cell;
         document->InsertGroupCells(
-          cell = new GroupCell(&(document->m_configuration),
-                        GC_TYPE_CODE, &document->m_cellPointers, line),
+          cell = new GroupCell(&(document->m_configuration), GC_TYPE_CODE, line),
           last);
         last = cell;
         line = wxEmptyString;
@@ -3188,8 +3181,7 @@ bool wxMaxima::OpenMACFile(const wxString &file, Worksheet *document, bool clear
   if(line != wxEmptyString)
   {
     document->InsertGroupCells(
-      new GroupCell(&(document->m_configuration),
-                    GC_TYPE_CODE, &document->m_cellPointers, line),
+      new GroupCell(&(document->m_configuration), GC_TYPE_CODE, line),
       last);
   }
 
@@ -3599,7 +3591,7 @@ GroupCell *wxMaxima::CreateTreeFromXMLNode(wxXmlNode *xmlcells, const wxString &
   // action).
   wxBusyCursor crs;
 
-  MathParser mp(&m_worksheet->m_configuration, &m_worksheet->m_cellPointers, wxmxfilename);
+  MathParser mp(&m_worksheet->m_configuration, wxmxfilename);
   GroupCell *tree = NULL;
   GroupCell *last = NULL;
 
@@ -3608,17 +3600,16 @@ GroupCell *wxMaxima::CreateTreeFromXMLNode(wxXmlNode *xmlcells, const wxString &
   if (xmlcells)
     xmlcells = xmlcells->GetChildren();
 
-  while (xmlcells != NULL)
+  while (xmlcells)
   {
     if (xmlcells->GetType() != wxXML_TEXT_NODE)
     {
-      Cell *mc;
-      mc = mp.ParseTag(xmlcells, false);
-      if (mc != NULL)
+      OwningCellPtr mc = mp.ParseTag(xmlcells, false);
+      if (mc)
       {
-        GroupCell *cell = dynamic_cast<GroupCell *>(mc);
+        GroupCell *cell = dynamic_cast<GroupCell *>(mc.get());
 
-        if (last == NULL)
+        if (!last)
         {
           // first cell
           last = tree = cell;
@@ -3626,8 +3617,8 @@ GroupCell *wxMaxima::CreateTreeFromXMLNode(wxXmlNode *xmlcells, const wxString &
         else
         {
           // The rest of the cells
-          last->m_next = cell;
-          last->SetNextToDraw(cell);
+          last->m_next = std::move(mc);
+          last->SetNextToDraw(mc.get());
           last->m_next->m_previous = last;
 
           last = last->GetNext();
@@ -5731,7 +5722,7 @@ void wxMaxima::EditMenu(wxCommandEvent &event)
 
   case Worksheet::popid_popup_gnuplot:
   {
-    if(m_worksheet->m_cellPointers.m_selectionStart == NULL)
+    if (!m_worksheet->m_cellPointers.m_selectionStart)
       return;
 
     wxString gnuplotSource =
@@ -8502,7 +8493,7 @@ void wxMaxima::PopupMenu(wxCommandEvent &event)
     break;
   }
   case Worksheet::popid_maxsizechooser:
-    if(m_worksheet->m_cellPointers.m_selectionStart != NULL)
+    if(m_worksheet->m_cellPointers.m_selectionStart)
     {
       Cell *output = dynamic_cast<GroupCell *>(m_worksheet->m_cellPointers.m_selectionStart->GetGroup())->GetLabel();
       if (output == NULL)
@@ -8581,7 +8572,7 @@ void wxMaxima::PopupMenu(wxCommandEvent &event)
         {
           GroupCell *SelectionEnd = SelectionStart;
           while (
-            (SelectionEnd->m_next != NULL)
+            (SelectionEnd->m_next)
             && (SelectionEnd->GetNext()->IsLesserGCType(SelectionStart->GetGroupType()))
             )
             SelectionEnd = SelectionEnd->GetNext();
@@ -9348,12 +9339,13 @@ void wxMaxima::TriggerEvaluation()
       tmp->GetEditable()->SetErrorIndex(m_commandIndex - 1);
       // Inform the user about the error (which automatically causes the worksheet
       // to the cell we marked as erroneous a few seconds ago.
-      TextCell *cell = new TextCell(tmp, &(m_worksheet->m_configuration),
-                                    &m_worksheet->m_cellPointers,
-                                    _("Refusing to send cell to maxima: ") +
-                                    parenthesisError + wxT("\n"));
-      cell->SetType(MC_TYPE_ERROR);
-      tmp->SetOutput(cell);
+      {
+        auto cell = MakeOwned<TextCell>(tmp, &(m_worksheet->m_configuration),
+                                        _("Refusing to send cell to maxima: ") +
+                                          parenthesisError + wxT("\n"));
+        cell->SetType(MC_TYPE_ERROR);
+        tmp->SetOutput(std::move(cell));
+      }
       m_worksheet->m_evaluationQueue.Clear();
       m_worksheet->m_cellPointers.SetWorkingGroup(NULL);
       tmp->GetInput()->SetCaretPosition(index);
@@ -9576,8 +9568,7 @@ void wxMaxima::InsertMenu(wxCommandEvent &event)
     case menu_add_pagebreak:
     case menu_format_pagebreak:
       m_worksheet->InsertGroupCells(
-              new GroupCell(&(m_worksheet->m_configuration), GC_TYPE_PAGEBREAK,
-                            &m_worksheet->m_cellPointers),
+        MakeOwned<GroupCell>(&(m_worksheet->m_configuration), GC_TYPE_PAGEBREAK),
               m_worksheet->GetHCaret());
       m_worksheet->Recalculate();
       m_worksheet->SetFocus();

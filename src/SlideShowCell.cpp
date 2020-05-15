@@ -48,29 +48,24 @@
 // filesystem cannot be passed by const reference as we want to keep the
 // pointer to the file system alive in a background task
 // cppcheck-suppress performance symbolName=filesystem
-SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, std::shared_ptr <wxFileSystem> filesystem, int framerate) :
-  Cell(parent, config, cellPointers),
-  m_timer(NULL),
+SlideShow::SlideShow(Cell *parent, Configuration **config, std::shared_ptr <wxFileSystem> filesystem, int framerate) :
+  Cell(parent, config),
   m_fileSystem(filesystem)
 {
-  m_nextToDraw = NULL;
   m_animationRunning = true;
   m_size = m_displayed = 0;
   m_type = MC_TYPE_SLIDE;
   m_framerate = framerate;
   m_imageBorderWidth = Scale_Px(1);
   m_drawBoundingBox = false;
-  if(m_animationRunning)
+  if (m_animationRunning)
     ReloadTimer();
   m_width = m_height = -1;
 }
 
-SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, int framerate) :
-  Cell(parent, config, cellPointers),
-  m_timer(NULL),
-  m_fileSystem(NULL)
+SlideShow::SlideShow(Cell *parent, Configuration **config, int framerate) :
+  Cell(parent, config)
 {
-  m_nextToDraw = NULL;
   m_width = m_height = -1;
   m_animationRunning = true;
   m_size = m_displayed = 0;
@@ -78,23 +73,21 @@ SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPoi
   m_framerate = framerate;
   m_imageBorderWidth = Scale_Px(1);
   m_drawBoundingBox = false;
-  if(m_animationRunning)
+  if (m_animationRunning)
     ReloadTimer();
 }
 
-SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, wxString WXUNUSED(type)):
-  SlideShow(parent, config, cellPointers)
+SlideShow::SlideShow(Cell *parent, Configuration **config, wxMemoryBuffer image, const wxString &WXUNUSED(type)):
+  SlideShow(parent, config)
 {
-  m_nextToDraw = NULL;
   LoadImages(image);
 }
 
-SlideShow::SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxString image, bool remove):
-  SlideShow(parent, config, cellPointers)
+SlideShow::SlideShow(Cell *parent, Configuration **config, const wxString &image, bool remove):
+  SlideShow(parent, config)
 {
-  m_nextToDraw = NULL;
   LoadImages(image);
-  if(remove)
+  if (remove)
     wxRemoveFile(image);
 }
 
@@ -120,28 +113,25 @@ int SlideShow::GetFrameRate() const
 
 void SlideShow::ReloadTimer()
 {
-  if(!m_timer)
+  if (!m_timer)
   {
     // Tell MathCtrl about our timer.
-    m_timer = std::make_shared<wxTimer>(m_cellPointers->GetMathCtrl(), wxNewId());
+    m_timer.reset(new wxTimer(m_cellPointers->GetMathCtrl(), wxNewId()));
     m_cellPointers->m_slideShowTimers[this] = m_timer->GetId();
   }
   
-  if(m_timer)
-  {
-    if(!m_timer->IsRunning())
-      m_timer->StartOnce(1000 / GetFrameRate());
-  }
+  if (m_timer && !m_timer->IsRunning())
+    m_timer->StartOnce(1000 / GetFrameRate());
 }
 
 void SlideShow::StopTimer()
 {
-    if(m_timer)
-    {
-      m_timer->Stop();
-      m_cellPointers->m_slideShowTimers.erase(this);
-      m_timer = NULL;
-    }
+  if (m_timer)
+  {
+    m_timer->Stop();
+    m_cellPointers->m_slideShowTimers.erase(this);
+    m_timer.reset();
+  }
 }
 
 void SlideShow::AnimationRunning(bool run)
@@ -171,7 +161,7 @@ int SlideShow::SetFrameRate(int Freq)
   return m_framerate;
 }
 
-void SlideShow::LoadImages(wxMemoryBuffer imageData)
+void SlideShow::LoadImages(const wxMemoryBuffer &imageData)
 {
   wxImage images;
   wxMemoryInputStream istream(imageData.GetData(), imageData.GetDataLen());
@@ -188,7 +178,7 @@ void SlideShow::LoadImages(wxMemoryBuffer imageData)
   }
 }
 
-void SlideShow::LoadImages(wxString imageFile)
+void SlideShow::LoadImages(const wxString &imageFile)
 {
   wxImage images;
   size_t count = wxImage::GetImageCount(imageFile);
@@ -239,9 +229,8 @@ void SlideShow::LoadImages(wxArrayString images, bool deleteRead)
 }
 
 SlideShow::SlideShow(const SlideShow &cell):
-  SlideShow(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+  SlideShow(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   AnimationRunning(false);
 
@@ -257,15 +246,9 @@ SlideShow::SlideShow(const SlideShow &cell):
 
 SlideShow::~SlideShow()
 {
-  SlideShow::MarkAsDeleted();
-}
-
-void SlideShow::MarkAsDeleted()
-{
   // Stop and unregister the timer.
   StopTimer();
   ClearCache();
-  Cell::MarkAsDeleted();
 }
 
 void SlideShow::SetDisplayedIndex(int ind)
@@ -521,22 +504,22 @@ wxString SlideShow::ToRTF()
 }
 
 
-wxString SlideShow::GetToolTip(const wxPoint &point)
+const wxString &SlideShow::GetToolTip(const wxPoint &point)
 {
-  if(ContainsPoint(point))
+  static wxString empty;
+  if (ContainsPoint(point))
   {
     m_cellPointers->m_cellUnderPointer = this;
-    if(!IsOk())
-      return(_("The image could not be displayed. It may be broken, in a wrong format or "
-               "be the result of gnuplot not being able to write the image or not being "
-               "able to understand what maxima wanted to plot.\n"
-               "One example of the latter would be: Gnuplot refuses to plot entirely "
-               "empty images"));
-    else
+    if (IsOk())
       return m_toolTip;
+
+    return _("The image could not be displayed. It may be broken, in a wrong format or "
+             "be the result of gnuplot not being able to write the image or not being "
+             "able to understand what maxima wanted to plot.\n"
+             "One example of the latter would be: Gnuplot refuses to plot entirely "
+             "empty images");
   }
-  else
-    return wxEmptyString;
+  return empty;
 }
 
 wxSize SlideShow::ToGif(wxString file)

@@ -29,41 +29,28 @@
 
 using namespace std;
 
-class MatrCell : public Cell
+class MatrCell final : public Cell
 {
 public:
-  MatrCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  MatrCell(Cell *parent, Configuration **config);
   MatrCell(const MatrCell &cell);
-  Cell *Copy() override {return new MatrCell(*this);}
-  //! This class can be derived from wxAccessible which has no copy constructor
-  MatrCell &operator=(const MatrCell&) = delete;
+  OwningCellPtr Copy() override {return OwningCellPtr(new MatrCell(*this));}
   ~MatrCell();
 
   InnerCellIterator InnerBegin() const override
-    { return m_cells.empty() ? InnerCellIterator{} : InnerCellIterator(&m_cells.front()); }
-  InnerCellIterator InnerEnd() const override
-    { return m_cells.empty() ? InnerCellIterator{} : ++InnerCellIterator(&m_cells.back()); }
+  { return m_cells.empty() ? InnerCellIterator{} : InnerCellIterator{&m_cells.front(), &m_cells.back()+1}; }
 
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
-  void AddNewCell(Cell *cell)
-  {
-    m_cells.push_back(std::shared_ptr<Cell>(cell));
-  }
+  void AddNewCell(OwningCellPtr cell) { m_cells.emplace_back(std::move(cell)); }
 
-  void NewRow()
-  {
-    m_matHeight++;
-  }
+  void NewRow() { m_matHeight++; }
 
-  void NewColumn()
-  {
-    m_matWidth++;
-  }
+  void NewColumn() { m_matWidth++; }
 
   void SetDimension();
 
@@ -79,34 +66,29 @@ public:
 
   wxString ToXML() override;
 
-  void SetSpecialFlag(bool special)
-  { m_specialMatrix = special; }
+  void SetSpecialFlag(bool special) {m_specialMatrix = special;}
 
-  void SetInferenceFlag(bool inference)
-  { m_inferenceMatrix = inference; }
+  void SetInferenceFlag(bool inference) {m_inferenceMatrix = inference;}
 
-  void RowNames(bool rn)
-  { m_rowNames = rn; }
+  void RowNames(bool rn) {m_rowNames = rn;}
 
-  void ColNames(bool cn)
-  { m_colNames = cn; }
+  void ColNames(bool cn) {m_colNames = cn;}
 
-  void RoundedParens(bool rounded)
-  { m_roundedParens = rounded;}
+  void RoundedParens(bool rounded) {m_roundedParens = rounded;}
 
   void SetNextToDraw(Cell *next) override;
 
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   unsigned int m_matWidth;
   bool m_roundedParens;
   unsigned int m_matHeight;
   bool m_specialMatrix, m_inferenceMatrix, m_rowNames, m_colNames;
   //! Collections of pointers to inner cells.
-  vector<std::shared_ptr<Cell>> m_cells;
+  vector<OwningCellPtr> m_cells;
   vector<int> m_widths;
   vector<int> m_drops;
   vector<int> m_centers;

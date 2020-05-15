@@ -31,10 +31,9 @@
 #include "FontCache.h"
 #include "wx/config.h"
 
-TextCell::TextCell(Cell *parent, Configuration **config, CellPointers *cellPointers,
-                   wxString text, TextStyle style) : Cell(parent, config, cellPointers)
+TextCell::TextCell(Cell *parent, Configuration **config,
+                   const wxString &text, TextStyle style) : Cell(parent, config)
 {
-  m_nextToDraw = NULL;
   switch(m_textStyle = style)
   {
   case TS_DEFAULT: m_type = MC_TYPE_DEFAULT; break;
@@ -78,9 +77,7 @@ TextCell::TextCell(Cell *parent, Configuration **config, CellPointers *cellPoint
 }
 
 TextCell::~TextCell()
-{
-  MarkAsDeleted();
-}
+{}
 
 void TextCell::SetStyle(TextStyle style)
 {
@@ -346,12 +343,11 @@ void TextCell::SetValue(const wxString &text)
 // cppcheck-suppress uninitMemberVar symbolName=TextCell::m_altJs
 // cppcheck-suppress uninitMemberVar symbolName=TextCell::m_initialToolTip
 TextCell::TextCell(const TextCell &cell):
-  Cell(cell.m_group, cell.m_configuration, cell.m_cellPointers),
+  Cell(cell.m_group, cell.m_configuration),
   m_text(cell.m_text),
   m_userDefinedLabel(cell.m_userDefinedLabel),
   m_displayedText(cell.m_displayedText)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   m_forceBreakLine = cell.m_forceBreakLine;
   m_bigSkip = cell.m_bigSkip;
@@ -860,7 +856,7 @@ wxString TextCell::ToString()
   default:
   {}
   }
-  if((m_next != NULL) && (m_next->BreakLineHere()))
+  if (m_next && m_next->BreakLineHere())
     text += "\n";
   
   return text;
@@ -940,7 +936,7 @@ wxString TextCell::ToMatlab()
 	default:
 	{}
 	}
-	if((m_next != NULL) && (m_next->BreakLineHere()))
+    if (m_next && m_next->BreakLineHere())
 	  text += "\n";
 
 	return text;
@@ -1120,7 +1116,7 @@ wxString TextCell::ToTeX()
       // We have a hidden multiplication sign
       if (
         // This multiplication sign is between 2 cells
-              ((m_previous != NULL) && (m_next != NULL)) &&
+              (m_previous && m_next) &&
               // These cells are two variable names
               ((m_previous->GetStyle() == TS_VARIABLE) && (m_next->GetStyle() == TS_VARIABLE)) &&
               // The variable name prior to this cell has no subscript
@@ -1442,7 +1438,7 @@ wxString TextCell::ToOMML()
 {
   //Text-only lines are better handled in RTF.
   if (
-          ((m_previous != NULL) && (m_previous->GetStyle() != TS_LABEL) && (!m_previous->HardLineBreak())) &&
+          (m_previous && (m_previous->GetStyle() != TS_LABEL) && (!m_previous->HardLineBreak())) &&
           (HardLineBreak())
           )
     return wxEmptyString;
@@ -1603,7 +1599,7 @@ wxString TextCell::GetDiffPart()
 
 bool TextCell::IsShortNum()
 {
-  if (m_next != NULL)
+  if (m_next)
     return false;
   else if (m_text.Length() < 4)
     return true;

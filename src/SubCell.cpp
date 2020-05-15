@@ -30,16 +30,14 @@
 
 #define SUB_DEC 2
 
-SubCell::SubCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers)
+SubCell::SubCell(Cell *parent, Configuration **config) :
+  Cell(parent, config)
 {
-  m_nextToDraw = NULL;
 }
 
 SubCell::SubCell(const SubCell &cell):
-  SubCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+  SubCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if(cell.m_baseCell)
     SetBase(cell.m_baseCell->CopyList());
@@ -48,22 +46,20 @@ SubCell::SubCell(const SubCell &cell):
 }
 
 SubCell::~SubCell()
+{}
+
+Cell *SubCell::SetIndex(OwningCellPtr index)
 {
-  MarkAsDeleted();
+  auto *cell = index.get();
+  if (index)
+    m_indexCell = std::move(index);
+  return cell;
 }
 
-void SubCell::SetIndex(Cell *index)
+void SubCell::SetBase(OwningCellPtr base)
 {
-  if (index == NULL)
-    return;
-  m_indexCell = std::shared_ptr<Cell>(index);
-}
-
-void SubCell::SetBase(Cell *base)
-{
-  if (base == NULL)
-    return;
-  m_baseCell = std::shared_ptr<Cell>(base);
+  if (base )
+    m_baseCell = std::move(base);
 }
 
 void SubCell::RecalculateWidths(int fontsize)

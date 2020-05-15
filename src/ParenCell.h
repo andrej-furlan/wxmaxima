@@ -47,23 +47,17 @@
   If it isn't broken into multiple cells m_nextToDraw points to the 
   cell that follows this Cell.
  */
-class ParenCell : public Cell
+class ParenCell final : public Cell
 {
 public:
-  ParenCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  ParenCell(Cell *parent, Configuration **config);
   ParenCell(const ParenCell &cell);
-  Cell *Copy() override {return new ParenCell(*this);}
-
+  OwningCellPtr Copy() override {return OwningCellPtr{new ParenCell(*this)};}
   ~ParenCell();
 
-  //! This class can be derived from wxAccessible which has no copy constructor
-  ParenCell &operator=(const ParenCell&) = delete;
+  InnerCellIterator InnerBegin() const override { return {&m_innerCell, &m_close+1}; }
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_innerCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_close); }
-
-  void SetInner(Cell *inner, CellType type = MC_TYPE_DEFAULT);
-  void SetInner(std::shared_ptr<Cell> inner, CellType type = MC_TYPE_DEFAULT);
+  void SetInner(OwningCellPtr inner, CellType type = MC_TYPE_DEFAULT);
 
   void SetPrint(bool print)
   {
@@ -74,7 +68,7 @@ public:
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   bool BreakUp() override;
 
@@ -95,17 +89,16 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
-   /*! How to create a big parenthesis sign?
-   */
+  CellPtr m_nextToDraw;
+
+  //! How to create a big parenthesis sign?
   Configuration::drawMode m_bigParenType;
   void SetFont(int fontsize);
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_innerCell;
-  std::shared_ptr<Cell> m_open;
-  std::shared_ptr<Cell> m_close;
-  Cell *m_last1;
+  OwningCellPtr m_innerCell;
+  OwningCellPtr m_open;
+  OwningCellPtr m_close;
+  CellPtr m_last1;
   bool m_print;
   int m_numberOfExtensions;
   int m_charWidth, m_charHeight;

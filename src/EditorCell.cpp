@@ -37,9 +37,8 @@
 #include "wxMaximaFrame.h"
 #include <wx/tokenzr.h>
 
-EditorCell::EditorCell(Cell *parent, Configuration **config,
-                       CellPointers *cellPointers, wxString text) :
-  Cell(parent, config, cellPointers),
+EditorCell::EditorCell(Cell *parent, Configuration **config, const wxString &text) :
+  Cell(parent, config),
   m_text(text),
   m_fontStyle(wxFONTSTYLE_NORMAL),
   m_fontWeight(wxFONTWEIGHT_NORMAL)
@@ -188,7 +187,7 @@ void EditorCell::AddDrawParameter(wxString param)
   m_text += textAfterParameter;
   StyleText();
   ResetSize();
-  if (m_group != NULL)
+  if (m_group)
     m_group->ResetSize();
 }
 
@@ -272,9 +271,8 @@ wxString EditorCell::PrependNBSP(wxString input)
 // cppcheck-suppress uninitMemberVar symbolName=EditorCell::m_fontName
 // cppcheck-suppress uninitMemberVar symbolName=EditorCell::m_tokens
 EditorCell::EditorCell(const EditorCell &cell):
-  EditorCell(cell.m_group, cell.m_configuration, cell.m_cellPointers, cell.m_text)
+  EditorCell(cell.m_group, cell.m_configuration, cell.m_text)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
 }
 
@@ -389,26 +387,8 @@ wxString EditorCell::ToRTF()
 }
 
 EditorCell::~EditorCell()
-{
-  EditorCell::MarkAsDeleted();
-}
+{}
 
-void EditorCell::MarkAsDeleted()  
-{
-  if (m_cellPointers->m_cellMouseSelectionStartedIn == this)
-    m_cellPointers->m_cellMouseSelectionStartedIn = NULL;
-  if (m_cellPointers->m_cellKeyboardSelectionStartedIn == this)
-    m_cellPointers->m_cellKeyboardSelectionStartedIn = NULL;
-  if (m_cellPointers->m_cellSearchStartedIn == this)
-  {
-    m_cellPointers->m_cellSearchStartedIn = NULL;
-    m_cellPointers->m_indexSearchStartedAt = -1;
-  }
-  if (m_cellPointers->m_activeCell == this)
-    m_cellPointers->m_activeCell = NULL;
-
-  Cell::MarkAsDeleted();
-}
 
 wxString EditorCell::ToTeX()
 {
@@ -691,21 +671,22 @@ void EditorCell::RecalculateWidths(int fontsize)
 
 wxString EditorCell::ToHTML()
 {
-  EditorCell *tmp = this;
   wxString retval;
 
-  while (tmp != NULL)
+  for (auto &cell : OnCellList())
   {
-    for (std::vector<StyledText>::const_iterator textSnippet = m_styledText.begin();
-         textSnippet != m_styledText.end(); ++textSnippet)
+    auto *editor = dynamic_cast<EditorCell*>(&cell);
+    if (!editor)
+      break;
+    for (auto &textSnippet : editor->m_styledText)
     {
-      wxString text = PrependNBSP(EscapeHTMLChars(textSnippet->GetText()));
-/*      wxString tmp = EscapeHTMLChars(textSnippet->GetText());
+      wxString text = PrependNBSP(EscapeHTMLChars(textSnippet.GetText()));
+/*      wxString tmp = EscapeHTMLChars(textSnippet.GetText());
         wxString text = tmp);*/
 
-      if (textSnippet->StyleSet())
+      if (textSnippet.StyleSet())
       {
-        switch (textSnippet->GetStyle())
+        switch (textSnippet.GetStyle())
         {
         case TS_CODE_COMMENT:
           retval += wxT("<span class=\"code_comment\">") + text + wxT("</span>");
@@ -737,7 +718,6 @@ wxString EditorCell::ToHTML()
       else
         retval += text;
     }
-    tmp = dynamic_cast<EditorCell *>(tmp->m_next);
   }
   return retval;
 }
@@ -2261,11 +2241,7 @@ bool EditorCell::HandleOrdinaryKey(wxKeyEvent &event)
 
   if (m_historyPosition != -1)
   {
-    int len = m_textHistory.GetCount() - m_historyPosition;
-    m_textHistory.RemoveAt(m_historyPosition + 1, len - 1);
-    m_startHistory.erase(m_startHistory.begin() + m_historyPosition + 1, m_startHistory.end());
-    m_endHistory.erase(m_endHistory.begin() + m_historyPosition + 1, m_endHistory.end());
-    m_positionHistory.erase(m_positionHistory.begin() + m_historyPosition + 1, m_positionHistory.end());
+    m_history.erase(std::next(m_history.begin(), m_historyPosition + 1), m_history.end());
     m_historyPosition = -1;
   }
 
@@ -2596,18 +2572,18 @@ wxString EditorCell::InterpretEscapeString(const wxString &txt) const
 
 void EditorCell::DeactivateCursor()
 {
-  if (m_cellPointers->m_activeCell != NULL)
+  auto *editor = dynamic_cast<EditorCell *>(m_cellPointers->m_activeCell.get());
+  if (editor)
   {
-    dynamic_cast<EditorCell *>(m_cellPointers->m_activeCell)->ClearSelection();
-    dynamic_cast<EditorCell *>(m_cellPointers->m_activeCell)->m_paren1 =
-      dynamic_cast<EditorCell *>(m_cellPointers->m_activeCell)->m_paren2 = -1;
+    editor->ClearSelection();
+    editor->m_paren1 = editor->m_paren2 = -1;
   }
-  m_cellPointers->m_activeCell = NULL;
+  m_cellPointers->m_activeCell = nullptr;
 }
 
 void EditorCell::ActivateCursor()
 {
-  if (m_cellPointers->m_activeCell != NULL)
+  if (!m_cellPointers->m_activeCell)
     DeactivateCursor();
 
   SaveValue();
@@ -3219,28 +3195,27 @@ int EditorCell::GetLineWidth(unsigned int line, int pos)
   // the indentation needed.
   unsigned int currentLine = 1;
   int indentPixels = 0;
-  std::vector<StyledText>::const_iterator textSnippet;
-  for (textSnippet = m_styledText.begin();
-       ((textSnippet < m_styledText.end()) && (currentLine <= line)); ++textSnippet)
+
+  for (auto &textSnippet : m_styledText)
   {
-    if ((textSnippet->GetText() == '\n') || (textSnippet->GetText() == '\r'))
+    if (currentLine > line)
+      break;
+    if (textSnippet.GetText() == '\n' || textSnippet.GetText() == '\r')
     {
-      indentPixels = textSnippet->GetIndentPixels();
+      indentPixels = textSnippet.GetIndentPixels();
       currentLine++;
     }
   }
 
   if (pos == 0)
-  {
     return indentPixels;
-  }
 
   unsigned int i = 0;
-
-  for (textSnippet = m_styledText.begin(); (textSnippet < m_styledText.end()) && (i < line); ++textSnippet)
+  auto textSnippet = m_styledText.begin();
+  for (; textSnippet != m_styledText.end() && i < line; ++textSnippet)
   {
-    wxString text = textSnippet->GetText();
-    if ((text.Right(1) == '\n') || (text.Right(1) == '\r'))
+    auto const &text = textSnippet->GetText();
+    if (!text.empty() && (*text.rbegin() == '\n' || *text.rbegin() == '\r'))
       i++;
   }
 
@@ -3249,21 +3224,23 @@ int EditorCell::GetLineWidth(unsigned int line, int pos)
 
   SetFont();
   int width = 0;
-  wxString text;
   int textWidth = 0;
+  const wxString *text = {};
   pos--;
   for (; (textSnippet < m_styledText.end()) && (pos >= 0); ++textSnippet)
   {
-    text = textSnippet->GetText();
-    textWidth = GetTextSize(text).GetWidth();
+    text = &textSnippet->GetText();
+    textWidth = GetTextSize(*text).GetWidth();
     width += textWidth;
-    pos -= text.Length();
+    pos -= text->Length();
   }
 
   if (pos < 0)
   {
     width -= textWidth;
-    textWidth = GetTextSize(text.SubString(0, text.Length() + pos)).GetWidth();
+    if (text)
+      //                                                        vvv note pos<0
+      textWidth = GetTextSize(text->SubString(0, text->size() + pos)).GetWidth();
     width += textWidth;
   }
 
@@ -3274,20 +3251,17 @@ int EditorCell::GetLineWidth(unsigned int line, int pos)
 }
 
 
-bool EditorCell::CanUndo()
+bool EditorCell::CanUndo() const
 {
-  return m_textHistory.GetCount() > 0 && m_historyPosition != 0;
+  return !m_history.empty() && m_historyPosition != 0;
 }
 
 void EditorCell::Undo()
 {
   if (m_historyPosition == -1)
   {
-    m_historyPosition = m_textHistory.GetCount() - 1;
-    m_textHistory.Add(m_text);
-    m_startHistory.push_back(m_selectionStart);
-    m_endHistory.push_back(m_selectionEnd);
-    m_positionHistory.push_back(m_positionOfCaret);
+    m_historyPosition = m_history.size()- 1;
+    m_history.emplace_back(m_text, m_selectionStart, m_selectionEnd, m_positionOfCaret);
   }
   else
     m_historyPosition--;
@@ -3296,11 +3270,12 @@ void EditorCell::Undo()
     return;
 
   // We cannot use SetValue() here, since SetValue() tends to move the cursor.
-  m_text = m_textHistory.Item(m_historyPosition);
+  auto const &history = m_history.at(m_historyPosition);
+  m_text = history.text;
   StyleText();
 
-  m_positionOfCaret = m_positionHistory[m_historyPosition];
-  SetSelection(m_startHistory[m_historyPosition], m_endHistory[m_historyPosition]);
+  m_positionOfCaret = history.positionOfCaret;
+  SetSelection(history.selectionStart, history.selectionEnd);
 
   m_paren1 = m_paren2 = -1;
   m_isDirty = true;
@@ -3308,11 +3283,11 @@ void EditorCell::Undo()
 }
 
 
-bool EditorCell::CanRedo()
+bool EditorCell::CanRedo() const
 {
-  return m_textHistory.GetCount() > 0 &&
+  return !m_history.empty() &&
          m_historyPosition >= 0 &&
-         m_historyPosition < ((long) m_textHistory.GetCount()) - 1;
+         m_historyPosition < int(m_history.size()) - 1;
 }
 
 void EditorCell::Redo()
@@ -3322,15 +3297,16 @@ void EditorCell::Redo()
 
   m_historyPosition++;
 
-  if (m_historyPosition >= (long) m_textHistory.GetCount())
+  if (m_historyPosition >= int(m_history.size()))
     return;
 
   // We cannot use SetValue() here, since SetValue() tends to move the cursor.
-  m_text = m_textHistory.Item(m_historyPosition);
+  auto const &history = m_history.at(m_historyPosition);
+  m_text = history.text;
   StyleText();
 
-  m_positionOfCaret = m_positionHistory[m_historyPosition];
-  SetSelection(m_startHistory[m_historyPosition], m_endHistory[m_historyPosition]);
+  m_positionOfCaret = history.positionOfCaret;
+  SetSelection(history.selectionStart, history.selectionEnd);
 
   m_paren1 = m_paren2 = -1;
   m_isDirty = true;
@@ -3340,34 +3316,21 @@ void EditorCell::Redo()
 
 void EditorCell::SaveValue()
 {
-  if (m_textHistory.GetCount() > 0)
-  {
-    if (m_textHistory.Last() == m_text)
-      return;
-  }
+  if (!m_history.empty() && m_history.back().text == m_text)
+    return;
 
   if (m_historyPosition != -1)
   {
-    int len = m_textHistory.GetCount() - m_historyPosition;
-    m_textHistory.RemoveAt(m_historyPosition, len);
-    m_startHistory.erase(m_startHistory.begin() + m_historyPosition, m_startHistory.end());
-    m_endHistory.erase(m_endHistory.begin() + m_historyPosition, m_endHistory.end());
-    m_positionHistory.erase(m_positionHistory.begin() + m_historyPosition, m_positionHistory.end());
+    m_history.erase(std::next(m_history.begin(), m_historyPosition), m_history.end());
   }
 
-  m_textHistory.Add(m_text);
-  m_startHistory.push_back(m_selectionStart);
-  m_endHistory.push_back(m_selectionEnd);
-  m_positionHistory.push_back(m_positionOfCaret);
+  m_history.emplace_back(m_text, m_selectionStart, m_selectionEnd, m_positionOfCaret);
   m_historyPosition = -1;
 }
 
 void EditorCell::ClearUndo()
 {
-  m_textHistory.Clear();
-  m_startHistory.clear();
-  m_endHistory.clear();
-  m_positionHistory.clear();
+  m_history.clear();
   m_historyPosition = -1;
 }
 
@@ -3885,7 +3848,7 @@ void EditorCell::SetValue(const wxString &text)
 
   // Style the text.
   StyleText();
-  if (m_group != NULL)
+  if (m_group)
     m_group->ResetSize();
   ResetData();
 }

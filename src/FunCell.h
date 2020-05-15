@@ -49,27 +49,25 @@
   If it isn't broken into multiple cells m_nextToDraw points to the 
   cell that follows this Cell. 
 */
-class FunCell : public Cell
+class FunCell final : public Cell
 {
 public:
-  FunCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  FunCell(Cell *parent, Configuration **config);
   FunCell(const FunCell &cell);
-  Cell *Copy() override {return new FunCell(*this);}
+  OwningCellPtr Copy() override {return OwningCellPtr{new FunCell(*this)};}
   ~FunCell();
-  FunCell &operator=(const FunCell&) = delete;
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_nameCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_argCell); }
+  InnerCellIterator InnerBegin() const override { return {&m_nameCell, &m_argCell+1}; }
 
-  void SetName(Cell *name);
+  void SetName(OwningCellPtr name);
 
-  void SetArg(Cell *arg);
+  void SetArg(OwningCellPtr arg);
 
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 
@@ -90,13 +88,13 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_nameCell;
-  std::shared_ptr<Cell> m_argCell;
-  Cell *m_nameCell_Last;
-  Cell *m_argCell_Last;
+  OwningCellPtr m_nameCell;
+  OwningCellPtr m_argCell;
+  CellPtr m_nameCell_Last;
+  CellPtr m_argCell_Last;
 };
 
 

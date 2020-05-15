@@ -37,14 +37,13 @@
 #define INTEGRAL_FONT_SIZE 12
 #endif
 
-IntCell::IntCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_base(new TextCell(parent, config, cellPointers)),
-  m_under(new TextCell(parent, config, cellPointers)),
-  m_over(new TextCell(parent, config, cellPointers)),
-  m_var(new TextCell(parent, config, cellPointers))
+IntCell::IntCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_base(new TextCell(parent, config)),
+  m_under(new TextCell(parent, config)),
+  m_over(new TextCell(parent, config)),
+  m_var(new TextCell(parent, config))
 {
-  m_nextToDraw = NULL;
   m_signHeight = 35;
   m_signWidth = 18;
   m_signTop = m_signHeight / 2;
@@ -60,11 +59,10 @@ IntCell::IntCell(Cell *parent, Configuration **config, CellPointers *cellPointer
 // cppcheck-suppress uninitMemberVar symbolName=IntCell::m_charHeight
 // cppcheck-suppress uninitMemberVar symbolName=IntCell::m_charWidth
 IntCell::IntCell(const IntCell &cell):
- IntCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+ IntCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
-  if(cell.m_base)
+  if (cell.m_base)
     SetBase(cell.m_base->CopyList());
   if(cell.m_under)
     SetUnder(cell.m_under->CopyList());
@@ -76,36 +74,30 @@ IntCell::IntCell(const IntCell &cell):
 }
 
 IntCell::~IntCell()
+{}
+
+void IntCell::SetOver(OwningCellPtr name)
 {
-  MarkAsDeleted();
+  if (name)
+    m_over = std::move(name);
 }
 
-void IntCell::SetOver(Cell *name)
+void IntCell::SetBase(OwningCellPtr base)
 {
-  if (name == NULL)
-    return;
-  m_over = std::shared_ptr<Cell>(name);
+  if (base)
+    m_base = std::move(base);
 }
 
-void IntCell::SetBase(Cell *base)
+void IntCell::SetUnder(OwningCellPtr under)
 {
-  if (base == NULL)
-    return;
-  m_base = std::shared_ptr<Cell>(base);
+  if (under)
+    m_under = std::move(under);
 }
 
-void IntCell::SetUnder(Cell *under)
+void IntCell::SetVar(OwningCellPtr var)
 {
-  if (under == NULL)
-    return;
-  m_under = std::shared_ptr<Cell>(under);
-}
-
-void IntCell::SetVar(Cell *var)
-{
-  if (var == NULL)
-    return;
-  m_var = std::shared_ptr<Cell>(var);
+  if (var)
+    m_var = std::move(var);
 }
 
 void IntCell::RecalculateWidths(int fontsize)
@@ -399,10 +391,10 @@ wxString IntCell::ToString()
 
   s += m_base->ListToString();
 
-  Cell *tmp = m_var.get();
   wxString var;
-  tmp = tmp->m_next;
-  if (tmp != NULL)
+  Cell *tmp = m_var.get();
+  tmp = tmp->m_next.get();
+  if (tmp)
   {
     var = tmp->ListToString();
   }
@@ -424,10 +416,10 @@ wxString IntCell::ToMatlab()
 
   s += m_base->ListToMatlab();
 
-  Cell *tmp = m_var.get();
   wxString var;
-  tmp = tmp->m_next;
-  if (tmp != NULL)
+  Cell *tmp = m_var.get();
+  tmp = tmp->m_next.get();
+  if (tmp)
   {
 	var = tmp->ListToMatlab();
   }

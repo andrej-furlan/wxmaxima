@@ -30,13 +30,12 @@
 #include "ParenCell.h"
 #include "FontCache.h"
 
-ParenCell::ParenCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_innerCell(std::make_shared<TextCell>(parent, config, cellPointers)),
-  m_open(std::make_shared<TextCell>(parent, config, cellPointers, wxT("("))),
-  m_close(std::make_shared<TextCell>(parent, config, cellPointers, wxT(")")))
+ParenCell::ParenCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_innerCell(new TextCell(parent, config)),
+  m_open(new TextCell(parent, config, wxT("("))),
+  m_close(new TextCell(parent, config, wxT(")")))
 {
-  m_nextToDraw = NULL;
   m_open->SetStyle(TS_FUNCTION);
   m_close->SetStyle(TS_FUNCTION);
   m_numberOfExtensions = 0;
@@ -46,7 +45,6 @@ ParenCell::ParenCell(Cell *parent, Configuration **config, CellPointers *cellPoi
   m_charHeight = 12;
   m_charHeight1 = 12;
   m_fontSize = 10;
-  m_last1 = NULL;
   m_signTopHeight = 12;
   m_signHeight = 50;
   m_signBotHeight = 12;
@@ -70,9 +68,8 @@ ParenCell::ParenCell(Cell *parent, Configuration **config, CellPointers *cellPoi
 // cppcheck-suppress uninitMemberVar symbolName=ParenCell::m_signBotHeight
 // cppcheck-suppress uninitMemberVar symbolName=ParenCell::m_extendHeight
 ParenCell::ParenCell(const ParenCell &cell):
- ParenCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+ ParenCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if(cell.m_innerCell)
     SetInner(cell.m_innerCell->CopyList(), cell.m_type);
@@ -80,30 +77,22 @@ ParenCell::ParenCell(const ParenCell &cell):
 }
 
 ParenCell::~ParenCell()
-{
-  MarkAsDeleted();
-}
+{}
 
-void ParenCell::SetInner(Cell *inner, CellType type)
+void ParenCell::SetInner(OwningCellPtr inner, CellType type)
 {
-  if (inner != NULL)
-    SetInner(std::shared_ptr<Cell>(inner), type);
-}
-
-void ParenCell::SetInner(std::shared_ptr<Cell> inner, CellType type)
-{
-  if (inner == NULL)
+  if (!inner)
     return;
-  m_innerCell = inner;
 
+  m_innerCell = std::move(inner);
   m_type = type;
   // Tell the first of our inner cells not to begin with a multiplication dot.
   m_innerCell->m_SuppressMultiplicationDot = true;
 
   // Search for the last of the inner cells
   Cell *last1 = inner.get();
-  while (last1->m_next != NULL)
-    last1 = last1->m_next;
+  while (last1->m_next)
+    last1 = last1->m_next.get();
   m_last1 = last1;
   ResetSize();
 }
@@ -510,8 +499,8 @@ bool ParenCell::BreakUp()
   {
     m_isBrokenIntoLines = true;
     m_open->SetNextToDraw(m_innerCell.get());
-    wxASSERT_MSG(m_last1 != NULL, _("Bug: No last cell inside a parenthesis!"));
-    if (m_last1 != NULL)
+    wxASSERT_MSG(m_last1, _("Bug: No last cell inside a parenthesis!"));
+    if (m_last1)
       m_last1->SetNextToDraw(m_close.get());
     m_close->SetNextToDraw(m_nextToDraw);
     m_nextToDraw = m_open.get();

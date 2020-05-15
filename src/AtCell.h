@@ -25,28 +25,24 @@
 
 #include "Cell.h"
 
-class AtCell : public Cell
+class AtCell final : public Cell
 {
 public:
-  AtCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  AtCell(Cell *parent, Configuration **config);
   AtCell(const AtCell &cell);
-  Cell *Copy() override {return new AtCell(*this);}
+  OwningCellPtr Copy() override {return OwningCellPtr{new AtCell(*this)};}
   ~AtCell();
 
-  //! This class can be derived from wxAccessible which has no copy constructor
-  AtCell &operator=(const AtCell&) = delete;
-
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_baseCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_indexCell); }
+  InnerCellIterator InnerBegin() const override { return {&m_baseCell, &m_indexCell+1}; }
   
-  void SetBase(Cell *base);
-  void SetIndex(Cell *index);
+  void SetBase(OwningCellPtr base);
+  void SetIndex(OwningCellPtr index);
 
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 
@@ -65,11 +61,11 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_baseCell;
-  std::shared_ptr<Cell> m_indexCell;
+  OwningCellPtr m_baseCell;
+  OwningCellPtr m_indexCell;
 };
 
 #endif // ATCELL_H

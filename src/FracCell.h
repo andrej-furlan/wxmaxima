@@ -40,19 +40,15 @@
        on the screen, or
      - as a linear division (\f$ a/b \f$) if it doesn't. 
  */
-class FracCell : public Cell
+class FracCell final : public Cell
 {
 public:
-  FracCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  FracCell(Cell *parent, Configuration **config);
   FracCell(const FracCell &cell);
-  Cell *Copy() override {return new FracCell(*this);}
+  OwningCellPtr Copy() override {return OwningCellPtr{new FracCell(*this)}; }
   ~FracCell();
 
-  //! This class can be derived from wxAccessible which has no copy constructor
-  FracCell &operator=(const FracCell&) = delete;
-
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_divide); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_displayedDenom); }
+  InnerCellIterator InnerBegin() const override { return {&m_divide, &m_displayedDenom+1}; }
 
   //! All types of fractions we support
   enum FracType
@@ -66,24 +62,18 @@ public:
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
-  void SetFracStyle(int style)
-  {
-    m_fracStyle = style;
-  }
+  void SetFracStyle(int style) {m_fracStyle = style;}
 
   //! Set the numerator for the fraction
-  void SetNum(Cell *num);
+  void SetNum(OwningCellPtr num);
 
   //! Set the denominator of the fraction
-  void SetDenom(Cell *denom);
+  void SetDenom(OwningCellPtr denom);
 
   //! Answers the question if this is an operator by returning "true".
-  bool IsOperator() const override
-  {
-    return true;
-  }
+  bool IsOperator() const override {return true;}
 
   wxString ToString() override;
 
@@ -109,29 +99,31 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
+  //! The default numerator
+  OwningCellPtr m_defaultNum;
   //! The numerator
-  std::shared_ptr<Cell> m_num;
+  CellPtr m_num;
   //! The denominator
-  std::shared_ptr<Cell> m_denom;
+  CellPtr m_denom;
   //! A parenthesis around the numerator
-  std::shared_ptr<Cell> m_numParenthesis;
+  std::unique_ptr<ParenCell> m_numParenthesis;
   //! A parenthesis around the denominator
-  std::shared_ptr<Cell> m_denomParenthesis;
+  std::unique_ptr<ParenCell> m_denomParenthesis;
   //! The last element of the numerator
-  Cell *m_num_Last;
+  CellPtr m_num_Last;
   //! The last element of the denominator
-  Cell *m_denom_Last;
+  CellPtr m_denom_Last;
   //! Fractions in exponents are shown in their linear form.
   bool m_exponent;
   // The pointers below point to inner cells and must be kept contiguous.
   //! The "/" sign
-  std::shared_ptr<Cell> m_divide;
+  OwningCellPtr m_divide;
   //! The displayed version of the numerator, if needed with parenthesis
-  std::shared_ptr<Cell> m_displayedNum;
+  OwningCellPtr m_displayedNum;
   //! The displayed version of the denominator, if needed with parenthesis
-  std::shared_ptr<Cell> m_displayedDenom;
+  OwningCellPtr m_displayedDenom;
   //! The way the fraction should be displayed
   int m_fracStyle;
   //! How much wider should the horizontal line be on both ends than num or denom?

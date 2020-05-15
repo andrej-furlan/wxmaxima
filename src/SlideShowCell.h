@@ -43,7 +43,7 @@
 
 using namespace std;
 
-class SlideShow : public Cell
+class SlideShow final : public Cell
 {
 public:
   /*! The constructor
@@ -56,35 +56,32 @@ public:
     \param filesystem The filesystem the contents of this slideshow can be found in.
                       NULL = the operating system's filesystem
     \param parent     The parent GroupCell this cell belongs to.
-    \param cellPointers All pointers that might point to this cell and that need to
-                        be set to NULL if this cell is deleted.
    */
-  SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, std::shared_ptr<wxFileSystem> filesystem, int framerate = -1);
-  SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, int framerate = -1);
+  SlideShow(Cell *parent, Configuration **config, std::shared_ptr<wxFileSystem> filesystem, int framerate = -1);
+  SlideShow(Cell *parent, Configuration **config, int framerate = -1);
   SlideShow(const SlideShow &cell);
   //! A constructor that loads the compressed file from a wxMemoryBuffer
-  SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, wxString type);
-  SlideShow(Cell *parent, Configuration **config, CellPointers *cellPointers, wxString image, bool remove);
+  SlideShow(Cell *parent, Configuration **config, wxMemoryBuffer image, const wxString &type);
+  SlideShow(Cell *parent, Configuration **config, const wxString &image, bool remove);
 
-  Cell *Copy() override {return new SlideShow(*this);}
+  OwningCellPtr Copy() override {return OwningCellPtr{new SlideShow(*this)};}
   ~SlideShow();
-  SlideShow &operator=(const SlideShow&) = delete;
-  void LoadImages(wxMemoryBuffer imageData);
-  void LoadImages(wxString imageFile);
+
+  void LoadImages(const wxMemoryBuffer &imageData);
+  void LoadImages(const wxString &imageFile);
 
   //! A class that publishes wxm data to the clipboard
   static wxDataFormat m_gifFormat;
 
   //! Can the current image be exported in SVG format?
-  bool CanExportSVG() const {return (m_images[m_displayed] != NULL) && m_images[m_displayed]->CanExportSVG();}
+  bool CanExportSVG() const {return m_images[m_displayed] && m_images[m_displayed]->CanExportSVG();}
 
   //! A Gif object for the clipboard
   class GifDataObject : public wxCustomDataObject
   {
   public:
     explicit GifDataObject(const wxMemoryOutputStream &str);
-
-    GifDataObject();
+    GifDataObject() = default;
 
   private:
     wxCharBuffer m_databuf;
@@ -92,29 +89,25 @@ public:
 
   bool IsOk() const {return (m_size>0) && (m_images[m_displayed]->IsOk());}
   
-  virtual wxString GetToolTip(const wxPoint &point) override;
-
-  void MarkAsDeleted()  override;
+  const wxString &GetToolTip(const wxPoint &point) override;
 
   /*! Remove all cached scaled images from memory
 
     To be called when the slideshow is outside of the displayed portion 
     of the screen; The bitmaps will be re-generated when needed.
    */
-  virtual void ClearCache() override;
+  void ClearCache() override;
 
   void LoadImages(wxArrayString images, bool deleteRead);
 
-  int GetDisplayedIndex() const
-  { return m_displayed; }
+  int GetDisplayedIndex() const {return m_displayed;}
 
   wxImage GetBitmap(int n) const
   { return m_images[n]->GetUnscaledBitmap().ConvertToImage(); }
 
   void SetDisplayedIndex(int ind);
 
-  int Length() const
-  { return m_size; }
+  int Length() const {return m_size;}
 
   //! Exports the image the slideshow currently displays
   wxSize ToImageFile(wxString file);
@@ -156,38 +149,24 @@ public:
   bool AnimationRunning() const {return m_animationRunning;}
   void AnimationRunning(bool run);
   bool CanPopOut() override
-    {
-      return (!m_images[m_displayed]->GnuplotSource().IsEmpty());
-    }
+  { return m_images[m_displayed] && !m_images[m_displayed]->GnuplotSource().IsEmpty(); }
 
-  void GnuplotSource(int image, wxString gnuplotFilename, wxString dataFilename, std::shared_ptr<wxFileSystem> filesystem)
-    {
-      m_images[image]->GnuplotSource(gnuplotFilename, dataFilename, filesystem);
-    }
+  void GnuplotSource(int image, const wxString &gnuplotFilename, const wxString &dataFilename, std::shared_ptr<wxFileSystem> filesystem)
+  { m_images[image]->GnuplotSource(gnuplotFilename, dataFilename, filesystem); }
 
   wxString GnuplotSource() const override
-    {
-      if(m_images[m_displayed] == NULL)
-        return wxEmptyString;
-      else
-        return m_images[m_displayed]->GnuplotSource();
-    }
+  { return m_images[m_displayed] ? m_images[m_displayed]->GnuplotSource() : wxString(); }
   wxString GnuplotData() const override
-    {
-      if(m_images[m_displayed] == NULL)
-        return wxEmptyString;
-      else
-        return m_images[m_displayed]->GnuplotData();
-    }
+  { return m_images[m_displayed] ? m_images[m_displayed]->GnuplotData() : wxString(); }
 
   void SetNextToDraw(Cell *next) override;
 
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
-  std::shared_ptr<wxTimer> m_timer;
+  CellPtr m_nextToDraw;
+
+  std::unique_ptr<wxTimer> m_timer;
   /*! The framerate of this cell.
 
     Can contain a frame rate [in Hz] or a -1, which means: Use the default frame rate.
@@ -200,11 +179,13 @@ protected:
   std::shared_ptr<wxFileSystem> m_fileSystem;
   vector<std::shared_ptr<Image>> m_images;
 
+  bool m_drawBoundingBox;
+
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 
@@ -216,13 +197,8 @@ protected:
 
   wxString ToXML() override;
 
-  virtual void DrawBoundingBox(wxDC &WXUNUSED(dc), bool WXUNUSED(all) = false)  override
-  {
-    m_drawBoundingBox = true;
-  }
-
-private:
-  bool m_drawBoundingBox;
+  void DrawBoundingBox(wxDC &WXUNUSED(dc), bool WXUNUSED(all) = false) override
+  {m_drawBoundingBox = true;}
 };
 
 #endif // SLIDESHOWCELL_H

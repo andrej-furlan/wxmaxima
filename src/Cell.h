@@ -1,7 +1,8 @@
 // -*- mode: c++; c-file-style: "linux"; c-basic-offset: 2; indent-tabs-mode: nil -*-
 //
 //  Copyright (C) 2004-2015 Andrej Vodopivec <andrej.vodopivec@gmail.com>
-//  Copyright (C) 2014-2018 Gunter Königsmann <wxMaxima@physikbuch.de>
+//                2014-2018 Gunter Königsmann <wxMaxima@physikbuch.de>
+//                2020 Kuba Ober <kuba@bertec.com>
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@
 //
 //  SPDX-License-Identifier: GPL-2.0+
 
-/*!\file
+/*! \file
   
   The definition of the base class of all cells the worksheet consists of.
  */
@@ -35,11 +36,14 @@
 #include <wx/hashmap.h>
 #include <wx/scrolwin.h>
 #endif // wxUSE_ACCESSIBILITY
+#include "CellPtr.h"
 #include "Configuration.h"
 #include "TextStyle.h"
 #include <algorithm>
 #include <memory>
 #include <vector>
+
+class Worksheet;
 
 /*! The supported types of math cells
  */
@@ -63,6 +67,11 @@ enum CellType
   MC_TYPE_SLIDE,       //!< An animation created by the with_slider_* maxima commands
   MC_TYPE_GROUP        //!< A group cells that bundles several individual cells together
 };
+
+//! A pointer that owns the cell it points to.
+using OwningCellPtr = OwningPtr<Cell>;
+
+class GroupCell;
 
 /*!
   The base class all cell types the worksheet can consist of are derived from
@@ -101,14 +110,14 @@ enum CellType
 
  */
 #if wxUSE_ACCESSIBILITY
-class Cell: public wxAccessible
+class Cell: public Observed, public wxAccessible
 #else
-class Cell
+class Cell: public Observed
 #endif
 {
   public:
 
-    /*! The storage for pointers to cells.
+  /*! The storage for pointers to cells.
     
     If a cell is deleted it is necessary to remove all pointers that might
     allow to access the now-defunct cell. These pointers are kept in this 
@@ -117,8 +126,8 @@ class Cell
   class CellPointers
   {
   public:
-    void ScrollToCell(Cell *cell){m_cellToScrollTo = cell;}
-    Cell *CellToScrollTo(){return m_cellToScrollTo;}
+    void ScrollToCell(Cell *cell) {m_cellToScrollTo = cell;}
+    Cell *CellToScrollTo() {return m_cellToScrollTo.get();}
     explicit CellPointers(wxScrolledCanvas *mathCtrl);
     /*! Returns the cell maxima currently works on. NULL if there isn't such a cell.
       
@@ -126,20 +135,15 @@ class Cell
       use the last cell maxima was known to work on.
     */
     Cell *GetWorkingGroup(bool resortToLast = false)
-      {
-        if ((m_workingGroup != NULL) || (!resortToLast))
-          return m_workingGroup;
-        else
-          return m_lastWorkingGroup;
-      }
+    { return (m_workingGroup || !resortToLast) ? m_workingGroup.get() : m_lastWorkingGroup.get(); }
 
     //! Sets the cell maxima currently works on. NULL if there isn't such a cell.
     void SetWorkingGroup(Cell *group)
-      {
-        if(group != NULL)
-          m_lastWorkingGroup = group;
-        m_workingGroup = group;
-      }
+    {
+      if (group)
+        m_lastWorkingGroup = group;
+      m_workingGroup = group;
+    }
     
     void WXMXResetCounter()
       { m_wxmxImgCounter = 0; }
@@ -157,47 +161,47 @@ class Cell
       //! Is the list of errors empty?
       bool Empty() const {return m_errors.empty();}
       //! Remove one specific GroupCell from the list of errors
-      void Remove(Cell * cell){m_errors.erase(std::remove(m_errors.begin(), m_errors.end(), cell), m_errors.end());}
+      void Remove(Cell * cell){m_errors.erase(std::remove(m_errors.begin(), m_errors.end(), static_cast<Observed*>(cell)), m_errors.end());}
       //! Does the list of GroupCell with errors contain cell?
-      bool Contains(Cell * cell) const {return std::find(m_errors.begin(), m_errors.end(), cell) != m_errors.end();}
+      bool Contains(Cell * cell) const {return std::find(m_errors.begin(), m_errors.end(), static_cast<Observed*>(cell)) != m_errors.end();}
       //! Mark this GroupCell as containing errors
       void Add(Cell * cell){m_errors.push_back(cell);}
       //! The first GroupCell with error that is still in the list
-      Cell *FirstError() const {return m_errors.empty() ? NULL : m_errors.front();}
+      Cell *FirstError() const {return m_errors.empty() ? nullptr : m_errors.front().get();}
       //! The last GroupCell with errors in the list
-      Cell *LastError() const {return m_errors.empty() ? NULL : m_errors.back();}
+      Cell *LastError() const {return m_errors.empty() ? nullptr : m_errors.back().get();}
       //! Empty the list of GroupCells with errors
       void Clear(){m_errors.clear();}
     private:
       //! A list of GroupCells that contain errors
-      std::vector<Cell *> m_errors;
+      std::vector<CellPtr> m_errors;
     };
 
     //! The list of cells maxima has complained about errors in
     ErrorList m_errorList;
     //! The EditorCell the mouse selection has started in
-    Cell *m_cellMouseSelectionStartedIn;
+    CellPtr m_cellMouseSelectionStartedIn;
     //! The EditorCell the keyboard selection has started in
-    Cell *m_cellKeyboardSelectionStartedIn;
+    CellPtr m_cellKeyboardSelectionStartedIn;
     //! The EditorCell the search was started in
-    Cell *m_cellSearchStartedIn;
+    CellPtr m_cellSearchStartedIn;
     //! Which cursor position incremental search has started at?
-    int m_indexSearchStartedAt;
+    int m_indexSearchStartedAt = -1;
     //! Which cell the blinking cursor is in?
-    Cell *m_activeCell;
+    CellPtr m_activeCell;
     //! The GroupCell that is under the mouse pointer 
-    Cell *m_groupCellUnderPointer;
+    CellPtr m_groupCellUnderPointer;
     //! The EditorCell that contains the currently active question from maxima 
-    Cell *m_answerCell;
+    CellPtr m_answerCell;
     //! The last group cell maxima was working on.
-    Cell *m_lastWorkingGroup;
+    CellPtr m_lastWorkingGroup;
     //! The textcell the text maxima is sending us was ending in.
-    Cell *m_currentTextCell;
+    CellPtr m_currentTextCell;
     /*! The group cell maxima is currently working on.
 
       NULL means that maxima isn't currently evaluating a cell.
     */
-    Cell *m_workingGroup;
+    CellPtr m_workingGroup;
     /*! The currently selected string. 
 
       Since this string is defined here it is available in every editor cell
@@ -228,7 +232,7 @@ class Cell
     
       See also m_hCaretPositionStart and m_selectionEnd
     */
-    Cell *m_selectionStart;
+    CellPtr m_selectionStart;
     /*! The last cell of the currently selected range of groupCells.
     
       NULL, when no GroupCells are selected and NULL, if only stuff inside a GroupCell
@@ -239,7 +243,7 @@ class Cell
     */
 
     //! The cell currently under the mouse pointer
-    Cell *m_cellUnderPointer;
+    CellPtr m_cellUnderPointer;
   
     /*! The last cell of the currently selected range of Cells.
     
@@ -249,33 +253,43 @@ class Cell
     
       See also m_hCaretPositionStart, m_hCaretPositionEnd and m_selectionStart.
     */
-    Cell *m_selectionEnd;
-    WX_DECLARE_VOIDPTR_HASH_MAP( int, SlideShowTimersList);
+    CellPtr m_selectionEnd;
+    WX_DECLARE_VOIDPTR_HASH_MAP(int, SlideShowTimersList);
     SlideShowTimersList m_slideShowTimers;
 
     wxScrolledCanvas *GetMathCtrl(){return m_mathCtrl;}
 
     //! Is scrolling to a cell scheduled?
-    bool m_scrollToCell;
+    bool m_scrollToCell = false;
   private:
     //! If m_scrollToCell = true: Which cell do we need to scroll to?
-    Cell *m_cellToScrollTo;
+    CellPtr m_cellToScrollTo;
     //! The function to call if an animation has to be stepped.
     wxScrolledCanvas *m_mathCtrl;
     //! The image counter for saving .wxmx files
-    int m_wxmxImgCounter;
+    int m_wxmxImgCounter = 0;
   };
 
-
-  Cell(Cell *group, Configuration **config, CellPointers *cellPointers);
+  Cell(Cell *group, Configuration **config);
 
   /*! Create a copy of this cell
 
     This method is purely virtual, which means every child class has to define
     its own Copy() method.
    */
-  virtual Cell *Copy() = 0;
-  
+  virtual OwningCellPtr Copy() = 0;
+
+  /*! The GroupCell this list of cells belongs to.
+    Reads NULL, if no parent cell has been set - which is treated as an Error by GetGroup():
+    every math cell has a GroupCell it belongs to.
+   */
+  CellPtr m_group;
+
+  //! The cell that contains the current cell
+  CellPtr m_parent;
+
+  Configuration **m_configuration;
+
   /*! Scale font sizes and line widths according to the zoom factor.
 
     Is used for displaying/printing/exporting of text/maths
@@ -313,22 +327,13 @@ class Cell
 
     wxEmptyString means: No ToolTip
    */
-  virtual wxString GetToolTip(const wxPoint &point);
+  virtual const wxString &GetToolTip(const wxPoint &point);
 
   //! Delete this list of cells.
   virtual ~Cell();
 
   //! How many cells does this cell contain?
   int CellsInListRecursive() const;
-
-  /*! If the cell is moved to the undo buffer this function drops pointers to it
-  
-    Examples are the pointer to the start or the end of the selection.
-
-    \attention If this method is overridden the overiding function needs to call
-    this function.
-  */
-  virtual void MarkAsDeleted();
   
   //! The part of the rectangle rect that is in the region that is currently drawn
   wxRect CropToUpdateRegion(wxRect rect)
@@ -349,10 +354,10 @@ class Cell
     
     \param p_next The cell that will be appended to the list.
    */
-  void AppendCell(Cell *p_next);
+  void AppendCell(OwningCellPtr p_next);
 
   //! 0 for ordinary cells, 1 for slide shows and diagrams displayed with a 1-pixel border
-  int m_imageBorderWidth;
+  int m_imageBorderWidth = 0;
 
   //! Do we want this cell to start with a linebreak?
   bool SoftLineBreak(bool breakLine = true)
@@ -653,25 +658,25 @@ class Cell
     \param first Returns the first cell of the rectangle
     \param last Returns the last cell of the rectangle
    */
-  void SelectRect(const wxRect &rect, Cell **first, Cell **last);
+  void SelectRect(const wxRect &rect, CellPtr &first, CellPtr &last);
 
   /*! The top left of the rectangle the mouse has selected
 
     \param rect The rectangle the mouse selected
     \param first Returns the first cell of the rectangle
    */
-  void SelectFirst(const wxRect &rect, Cell **first);
+  void SelectFirst(const wxRect &rect, CellPtr &first);
 
   /*! The bottom right of the rectangle the mouse has selected
 
     \param rect The rectangle the mouse selected
     \param last Returns the last cell of the rectangle
    */
-  void SelectLast(const wxRect &rect, Cell **last);
+  void SelectLast(const wxRect &rect, CellPtr &last);
 
   /*! Select the cells inside this cell described by the rectangle rect.
   */
-  virtual void SelectInner(const wxRect &rect, Cell **first, Cell **last);
+  virtual void SelectInner(const wxRect &rect, CellPtr &first, CellPtr &last);
 
   //! Is this cell an operator?
   virtual bool IsOperator() const;
@@ -733,7 +738,7 @@ class Cell
   wxString OMML2RTF(wxXmlNode *node);
 
   //! Converts OMML math to RTF math
-  wxString OMML2RTF(wxString ommltext);
+  wxString OMML2RTF(const wxString &ommltext);
 
   /*! Returns the cell's representation as OMML
 
@@ -792,10 +797,10 @@ class Cell
     Reads NULL, if this is the last cell of the list. See also m_nextToDraw and 
     m_previous.
    */
-  Cell *m_next;
+  OwningCellPtr m_next;
 
   //! Get the next cell in the list.
-  virtual Cell *GetNext() const {return m_next;}
+  //virtual Cell *GetNext() const {return m_next.get();}
   /*! Get the next cell that needs to be drawn
 
     In case of potential 2d objects like fractions either the fraction needs to be
@@ -809,7 +814,7 @@ class Cell
     Reads NULL, if this is the first cell of the list. See also 
     m_nextToDraw and m_next
    */
-  Cell *m_previous;
+  CellPtr m_previous;
   /*! Tells this cell which one should be the next cell to be drawn
 
     If the cell is displayed as 2d object this sets the pointer to the next cell.
@@ -818,14 +823,14 @@ class Cell
     list of cells this cell is displayed as.
    */
   virtual void SetNextToDraw(Cell *next) = 0;
-  bool m_bigSkip;
+  bool m_bigSkip = false;
   /*! true means:  This cell is broken into two or more lines.
     
     Long abs(), conjugate(), fraction and similar cells can be displayed as 2D objects,
     but will be displayed in their linear form (and therefore broken into lines) if they
     end up to be wider than the screen. In this case m_isBrokenIntoLines is true.
    */
-  bool m_isBrokenIntoLines;
+  bool m_isBrokenIntoLines = false;
   /*! True means: This cell is not to be drawn.
 
     Currently the following items fall into this category:
@@ -833,10 +838,10 @@ class Cell
      - plus signs within numbers
      - The output in folded GroupCells
    */
-  bool m_isHidden;
+  bool m_isHidden = false;
 
   //! True means: This is a hidable multiplication sign
-  bool m_isHidableMultSign;
+  bool m_isHidableMultSign = false;
 
   /*! Determine if this cell contains text that isn't code
 
@@ -856,7 +861,7 @@ class Cell
   bool IsEditable(bool input = false) const
   {
     return (m_type == MC_TYPE_INPUT &&
-            m_previous != NULL && m_previous->m_type == MC_TYPE_MAIN_PROMPT)
+            m_previous && m_previous->m_type == MC_TYPE_MAIN_PROMPT)
            || (!input && IsComment());
   }
 
@@ -967,7 +972,7 @@ class Cell
     
     Used by Cell::Copy() when the parameter <code>all</code> is true.
   */
-  Cell *CopyList();
+  OwningCellPtr CopyList();
 
   /*! Do we want to begin this cell with a center dot if it is part of a product?
 
@@ -977,7 +982,7 @@ class Cell
     many => we need parenthesis cells to set this flag for the first cell in 
     their "inner cell" list.
    */
-  bool m_SuppressMultiplicationDot;
+  bool m_SuppressMultiplicationDot = false;
 
   //! Remove this cell's tooltip
   void ClearToolTip(){m_toolTip = wxEmptyString;}
@@ -986,14 +991,14 @@ class Cell
   //! Add another tooltip to this cell
   void AddToolTip(const wxString &tip);
   //! Tells this cell where it is placed on the worksheet
-  void SetCurrentPoint(wxPoint point){m_currentPoint = point;
-    if((m_currentPoint.x >=0) &&
-       (m_currentPoint.y >=0))
-  m_currentPoint_Last = point;
+  void SetCurrentPoint(wxPoint point){
+    m_currentPoint = point;
+    if (point.IsFullySpecified())
+      m_currentPoint_Last = point;
   }
   //! Tells this cell where it is placed on the worksheet
   void SetCurrentPoint(int x, int y){
-    SetCurrentPoint(wxPoint(x,y));
+    SetCurrentPoint({x ,y});
   }
   //! Where is this cell placed on the worksheet?
   wxPoint GetCurrentPoint() const {return m_currentPoint;}
@@ -1018,51 +1023,49 @@ protected:
      - for EditorCells by it's GroupCell's RecalculateHeight and
      - for Cells when they are drawn.
   */
-  wxPoint m_currentPoint;
+  wxPoint m_currentPoint = wxDefaultPosition;
 
-  wxPoint m_currentPoint_Last;
-
-  /*! The GroupCell this list of cells belongs to.
-    
-    Reads NULL, if no parent cell has been set - which is treated as an Error by GetGroup():
-    every math cell has a GroupCell it belongs to.
-  */
-  Cell *m_group;
-
-  //! The cell that contains the current cell
-  Cell *m_parent;
+  wxPoint m_currentPoint_Last = wxDefaultPosition;
 
   //! Does this cell begin with a forced page break?
-  bool m_breakPage;
+  bool m_breakPage = false;
   //! Are we allowed to add a line break before this cell?
-  bool m_breakLine;
-  //! true means we force this cell to begin with a line break.  
-  bool m_forceBreakLine;
-  bool m_highlight;
-  /* Text that should end up on the clipboard if this cell is copied as text.
+  bool m_breakLine = false;
+  //! true means we force this cell to begin with a line break.
+  bool m_forceBreakLine = false;
+  bool m_highlight = false;
+
+  /*! Text that should end up on the clipboard if this cell is copied as text.
 
      \attention  m_altCopyText is not check in all cell types!
   */
   wxString m_altCopyText;
-  Configuration **m_configuration;
 
-  class InnerCellIterator
+  class InnerCellIterator final
   {
-    const std::shared_ptr<Cell> *ptr = {};
+    const OwningCellPtr *ptr = {}, *end = {};
+    void Adjust()
+    {
+      while (ptr != end && !*ptr)
+        ++ ptr;
+    }
   public:
     InnerCellIterator() = default;
-    explicit InnerCellIterator(const std::shared_ptr<Cell> *p) : ptr(p) {}
+    InnerCellIterator(const OwningCellPtr *p, const OwningCellPtr *end) : ptr(p), end(end)
+    { Adjust(); }
     InnerCellIterator(const InnerCellIterator &o) = default;
     InnerCellIterator &operator=(const InnerCellIterator &o) = default;
-    InnerCellIterator operator++(int) {
+    InnerCellIterator operator++(int)
+    {
       auto ret = *this;
-      ptr ++;
+      ++ ptr;
+      Adjust();
       return ret;
     }
-    InnerCellIterator &operator++() { ++ptr; return *this; }
-    bool operator==(const InnerCellIterator &o) const { return ptr == o.ptr; }
-    bool operator!=(const InnerCellIterator &o) const { return ptr != o.ptr; }
-    operator bool() const { return ptr && ptr->get(); }
+    InnerCellIterator &operator++() { ++ptr; Adjust(); return *this; }
+    bool operator==(const InnerCellIterator &o) const { return ptr == o.ptr || (ptr == end && !o.ptr); }
+    bool operator!=(const InnerCellIterator &o) const { return !(*this == o); }
+    //explicit operator bool() const { return ptr && ptr->get(); }
     operator Cell*() const { return ptr ? ptr->get() : nullptr; }
     Cell *operator->() const { return ptr ? ptr->get() : nullptr; }
   };
@@ -1070,47 +1073,155 @@ protected:
   //! Iterator to the beginning of the inner cell range
   virtual InnerCellIterator InnerBegin() const;
   //! Iterator to the end of the inner cell range
-  virtual InnerCellIterator InnerEnd() const;
+  InnerCellIterator InnerEnd() const { return {}; }
+
+  struct InnerCellRange final
+  {
+    InnerCellIterator m_begin, m_end;
+  public:
+    InnerCellIterator begin() const { return m_begin; }
+    InnerCellIterator end() const { return m_end; }
+  };
+  InnerCellRange OnInnerCells() const { return {InnerBegin(), InnerEnd()}; }
+
+  template <class CellT, class Derived> class CellListIteratorBase
+  {
+  protected:
+    CellT *ptr = {};
+  public:
+    CellListIteratorBase() = default;
+    explicit CellListIteratorBase(CellT *cell) : ptr(cell) {}
+    CellListIteratorBase(const Derived &o) : ptr(o.ptr) {};
+    Derived &operator=(const Derived &o) { return (ptr = o.ptr), *this; }
+    Derived operator++(int)
+    {
+      auto ret = *this;
+      ++(*this);
+      return ret;
+    }
+    bool operator==(const Derived &o) const { return ptr == o.ptr; }
+    bool operator!=(const Derived &o) const { return ptr != o.ptr; }
+    operator bool() const { return ptr; }
+    operator CellT *() const { return ptr; }
+    CellT *operator->() const { return ptr; }
+  };
+
+  class CellListIterator final : public CellListIteratorBase<Cell, CellListIterator>
+  {
+  public:
+    using CellListIteratorBase::CellListIteratorBase;
+#if 0
+    CellListIterator() = default;
+    CellListIterator(Cell *cell) : CellListIteratorBase(cell) {}
+    CellListIterator(const CellListIterator &o) = default;
+#endif
+    CellListIterator &operator++() { ptr = ptr->m_next.get(); return *this; }
+  };
+
+  CellListIterator ListBegin() const { return CellListIterator{const_cast<Cell*>(this)}; }
+  CellListIterator ListEnd() const { return {}; }
+  struct CellListRange final
+  {
+    CellListIterator m_begin;
+  public:
+    CellListIterator begin() const { return m_begin; }
+    CellListIterator end() const { return {}; }
+  };
+
+  class DrawListIterator final : public CellListIteratorBase<Cell, DrawListIterator>
+  {
+  public:
+    using CellListIteratorBase::CellListIteratorBase;
+    DrawListIterator &operator++() { ptr = ptr->GetNextToDraw(); return *this; }
+  };
+
+  DrawListIterator DrawBegin() const { return DrawListIterator{const_cast<Cell*>(this)}; }
+  DrawListIterator DrawEnd() const { return {}; }
+  struct DrawListRange final
+  {
+    DrawListIterator m_begin;
+  public:
+    DrawListIterator begin() const { return m_begin; }
+    DrawListIterator end() const { return {}; }
+  };
+
+  //! The iterator that iterates over the group cells in this cell's list. It stops
+  //! immediately when the next node is not a GroupCell.
+  class GroupListIterator final : public CellListIteratorBase<GroupCell, GroupListIterator>
+  {
+  public:
+    using CellListIteratorBase::CellListIteratorBase;
+    GroupListIterator &operator++();// { ptr = ptr->GetNext(); return *this; }
+  };
+
+  struct GroupListRange final
+  {
+    GroupListIterator m_begin;
+  public:
+    GroupListIterator begin() const { return m_begin; }
+    GroupListIterator end() const { return {}; }
+  };
+
+  inline Worksheet *GetWorksheet() const;
+
+public:
+  //! Provides a range on the cell list, starting with this cell.
+  CellListRange OnCellList() const { return {ListBegin()}; }
+  //! Proviedes a range on the cell list in draw order, starting with this cell.
+  DrawListRange OnDrawList() const { return {DrawBegin()}; }
+  //! Provides a range on the list of group cells, starting with this cell,
+  //! ending with the first non-group cell.
+  virtual GroupListRange OnGroupList() const { return {}; }
 
 protected:
   //! The height of this cell.
-  int m_height;
+  int m_height = 1;
   /*! The width of this cell.
 
     Is recalculated by RecalculateHeight.
    */
-  int m_width;
+  int m_width = -1;
   /*! Caches the width of the list starting with this cell.
 
     - Will contain -1, if it has not yet been calculated.
     - Won't be recalculated on appending new cells to the list.
   */
-  int m_fullWidth;
+  int m_fullWidth = -1;
   /*! Caches the width of the rest of the line this cell is part of.
 
     - Will contain -1, if it has not yet been calculated.
     - Won't be recalculated on appending new cells to the list.
   */
-  int m_lineWidth;
-  int m_center;
-  int m_maxCenter;
-  int m_maxDrop;
-  CellType m_type;
-  TextStyle m_textStyle;
+  int m_lineWidth = -1;
+  int m_center = -1;
+  int m_maxCenter = -1;
+  int m_maxDrop = -1;
+  CellType m_type = MC_TYPE_DEFAULT;
+  TextStyle m_textStyle = TS_DEFAULT;
   //! The font size is smaller in super- and subscripts.
   double m_fontSize;
 
 protected:
-  CellPointers *m_cellPointers;
+  CellPointers *const m_cellPointers = GetCellPointers();
   //! The zoom factor at the time of the last recalculation.
-  double m_lastZoomFactor;
-  int m_fontsize_old;
-  bool m_isBrokenIntoLines_old;
+  double m_lastZoomFactor = -1.0;
+  int m_fontsize_old = -1;
+  bool m_isBrokenIntoLines_old = false;
 private:
   //! The client width at the time of the last recalculation.
-  int m_clientWidth_old;
+  int m_clientWidth_old = -1;
+
+  CellPointers *GetCellPointers() const;
 };
 
+inline CellPtr::CellPtr(const std::unique_ptr<Cell> &ptr) : m_cb(Ref(ptr.get())) {}
+inline Cell &CellPtr::operator*() const
+{ wxASSERT(m_cb->m_object); return *static_cast<Cell*>(m_cb->m_object); }
+inline Cell *CellPtr::operator->() const
+{ return static_cast<Cell*>(m_cb->m_object); }
+inline CellPtr::operator Cell*() const
+{ return static_cast<Cell*>(m_cb->m_object); }
+inline Cell *CellPtr::get() const
+{ return static_cast<Cell*>(m_cb->m_object); }
+
 #endif // MATHCELL_H
-
-

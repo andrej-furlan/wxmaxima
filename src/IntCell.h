@@ -36,35 +36,32 @@
 
   This class represents an integral including the integral sign and its contents.
  */
-class IntCell : public Cell
+class IntCell final : public Cell
 {
 public:
-  IntCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  IntCell(Cell *parent, Configuration **config);
   IntCell(const IntCell &cell);
-  Cell *Copy() override {return new IntCell(*this);}
-  //! This class can be derived from wxAccessible which has no copy constructor
-  IntCell &operator=(const IntCell&) = delete;
+  OwningCellPtr Copy() override {return OwningCellPtr{new IntCell(*this)};}
   ~IntCell();
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_base); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_var); }
+  InnerCellIterator InnerBegin() const override { return {&m_base, &m_var+1}; }
 
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
-  void SetBase(Cell *base);
+  void SetBase(OwningCellPtr base);
 
   //! Set the lower limit of the integral
-  void SetUnder(Cell *under);
+  void SetUnder(OwningCellPtr under);
 
   //! Set the higher limit of the integral
-  void SetOver(Cell *name);
+  void SetOver(OwningCellPtr name);
 
   //! Set the integration variable
-  void SetVar(Cell *var);
+  void SetVar(OwningCellPtr var);
 
   enum IntegralType
   {
@@ -73,10 +70,7 @@ public:
   };
 
   //! Choose between definite and indefinite integrals
-  void SetIntStyle(IntegralType style)
-  {
-    m_intStyle = style;
-  }
+  void SetIntStyle(IntegralType style) {m_intStyle = style;}
 
   wxString ToString() override;
 
@@ -95,17 +89,17 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
   //! The part of the formula that is to be integrated.
-  std::shared_ptr<Cell> m_base;
+  OwningCellPtr m_base;
   //! The lower limit of the integral
-  std::shared_ptr<Cell> m_under;
+  OwningCellPtr m_under;
   //! The upper limit of the integral
-  std::shared_ptr<Cell> m_over;
+  OwningCellPtr m_over;
   //! The integration variable
-  std::shared_ptr<Cell> m_var;
+  OwningCellPtr m_var;
   //! The height of the integral sign
   int m_signHeight;
   //! The width of the integral sign

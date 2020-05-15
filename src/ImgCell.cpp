@@ -40,32 +40,28 @@
 #include <wx/clipbrd.h>
 #include <wx/mstream.h>
 
-ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellpointers) : Cell(parent, config, cellpointers)
+ImgCell::ImgCell(Cell *parent, Configuration **config) : Cell(parent, config)
 {
-  m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
   m_drawRectangle = true;
   m_imageBorderWidth = 1;
   m_drawBoundingBox = false;
 }
 
-ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointers, wxMemoryBuffer image, wxString type) :
-  Cell(parent, config, cellPointers),
+ImgCell::ImgCell(Cell *parent, Configuration **config, const wxMemoryBuffer &image, const wxString &type) :
+  Cell(parent, config),
   m_image(new Image(m_configuration, image, type))
 {
-  m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
   m_drawRectangle = true;
   m_imageBorderWidth = 1;
   m_drawBoundingBox = false;
 }
 
-ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointers, const wxBitmap &bitmap) :
-  Cell(parent, config, cellPointers),
+ImgCell::ImgCell(Cell *parent, Configuration **config, const wxBitmap &bitmap) :
+  Cell(parent, config),
   m_image(new Image(m_configuration, bitmap))
-
 {
-  m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
   m_drawRectangle = true;
   m_imageBorderWidth = 1;
@@ -75,10 +71,9 @@ ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointer
 int ImgCell::s_counter = 0;
 
 // constructor which load image
-ImgCell::ImgCell(Cell *parent, Configuration **config, CellPointers *cellPointers, wxString image, std::shared_ptr<wxFileSystem> filesystem, bool remove)
-  : Cell(parent, config, cellPointers)
+ImgCell::ImgCell(Cell *parent, Configuration **config, const wxString &image, std::shared_ptr<wxFileSystem> filesystem, bool remove)
+  : Cell(parent, config)
 {
-  m_nextToDraw = NULL;
   m_type = MC_TYPE_IMAGE;
   m_drawRectangle = true;
   if (image != wxEmptyString)
@@ -100,9 +95,8 @@ void ImgCell::SetBitmap(const wxBitmap &bitmap)
 }
 
 ImgCell::ImgCell(const ImgCell &cell):
- ImgCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+ ImgCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   m_drawRectangle = cell.m_drawRectangle;
   m_drawBoundingBox = false;
@@ -111,31 +105,25 @@ ImgCell::ImgCell(const ImgCell &cell):
 
 ImgCell::~ImgCell()
 {
-  ImgCell::MarkAsDeleted();
-}
-
-void ImgCell::MarkAsDeleted()
-{
   ClearCache();
-  Cell::MarkAsDeleted();
 }
 
-wxString ImgCell::GetToolTip(const wxPoint &point)
+const wxString &ImgCell::GetToolTip(const wxPoint &point)
 {
-  if(ContainsPoint(point))
+  static wxString empty;
+  if (ContainsPoint(point))
   {
     m_cellPointers->m_cellUnderPointer = this;
-    if(!m_image->IsOk())
-      return(_("The image could not be displayed. It may be broken, in a wrong format or "
-               "be the result of gnuplot not being able to write the image or not being "
-               "able to understand what maxima wanted to plot.\n"
-               "One example of the latter would be: Gnuplot refuses to plot entirely "
-               "empty images"));
-    else
+    if (m_image->IsOk())
       return m_toolTip;
+
+    return _("The image could not be displayed. It may be broken, in a wrong format or "
+             "be the result of gnuplot not being able to write the image or not being "
+             "able to understand what maxima wanted to plot.\n"
+             "One example of the latter would be: Gnuplot refuses to plot entirely "
+             "empty images");
   }
-  else
-    return wxEmptyString;
+  return empty;
 }
 
 void ImgCell::RecalculateWidths(int fontsize)

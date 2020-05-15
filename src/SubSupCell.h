@@ -26,40 +26,35 @@
 #include <memory>
 #include "Cell.h"
 
-class SubSupCell : public Cell
+class SubSupCell final : public Cell
 {
 public:
-  SubSupCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  SubSupCell(Cell *parent, Configuration **config);
   SubSupCell(const SubSupCell &cell);
-  Cell *Copy() override {return new SubSupCell(*this);}
-
+  OwningCellPtr Copy() override {return OwningCellPtr{new SubSupCell(*this)};}
   ~SubSupCell();
 
-  //! This class can be derived from wxAccessible which has no copy constructor
-  SubSupCell operator=(const SubSupCell&) = delete;
+  InnerCellIterator InnerBegin() const override { return {&m_baseCell, &m_preSupCell+1}; }
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_baseCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_preSupCell); }
+  void SetBase(OwningCellPtr base);
 
-  void SetBase(Cell *base);
+  void SetIndex(OwningCellPtr index);
 
-  void SetIndex(Cell *index);
+  void SetExponent(OwningCellPtr expt);
 
-  void SetExponent(Cell *expt);
+  void SetPreSub(OwningCellPtr index);
 
-  void SetPreSub(Cell *index);
+  void SetPreSup(OwningCellPtr index);
 
-  void SetPreSup(Cell *index);
+  void SetPostSub(OwningCellPtr index);
 
-  void SetPostSub(Cell *index);
-
-  void SetPostSup(Cell *index);
+  void SetPostSup(OwningCellPtr index);
   
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 
@@ -78,17 +73,17 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-  Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_baseCell;
-  std::shared_ptr<Cell> m_postSubCell;
-  std::shared_ptr<Cell> m_postSupCell;
-  std::shared_ptr<Cell> m_preSubCell;
-  std::shared_ptr<Cell> m_preSupCell;
+  OwningCellPtr m_baseCell;
+  OwningCellPtr m_postSubCell;
+  OwningCellPtr m_postSupCell;
+  OwningCellPtr m_preSubCell;
+  OwningCellPtr m_preSupCell;
   //! The inner cells set via SetPre* or SetPost*, but not SetBase nor SetIndex
   //! nor SetExponent.
-  std::vector<std::shared_ptr<Cell>> m_scriptCells;
+  std::vector<CellPtr> m_scriptCells;
 };
 
 #endif // SUBSUPCELL_H

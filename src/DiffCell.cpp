@@ -30,44 +30,41 @@
 #include "TextCell.h"
 #include "wx/config.h"
 
-DiffCell::DiffCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_baseCell(std::make_shared<TextCell>(parent, config, cellPointers)),
-  m_diffCell(std::make_shared<TextCell>(parent, config, cellPointers))
+DiffCell::DiffCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_baseCell(new TextCell(parent, config)),
+  m_diffCell(new TextCell(parent, config))
 {
-  m_nextToDraw = NULL;
 }
 
 DiffCell::DiffCell(const DiffCell &cell):
- DiffCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+    DiffCell(cell.m_group.get(), cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
-  if(cell.m_diffCell)
+  if (cell.m_diffCell)
     SetDiff(cell.m_diffCell->CopyList());
-  if(cell.m_baseCell)
+  if (cell.m_baseCell)
     SetBase(cell.m_baseCell->CopyList());
 }
 
 DiffCell::~DiffCell()
-{
-  MarkAsDeleted();
-}
+{}
 
-void DiffCell::SetDiff(Cell *diff)
+void DiffCell::SetDiff(OwningCellPtr diff)
 {
-  if (diff == NULL)
+  if (!diff)
     return;
-  m_diffCell = std::shared_ptr<Cell>(diff);
 
+  m_diffCell = std::move(diff);
   m_diffCell->m_SuppressMultiplicationDot = true;
 }
 
-void DiffCell::SetBase(Cell *base)
+void DiffCell::SetBase(OwningCellPtr base)
 {
-  if (base == NULL)
+  if (!base)
     return;
-  m_baseCell = std::shared_ptr<Cell>(base);
+
+  m_baseCell = std::move(base);
 }
 
 void DiffCell::RecalculateWidths(int fontsize)
@@ -122,7 +119,7 @@ wxString DiffCell::ToString()
 {
   if (m_isBrokenIntoLines)
     return wxEmptyString;
-  Cell *tmp = m_baseCell->m_next;
+  Cell *tmp = m_baseCell->m_next.get();
   wxString s = wxT("'diff(");
   if (tmp != NULL)
     s += tmp->ListToString();
@@ -135,7 +132,7 @@ wxString DiffCell::ToMatlab()
 {
   if (m_isBrokenIntoLines)
 	return wxEmptyString;
-  Cell *tmp = m_baseCell->m_next;
+  Cell *tmp = m_baseCell->m_next.get();
   wxString s = wxT("'diff(");
   if (tmp != NULL)
 	s += tmp->ListToMatlab();

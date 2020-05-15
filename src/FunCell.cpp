@@ -29,12 +29,11 @@
 #include "FunCell.h"
 #include "TextCell.h"
 
-FunCell::FunCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_nameCell(new TextCell(parent, config, cellPointers)),
-  m_argCell(new TextCell(parent, config, cellPointers))
+FunCell::FunCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_nameCell(new TextCell(parent, config)),
+  m_argCell(new TextCell(parent, config))
 {
-  m_nextToDraw = NULL;
   m_nameCell_Last = m_nameCell.get();
   if(m_nameCell_Last)
     while(m_nameCell_Last->m_next)
@@ -47,9 +46,8 @@ FunCell::FunCell(Cell *parent, Configuration **config, CellPointers *cellPointer
 }
 
 FunCell::FunCell(const FunCell &cell):
- FunCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+ FunCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if(cell.m_nameCell)
     SetName(cell.m_nameCell->CopyList());
@@ -58,30 +56,27 @@ FunCell::FunCell(const FunCell &cell):
 }
 
 FunCell::~FunCell()
-{
-  MarkAsDeleted();
-}
+{}
 
-void FunCell::SetName(Cell *name)
+void FunCell::SetName(OwningCellPtr name)
 {
-  if (name == NULL)
+  if (!name )
     return;
-  m_nameCell = std::shared_ptr<Cell>(name);
 
-  
-  m_nameCell_Last = name;
-  while(m_nameCell_Last->m_next)
+  m_nameCell = std::move(name);
+  m_nameCell_Last = m_nameCell;
+  while (m_nameCell_Last->m_next)
     m_nameCell_Last = m_nameCell_Last->m_next;
   name->SetStyle(TS_FUNCTION);
 }
 
-void FunCell::SetArg(Cell *arg)
+void FunCell::SetArg(OwningCellPtr arg)
 {  
-  if (arg == NULL)
+  if (!arg)
     return;
-  m_argCell = std::shared_ptr<Cell>(arg);
 
-  m_argCell_Last = arg;
+  m_argCell = std::move(arg);
+  m_argCell_Last = m_argCell;
   while(m_argCell_Last->m_next)
     m_argCell_Last = m_argCell_Last->m_next;
 }

@@ -30,18 +30,15 @@
 
 #define FRAC_DEC 1
 
-FracCell::FracCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_num(std::make_shared<TextCell>(parent, config, cellPointers)),
-  m_denom(std::make_shared<TextCell>(parent, config, cellPointers)),
-  m_numParenthesis(std::make_shared<ParenCell>(m_group, m_configuration, m_cellPointers)),
-  m_denomParenthesis(std::make_shared<ParenCell>(m_group, m_configuration, m_cellPointers)),
-  m_divide(std::make_shared<TextCell>(parent, config, cellPointers, "/"))
+FracCell::FracCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_num(new TextCell(parent, config)),
+  m_denom(new TextCell(parent, config)),
+  m_numParenthesis(new ParenCell(m_group, m_configuration)),
+  m_denomParenthesis(new ParenCell(m_group, m_configuration)),
+  m_divide(new TextCell(parent, config, "/"))
 {
-  m_nextToDraw = NULL;
   m_divide->SetStyle(TS_VARIABLE);
-  m_num_Last = NULL;
-  m_denom_Last = NULL;
   m_fracStyle = FC_NORMAL;
   m_exponent = false;
   m_horizontalGapLeft = 0;
@@ -50,9 +47,8 @@ FracCell::FracCell(Cell *parent, Configuration **config, CellPointers *cellPoint
 }
 
 FracCell::FracCell(const FracCell &cell):
- FracCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+ FracCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if(cell.m_num)
     SetNum(cell.m_num->CopyList());
@@ -64,26 +60,25 @@ FracCell::FracCell(const FracCell &cell):
 }
 
 FracCell::~FracCell()
-{
-  MarkAsDeleted();
-}
+{}
 
-void FracCell::SetNum(Cell *num)
+void FracCell::SetNum(OwningCellPtr num)
 {
-  if (num == NULL)
+  if (!num)
     return;
-  m_num = std::shared_ptr<Cell>(num);
-  static_cast<ParenCell&>(*m_numParenthesis).SetInner(m_num);
+  m_num = num;
+  m_numParenthesis->SetInner(std::move(num));
   m_num_Last = num;
   SetupBreakUps();
 }
 
-void FracCell::SetDenom(Cell *denom)
+void FracCell::SetDenom(OwningCellPtr denom)
 {
-  if (denom == NULL)
+  if (!denom)
     return;
-  m_denom = std::shared_ptr<Cell>(denom);
-  static_cast<ParenCell&>(*m_denomParenthesis).SetInner(m_denom);
+  m_denom = denom;
+  m_denomParenthesis->SetInner(std::move(denom));
+  // TODO FIXME should we set m_denom_Last ?
   SetupBreakUps();
 }
 
@@ -119,12 +114,12 @@ void FracCell::RecalculateWidths(int fontsize)
       // We want half a space's widh of blank space to separate us from the
       // next minus.
       
-      if (((m_previous != NULL) && (m_previous->ToString().EndsWith(wxT("-")))))
+      if (m_previous && (m_previous->ToString().EndsWith(wxT("-"))))
         m_horizontalGapLeft = m_protrusion;
       else
         m_horizontalGapLeft = 0;
       
-      if (((m_next != NULL) && (m_next->ToString().StartsWith(wxT("-")))))
+      if (m_next && (m_next->ToString().StartsWith(wxT("-"))))
         m_horizontalGapRight = m_protrusion;
       else
         m_horizontalGapRight = 0;
@@ -247,19 +242,19 @@ wxString FracCell::ToString()
     else
     {
       Cell *tmp = m_denom.get();
-      while (tmp != NULL)
+      while (tmp)
       {
-        tmp = tmp->m_next;   // Skip the d
-        if (tmp == NULL)
+        tmp = tmp->m_next.get();   // Skip the d
+        if (!tmp)
           break;
-        tmp = tmp->m_next;   // Skip the *
-        if (tmp == NULL)
+        tmp = tmp->m_next.get();   // Skip the *
+        if (!tmp)
           break;
         s += tmp->GetDiffPart();
-        tmp = tmp->m_next;   // Skip the *
-        if (tmp == NULL)
+        tmp = tmp->m_next.get();   // Skip the *
+        if (!tmp)
           break;
-        tmp = tmp->m_next;
+        tmp = tmp->m_next.get();
       }
     }
   }
@@ -290,19 +285,19 @@ wxString FracCell::ToMatlab()
 	else
 	{
 	  Cell *tmp = m_denom.get();
-	  while (tmp != NULL)
-	  {
-		tmp = tmp->m_next;   // Skip the d
-		if (tmp == NULL)
+      while (tmp)
+      {
+        tmp = tmp->m_next.get();   // Skip the d
+        if (!tmp)
+          break;
+        tmp = tmp->m_next.get();   // Skip the *
+        if (!tmp )
 		  break;
-		tmp = tmp->m_next;   // Skip the *
-		if (tmp == NULL)
-		  break;
-		s += tmp->GetDiffPart();
-		tmp = tmp->m_next;   // Skip the *
-		if (tmp == NULL)
-		  break;
-		tmp = tmp->m_next;
+        s += tmp->GetDiffPart();
+        tmp = tmp->m_next.get();   // Skip the *
+        if (!tmp)
+          break;
+        tmp = tmp->m_next.get();
 	  }
 	}
   }
@@ -383,15 +378,15 @@ void FracCell::SetupBreakUps()
     m_displayedDenom = m_denom;
   }
   m_num_Last = m_displayedNum.get();
-  if (m_num_Last != NULL)
+  if (m_num_Last)
   {
-    while (m_num_Last->m_next != NULL)
+    while (m_num_Last->m_next)
       m_num_Last = m_num_Last->m_next;
   }
   m_denom_Last = m_displayedDenom.get();
-  if (m_denom_Last != NULL)
+  if (m_denom_Last)
   {
-    while (m_denom_Last->m_next != NULL)
+    while (m_denom_Last->m_next)
       m_denom_Last = m_denom_Last->m_next;
   }
 }
@@ -404,16 +399,16 @@ bool FracCell::BreakUp()
   if (!m_isBrokenIntoLines)
   {
     m_isBrokenIntoLines = true;
-    if((m_num != NULL) && (m_num->m_next != NULL))
+    if(m_num && m_num->m_next)
       m_displayedNum = m_numParenthesis;
-    if((m_denom != NULL) && (m_denom->m_next != NULL))
+    if(m_denom && m_denom->m_next)
       m_displayedDenom = m_denomParenthesis;
-    wxASSERT_MSG(m_num_Last != NULL, _("Bug: No last cell in a numerator!"));
-    if (m_num_Last != NULL)
+    wxASSERT_MSG(m_num_Last, _("Bug: No last cell in a numerator!"));
+    if (m_num_Last)
       m_displayedNum->SetNextToDraw(m_divide.get());
     m_divide->SetNextToDraw(m_displayedDenom.get());
     m_displayedDenom->SetNextToDraw(m_nextToDraw);
-    wxASSERT_MSG(m_denom_Last != NULL, _("Bug: No last cell in a denominator!"));
+    wxASSERT_MSG(m_denom_Last, _("Bug: No last cell in a denominator!"));
     m_nextToDraw = m_displayedNum.get();
     ResetData();    
     return true;

@@ -45,28 +45,26 @@
   If it isn't broken into multiple cells m_nextToDraw points to the 
   cell that follows this Cell.
  */
-class SqrtCell : public Cell
+class SqrtCell final : public Cell
 {
 public:
-  SqrtCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  SqrtCell(Cell *parent, Configuration **config);
   SqrtCell(const SqrtCell &cell);
-  Cell *Copy() override {return new SqrtCell(*this);}
-
+  OwningCellPtr Copy() override {return OwningCellPtr{new SqrtCell(*this)};}
   ~SqrtCell();
 
   //! This class can be derived from wxAccessible which has no copy constructor
   SqrtCell &operator=(const SqrtCell&) = delete;
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_innerCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_close); }
+  InnerCellIterator InnerBegin() const override { return {&m_innerCell, &m_close+1}; }
 
-  void SetInner(Cell *inner);
+  void SetInner(OwningCellPtr inner);
 
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   bool BreakUp() override;
 
@@ -87,13 +85,13 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_innerCell;
-  std::shared_ptr<Cell> m_open;
-  std::shared_ptr<Cell> m_close;
-  Cell *m_last;
+  OwningCellPtr m_innerCell;
+  OwningCellPtr m_open;
+  OwningCellPtr m_close;
+  CellPtr m_last;
   int m_signWidth, m_signSize, m_signTop;
   int m_signType;
   double m_signFontScale;

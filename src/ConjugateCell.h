@@ -45,21 +45,17 @@
   If it isn't broken into multiple cells m_nextToDraw points to the 
   cell that follows this Cell.
  */
-class ConjugateCell : public Cell
+class ConjugateCell final : public Cell
 {
 public:
-  ConjugateCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  ConjugateCell(Cell *parent, Configuration **config);
   ConjugateCell(const ConjugateCell &cell);
-  Cell *Copy() override {return new ConjugateCell(*this);}
+  OwningCellPtr Copy() override {return OwningCellPtr{new ConjugateCell(*this)};}
   ~ConjugateCell();
 
-  //! This class can be derived from wxAccessible which has no copy constructor
-  ConjugateCell &operator=(const ConjugateCell&) = delete;
+  InnerCellIterator InnerBegin() const override { return {&m_innerCell, &m_close+1}; }
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_innerCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_close); }
-
-  void SetInner(Cell *inner);
+  void SetInner(OwningCellPtr inner);
 
   bool BreakUp() override;
 
@@ -68,19 +64,19 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-  Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_innerCell;
-  std::shared_ptr<Cell> m_open;
-  std::shared_ptr<Cell> m_close;
-  Cell *m_last;
+  OwningCellPtr m_innerCell;
+  OwningCellPtr m_open;
+  OwningCellPtr m_close;
+  CellPtr m_last;
 
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 

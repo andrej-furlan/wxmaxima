@@ -30,15 +30,14 @@
 
 #define EXPT_DEC 2
 
-ExptCell::ExptCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_baseCell(std::make_shared<TextCell>(parent, config, cellPointers)),
-  m_exptCell(std::make_shared<TextCell>(parent, config, cellPointers)),
-  m_exp(std::make_shared<TextCell>(parent, config, cellPointers, "^")),
-  m_open(std::make_shared<TextCell>(parent, config, cellPointers, "(")),
-  m_close(std::make_shared<TextCell>(parent, config, cellPointers, ")"))
+ExptCell::ExptCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_baseCell(new TextCell(parent, config)),
+  m_exptCell(new TextCell(parent, config)),
+  m_exp(new TextCell(parent, config, "^")),
+  m_open(new TextCell(parent, config, "(")),
+  m_close(new TextCell(parent, config, ")"))
 {
-  m_nextToDraw = NULL;
   m_open->SetStyle(TS_FUNCTION);
   m_close->SetStyle(TS_FUNCTION);
   m_exp->SetStyle(TS_FUNCTION);
@@ -50,9 +49,8 @@ ExptCell::ExptCell(Cell *parent, Configuration **config, CellPointers *cellPoint
 }
 
 ExptCell::ExptCell(const ExptCell &cell):
-  ExptCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+    ExptCell(cell.m_group.get(), cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if(cell.m_baseCell)
     SetBase(cell.m_baseCell->CopyList());
@@ -61,9 +59,7 @@ ExptCell::ExptCell(const ExptCell &cell):
 }
 
 ExptCell::~ExptCell()
-{
-  MarkAsDeleted();
-}
+{}
 
 void ExptCell::Draw(wxPoint point)
 {
@@ -81,12 +77,13 @@ void ExptCell::Draw(wxPoint point)
   }
 }
 
-void ExptCell::SetPower(Cell *power)
+Cell *ExptCell::SetPower(OwningCellPtr power)
 {
-  if (power == NULL)
-    return;
-  m_exptCell = std::shared_ptr<Cell>(power);
+  if (!power)
+    return nullptr;
 
+  auto *cell = power.get();
+  m_exptCell = std::move(power);
   if (!m_exptCell->IsCompound())
   {
     m_open->m_isHidden = true;
@@ -94,21 +91,24 @@ void ExptCell::SetPower(Cell *power)
   }
 
   m_expt_last = power;
-  if (m_expt_last != NULL)
-    while (m_expt_last->m_next != NULL)
+  if (m_expt_last)
+    while (m_expt_last->m_next)
       m_expt_last = m_expt_last->m_next;
+  return cell;
 }
 
-void ExptCell::SetBase(Cell *base)
+Cell *ExptCell::SetBase(OwningCellPtr base)
 {
-  if (base == NULL)
-    return;
-  m_baseCell = std::shared_ptr<Cell>(base);
+  if (!base)
+    return nullptr;
 
+  auto *cell = base.get();
+  m_baseCell = std::move(base);
   m_base_last = base;
-  if (m_base_last != NULL)
-    while (m_base_last->m_next != NULL)
+  if (m_base_last)
+    while (m_base_last->m_next)
       m_base_last = m_base_last->m_next;
+  return cell;
 }
 
 void ExptCell::RecalculateWidths(int fontsize)
@@ -256,13 +256,13 @@ bool ExptCell::BreakUp()
   if (!m_isBrokenIntoLines)
   {
     m_isBrokenIntoLines = true;
-    wxASSERT_MSG(m_base_last != NULL, _("Bug: No last cell in the base of an exptCell!"));
-    if (m_base_last != NULL)
+    wxASSERT_MSG(m_base_last, _("Bug: No last cell in the base of an exptCell!"));
+    if (m_base_last)
       m_base_last->SetNextToDraw(m_exp.get());
     m_exp->SetNextToDraw(m_open.get());
     m_open->SetNextToDraw(m_exptCell.get());
-    wxASSERT_MSG(m_expt_last != NULL, _("Bug: No last cell in an exponent of an exptCell!"));
-    if (m_expt_last != NULL)
+    wxASSERT_MSG(m_expt_last, _("Bug: No last cell in an exponent of an exptCell!"));
+    if (m_expt_last)
       m_expt_last->SetNextToDraw(m_close.get());
     m_close->SetNextToDraw(m_nextToDraw);
     m_nextToDraw = m_baseCell.get();

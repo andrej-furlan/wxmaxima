@@ -31,23 +31,20 @@
   Everything on the worksheet that is composed of characters with the eception
   of input cells: Input cells are handled by EditorCell instead.
  */
-class TextCell : public Cell
+class TextCell final : public Cell
 {
 private:
   //! Is an ending "(" of a function name the opening parenthesis of the function?
   bool m_dontEscapeOpeningParenthesis;
 public:
-  TextCell(Cell *parent, Configuration **config, CellPointers *cellPointers, wxString text = wxEmptyString, TextStyle style = TS_FUNCTION);
+  TextCell(Cell *parent, Configuration **config, const wxString &text = {}, TextStyle style = TS_FUNCTION);
   TextCell(const TextCell &cell);
-  Cell *Copy() override {return new TextCell(*this);}
-  //! This class can be derived from wxAccessible which has no copy constructor
-  TextCell &operator=(const TextCell&) = delete;
-  
+  OwningCellPtr Copy() override {return OwningCellPtr{new TextCell(*this)};}
   ~TextCell();  
 
   double GetScaledTextSize() const;
   
-  virtual void SetStyle(TextStyle style) override;
+  void SetStyle(TextStyle style) override;
   
   //! Set the text contained in this cell
   void SetValue(const wxString &text) override;
@@ -57,7 +54,7 @@ public:
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   void SetFont(int fontsize);
 
@@ -65,8 +62,7 @@ public:
 
     The "(" is the opening parenthesis of a function instead.
    */
-  void DontEscapeOpeningParenthesis()
-  { m_dontEscapeOpeningParenthesis = true; }
+  void DontEscapeOpeningParenthesis() {m_dontEscapeOpeningParenthesis = true;}
 
   wxString ToString() override;
 
@@ -86,8 +82,7 @@ public:
 
   bool IsOperator() const override;
 
-  wxString GetValue() const override
-  { return m_text; }
+  wxString GetValue() const override {return m_text;}
 
   wxString GetGreekStringTeX() const;
 
@@ -99,18 +94,18 @@ public:
 
   bool IsShortNum() override;
 
-  virtual void SetType(CellType type) override;
+  void SetType(CellType type) override;
 
-protected:
+private:
   wxSize GetTextSize(wxString const &text);
   void SetAltText();
 
   void FontsChanged() override
-    {
-      ResetSize();
-      ResetData();
-      m_widths.clear();
-    }
+  {
+    ResetSize();
+    ResetData();
+    m_widths.clear();
+  }
 
   //! Resets the font size to label size
   void SetFontSizeForLabel(wxDC *dc);
@@ -144,16 +139,12 @@ protected:
   void SetNextToDraw(Cell *next) override;
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
-private:
-  Cell *m_nextToDraw;
+  CellPtr m_nextToDraw;
   class SizeHash_internals
   {
   public:
     SizeHash_internals() { }
-    unsigned long operator()( const double& k ) const
-      {
-        return k * 1000000;
-      }
+    unsigned long operator()( const double& k ) const { return k * 1000000; }
     SizeHash_internals& operator=(const SizeHash_internals&) { return *this; }
   };
   // comparison operator
@@ -162,9 +153,7 @@ private:
   public:
     DoubleEqual() { }
     bool operator()( const double& a, const double& b ) const
-      {
-        return fabs(a-b) < .001;
-      }
+    { return fabs(a-b) < .001; }
     DoubleEqual& operator=(const DoubleEqual&) { return *this; }
   };
   WX_DECLARE_HASH_MAP(

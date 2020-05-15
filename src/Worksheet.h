@@ -576,7 +576,7 @@ private:
   bool m_mouseDrag;
   bool m_mouseOutside;
   //! The list of tree that contains the document itself
-  GroupCell *m_tree;
+  OwningGroupPtr m_tree;
   GroupCell *m_last;
   int m_clickType;
   GroupCell *m_clickInGC;
@@ -599,8 +599,8 @@ public:
   //! Is this worksheet empty?
   bool IsEmpty()
     {
-      return ( (m_tree == NULL) ||
-               ((m_tree->m_next == NULL) && m_tree->GetEditable()->GetValue().Length()<=1));
+      return (!m_tree ||
+              (!m_tree->m_next && m_tree->GetEditable()->GetValue().Length()<=1));
     }
   //! Close the autocompletion pop-up if it is currently open.
   void CloseAutoCompletePopup()
@@ -647,44 +647,25 @@ public:
     with the print settings might be active.
    */
   Configuration *m_configuration;
+
+  Cell::CellPointers *GetCellPointers() { return &m_cellPointers; }
+
   //! Get the currently active EditorCell
   EditorCell *GetActiveCell()
-  {
-    if (m_cellPointers.m_activeCell != NULL)
-      return dynamic_cast<EditorCell *>(m_cellPointers.m_activeCell);
-    else
-      return NULL;
-  }
+  { return m_cellPointers.m_activeCell.CastAs<EditorCell *>(); }
 
   //! Tells us which cell the keyboard selection has started in
   EditorCell *KeyboardSelectionStart()
-  {
-    if (m_cellPointers.m_cellKeyboardSelectionStartedIn != NULL)
-      return dynamic_cast<EditorCell *>(m_cellPointers.m_cellKeyboardSelectionStartedIn);
-    else
-      return NULL;
-  }
+  { return m_cellPointers.m_cellKeyboardSelectionStartedIn.CastAs<EditorCell *>(); }
 
   EditorCell *MouseSelectionStart()
-  {
-    if (m_cellPointers.m_cellMouseSelectionStartedIn != NULL)
-      return dynamic_cast<EditorCell *>(m_cellPointers.m_cellMouseSelectionStartedIn);
-    else
-      return NULL;
-  }
+  { return m_cellPointers.m_cellMouseSelectionStartedIn.CastAs<EditorCell *>(); }
 
   EditorCell *SearchStart()
-  {
-    if (m_cellPointers.m_cellSearchStartedIn != NULL)
-      return dynamic_cast<EditorCell *>(m_cellPointers.m_cellSearchStartedIn);
-    else
-      return NULL;
-  }
+  { return m_cellPointers.m_cellSearchStartedIn.CastAs<EditorCell *>(); }
 
   int IndexSearchStartedAt()
-  {
-    return m_cellPointers.m_indexSearchStartedAt;
-  }
+  { return m_cellPointers.m_indexSearchStartedAt; }
 
   //! The pointers to cells that can be deleted by these cells on deletion of the cells.
   Cell::CellPointers m_cellPointers;
@@ -923,7 +904,7 @@ public:
             - treeRedoActions for deletions while executing an undo or
             - NULL for: Don't keep any copy of the cells.
    */
-  GroupCell *InsertGroupCells(GroupCell *cells,
+  GroupCell *InsertGroupCells(OwningGroupPtr cells,
                               GroupCell *where,
                               UndoActions *undoBuffer
   );
@@ -933,14 +914,14 @@ public:
     \param cells The list of cells that has to be inserted
     \param where The cell the cells have to be inserted after
   */
-  GroupCell *InsertGroupCells(GroupCell *cells, GroupCell *where = NULL);
+  GroupCell *InsertGroupCells(OwningGroupPtr cells, GroupCell *where = NULL);
 
   /*! Add a new line to the output cell of the working group.
 
     If maxima isn't currently evaluating and therefore there is no working group
     the line is appended to m_last, instead.
   */
-  void InsertLine(Cell *newCell, bool forceNewLine = false);
+  void InsertLine(OwningCellPtr newCell, bool forceNewLine = false);
 
   // Actually recalculate the worksheet.
   bool RecalculateIfNeeded();
@@ -967,21 +948,21 @@ public:
 
   bool CanCopy(bool fromActive = false)
   {
-    return (m_cellPointers.m_selectionStart != NULL) ||
-           (fromActive && (m_cellPointers.m_activeCell != NULL) &&
-            dynamic_cast<EditorCell *>(m_cellPointers.m_activeCell)->CanCopy());
+    return m_cellPointers.m_selectionStart ||
+           (fromActive && m_cellPointers.m_activeCell &&
+            m_cellPointers.m_activeCell.CastAs<EditorCell *>()->CanCopy());
   }
 
   bool CanPaste()
   {
-    return (m_cellPointers.m_activeCell != NULL) || (m_hCaretActive);
+    return m_cellPointers.m_activeCell || m_hCaretActive;
   }
 
   bool CanCut()
   {
-    return (m_cellPointers.m_activeCell != NULL &&
-            dynamic_cast<EditorCell *>(m_cellPointers.m_activeCell)->CanCopy()) ||
-           (m_cellPointers.m_selectionStart != NULL && m_cellPointers.m_selectionStart->GetType() == MC_TYPE_GROUP);
+    return (m_cellPointers.m_activeCell &&
+            m_cellPointers.m_activeCell.CastAs<EditorCell *>()->CanCopy()) ||
+           (m_cellPointers.m_selectionStart && m_cellPointers.m_selectionStart->GetType() == MC_TYPE_GROUP);
   }
 
   //! Select the whole document
@@ -990,7 +971,7 @@ public:
   //! Is at least one entire cell selected?
   bool CellsSelected()
   {
-    return ((m_cellPointers.m_selectionStart != NULL) && (m_cellPointers.m_selectionEnd != NULL));
+    return (m_cellPointers.m_selectionStart && m_cellPointers.m_selectionEnd);
   }
 
   /*! Delete a range of cells
@@ -1042,7 +1023,7 @@ public:
   //! Does it make sense to enable the "Play" button and the slider now?
   bool CanAnimate()
   {
-    return m_cellPointers.m_selectionStart != NULL && m_cellPointers.m_selectionStart == m_cellPointers.m_selectionEnd &&
+    return m_cellPointers.m_selectionStart && m_cellPointers.m_selectionStart == m_cellPointers.m_selectionEnd &&
            m_cellPointers.m_selectionStart->GetType() == MC_TYPE_SLIDE;
   }
 
@@ -1154,8 +1135,7 @@ public:
    */
   wxString GetString(bool lb = false);
 
-  GroupCell *GetTree() const
-    { return m_tree; }
+  GroupCell *GetTree() const {return m_tree.get();}
 
   /*! Return the first of the currently selected cells.
 
@@ -1244,7 +1224,7 @@ public:
 
   //! Is the editor active in the last cell of the worksheet?
   bool IsActiveInLast()
-  { return m_cellPointers.m_activeCell != NULL && m_cellPointers.m_activeCell->GetGroup() == m_last; }
+  { return m_cellPointers.m_activeCell && m_cellPointers.m_activeCell->GetGroup() == m_last; }
 
   //! Returns the last cell of the worksheet
   GroupCell *GetLastCell()
@@ -1486,7 +1466,7 @@ public:
   { return m_questionPrompt; }
   //!@}
   //! Converts a wxm description into individual cells
-  GroupCell *CreateTreeFromWXMCode(wxArrayString wxmLines);
+  OwnedGroupPtr CreateTreeFromWXMCode(const wxArrayString &wxmLines);
 
   /*! Does maxima wait for the answer of a question?
 
@@ -1585,5 +1565,11 @@ protected:
   //! Was there a mouse motion we didn't react to until now?
   bool m_mouseMotionWas;
 };
+
+inline Worksheet *Cell::GetWorksheet() const
+{ return static_cast<Worksheet*>((*m_configuration)->GetWorkSheet()); }
+
+inline void Configuration::SetWorkSheet(wxWindow *workSheet)
+{ m_workSheet = dynamic_cast<Worksheet*>(workSheet); }
 
 #endif // WORKSHEET_H

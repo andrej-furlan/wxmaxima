@@ -40,36 +40,28 @@ enum
   SM_PROD
 };
 
-class SumCell : public Cell
+class SumCell final : public Cell
 {
 public:
-  SumCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  SumCell(Cell *parent, Configuration **config);
   SumCell(const SumCell &cell);
-  Cell *Copy() override {return new SumCell(*this);}
-
+  OwningCellPtr Copy() override {return OwningCellPtr{new SumCell(*this)};}
   ~SumCell();
 
-    //! This class can be derived from wxAccessible which has no copy constructor
-  SumCell operator=(const SumCell&) = delete;
-
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_under); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_paren); }
+  InnerCellIterator InnerBegin() const override { return {&m_under, &m_paren+1}; }\
   
   void RecalculateHeight(int fontsize) override;
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
-  void SetBase(Cell *base);
+  void SetBase(OwningCellPtr base);
 
-  void SetUnder(Cell *under);
+  void SetUnder(OwningCellPtr under);
 
-  void SetOver(Cell *over);
+  void SetOver(OwningCellPtr over);
 
-  void SetSumStyle(int style)
-  {
-    m_sumStyle = style;
-  }
+  void SetSumStyle(int style) {m_sumStyle = style;}
 
   wxString ToString() override;
 
@@ -88,16 +80,15 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-  Cell *m_nextToDraw;
+  CellPtr m_nextToDraw;
   
-protected:
-  std::shared_ptr<Cell> m_base;
+  CellPtr m_base;
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_under;
-  std::shared_ptr<Cell> m_over;
-  std::shared_ptr<Cell> m_paren;
+  OwningCellPtr m_under;
+  OwningCellPtr m_over;
+  OwningCellPtr m_paren;
   // The pointers above point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_displayedBase;
+  CellPtr m_displayedBase;
   int m_signHeight;
   double m_signWidth;
   int m_sumStyle;

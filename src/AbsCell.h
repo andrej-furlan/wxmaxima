@@ -52,21 +52,17 @@
   If it isn't broken into multiple cells m_nextToDraw points to the 
   cell that follows this AbsCell.  
  */
-class AbsCell : public Cell
+class AbsCell final : public Cell
 {
 public:
-  AbsCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  AbsCell(Cell *parent, Configuration **config);
   AbsCell(const AbsCell &cell);
-  Cell *Copy() override {return new AbsCell(*this);}
+  OwningCellPtr Copy() override {return OwningCellPtr{new AbsCell(*this)};}
   ~AbsCell();
 
-  //! This class can be derived from wxAccessible which has no copy constructor
-  AbsCell &operator=(const AbsCell&) = delete;
+  InnerCellIterator InnerBegin() const override { return {&m_innerCell, &m_close+1}; }
 
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_innerCell); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_close); }
-
-  void SetInner(Cell *inner);
+  void SetInner(OwningCellPtr inner);
 
   bool BreakUp() override;
 
@@ -74,7 +70,7 @@ public:
   
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 
@@ -93,17 +89,17 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-  Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
   //! The contents of the abs() command
-  std::shared_ptr<Cell> m_innerCell;
+  OwningCellPtr m_innerCell;
   //! The cell containing the eventual "abs" and the opening parenthesis
-  std::shared_ptr<Cell> m_open;
+  OwningCellPtr m_open;
   //! The cell containing the closing parenthesis
-  std::shared_ptr<Cell> m_close;
+  OwningCellPtr m_close;
   //! The last element of m_innerCell
-  Cell *m_last;
+  CellPtr m_last;
 };
 
 #endif // ABSCELL_H

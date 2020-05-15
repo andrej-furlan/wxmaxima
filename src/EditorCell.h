@@ -96,10 +96,9 @@ private:
   long m_oldSelectionEnd;
 public:
   //! The constructor
-  EditorCell(Cell *parent, Configuration **config,
-             CellPointers *cellPointers, wxString text = wxEmptyString);
+  EditorCell(Cell *parent, Configuration **config, const wxString &text = {});
   EditorCell(const EditorCell &cell);
-  Cell *Copy() override {return new EditorCell(*this);}
+  OwningCellPtr Copy() override {return OwningCellPtr{new EditorCell(*this)};}
   ~EditorCell();
 
   //! Insert the symbol that corresponds to the ESC command txt
@@ -116,7 +115,7 @@ public:
 
   //! Which cell the blinking cursor is in?
   EditorCell *GetActiveCell() const
-  { return dynamic_cast<EditorCell *>(m_cellPointers->m_activeCell); }
+  { return dynamic_cast<EditorCell *>(m_cellPointers->m_activeCell.get()); }
 
   /*! Tells where the mouse selection has started.
 
@@ -124,7 +123,7 @@ public:
     remove this pointer.
    */
   EditorCell *MouseSelectionStart() const
-  { return dynamic_cast<EditorCell *>(m_cellPointers->m_cellMouseSelectionStartedIn); }
+  { return dynamic_cast<EditorCell *>(m_cellPointers->m_cellMouseSelectionStartedIn.get()); }
 
   /*! Tells where the keyboard selection has started.
 
@@ -132,7 +131,7 @@ public:
     remove this pointer.
    */
   EditorCell *KeyboardSelectionStart() const
-  { return dynamic_cast<EditorCell *>(m_cellPointers->m_cellKeyboardSelectionStartedIn); }
+  { return dynamic_cast<EditorCell *>(m_cellPointers->m_cellKeyboardSelectionStartedIn.get()); }
 
   /*! Tells where the search has started.
 
@@ -140,7 +139,7 @@ public:
     remove this pointer.
    */
   EditorCell *SearchStart() const
-  { return dynamic_cast<EditorCell *>(m_cellPointers->m_cellSearchStartedIn); }
+  { return dynamic_cast<EditorCell *>(m_cellPointers->m_cellSearchStartedIn.get()); }
 
   /*! At which character inside its cell has the search started?
 
@@ -190,17 +189,6 @@ public:
   //! Has the selection changed since the last draw event?
   bool m_selectionChanged;
 
-  /*! Tell this cell to remove it from all gui actions.
-
-    Normally the gui keeps various pointers to a cell: The cell below the cursor,
-    the cell the selection was started at, the cell that was the last cell maxima
-    appended output to...
-
-    Running this command tells the cell to remove these pointers as the cell is 
-    no more displayed currently.
-   */
-  void MarkAsDeleted() override;
-
   /*! Expand all tabulators.
 
     \param input The string the tabulators should be expanded in
@@ -218,7 +206,7 @@ public:
   //! Recalculate the widths of the current cell.
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
   wxString ToString() override;
 
@@ -406,7 +394,7 @@ public:
   }
 
   bool IsActive() const override
-  { return this == m_cellPointers->m_activeCell; }
+  { return this == m_cellPointers->m_activeCell.get(); }
 
   //! Is the cursor at the start of this cell?
   bool CaretAtStart() const
@@ -426,13 +414,13 @@ public:
   void CaretToPosition(int pos);
 
   //! True, if there is undo information for this cell
-  bool CanUndo(); 
+  bool CanUndo() const;
 
   //! Issue an undo command
   void Undo();
 
   //! True, if a redo can be done for this cell.
-  bool CanRedo();
+  bool CanRedo() const;
 
   //! Issu a redo command
   void Redo();
@@ -577,7 +565,7 @@ protected:
       m_widths.clear();
     }
 private:
-  Cell *m_nextToDraw = {};
+  CellPtr m_nextToDraw;
   //! Determines the size of a text snippet
   wxSize GetTextSize(wxString const &text);
   //! Mark this cell as "Automatically answer questions".
@@ -645,11 +633,7 @@ private:
     int GetWidth() const {return m_width;}
     bool SizeKnown() const {return GetWidth() >= 0;}
     //! Returns the piece of text
-    wxString GetText() const
-    {
-      return m_text;
-    }
-
+    const wxString &GetText() const {return m_text;}
 
   
     //! Changes the piece of text kept in this token
@@ -715,11 +699,18 @@ private:
    */
   wxString InterpretEscapeString(const wxString &txt) const;
 
+  struct State
+  {
+    wxString text;
+    int selectionStart, selectionEnd;
+    int positionOfCaret;
+    State(const wxString &text, int selStart, int selEnd, int caretPos) :
+        text(text), selectionStart(selStart), selectionEnd(selEnd), positionOfCaret(caretPos)
+    {}
+  };
+
   wxString m_text;
-  wxArrayString m_textHistory;
-  std::vector<int> m_positionHistory;
-  std::vector<int> m_startHistory;
-  std::vector<int> m_endHistory;
+  std::vector<State> m_history;
   //! Where in the undo history are we?
   ptrdiff_t m_historyPosition;
   //! Where inside this cell is the cursor?

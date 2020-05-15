@@ -30,13 +30,11 @@
 
 #include "AbsCell.h"
 
-AbsCell::AbsCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_open(new TextCell(parent, config, cellPointers, wxT("abs("))),
-  m_close(new TextCell(parent, config, cellPointers, wxT(")"))),
-  m_last(NULL)
+AbsCell::AbsCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_open(new TextCell(parent, config, wxT("abs("))),
+  m_close(new TextCell(parent, config, wxT(")")))
 {
-  m_nextToDraw = NULL;
   static_cast<TextCell&>(*m_open).DontEscapeOpeningParenthesis();
   m_open->SetStyle(TS_FUNCTION);
 }
@@ -45,31 +43,25 @@ AbsCell::AbsCell(Cell *parent, Configuration **config, CellPointers *cellPointer
 // cppcheck-suppress uninitMemberVar symbolName=AbsCell::m_open
 // cppcheck-suppress uninitMemberVar symbolName=AbsCell::m_close
 AbsCell::AbsCell(const AbsCell &cell):
-  AbsCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+  AbsCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
-  if(cell.m_innerCell)
+  if (cell.m_innerCell)
     SetInner(cell.m_innerCell->CopyList());
 }
 
 AbsCell::~AbsCell()
-{
-  m_innerCell = NULL;
-  m_open = NULL;
-  m_close = NULL;
-  MarkAsDeleted();
-}
+{}
 
-void AbsCell::SetInner(Cell *inner)
+void AbsCell::SetInner(OwningCellPtr inner)
 {
-  if (inner == NULL)
+  if (!inner)
     return;
-  m_innerCell = std::shared_ptr<Cell>(inner);
+  m_innerCell = std::move(inner);
 
-  m_last = m_innerCell.get();
-  if (m_last != NULL)
-    while (m_last->m_next != NULL)
+  m_last = m_innerCell;
+  if (m_last)
+    while (m_last->m_next)
       m_last = m_last->m_next;
 }
 
@@ -192,8 +184,8 @@ bool AbsCell::BreakUp()
   {
     m_isBrokenIntoLines = true;
     m_open->SetNextToDraw(m_innerCell.get());
-    wxASSERT_MSG(m_last != NULL, _("Bug: No last cell in an absCell!"));
-    if (m_last != NULL)
+    wxASSERT_MSG(m_last, _("Bug: No last cell in an absCell!"));
+    if (m_last)
       m_last->SetNextToDraw(m_close.get());
     m_close->SetNextToDraw(m_nextToDraw);
     m_nextToDraw = m_open.get();

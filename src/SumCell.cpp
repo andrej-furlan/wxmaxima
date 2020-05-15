@@ -32,14 +32,13 @@
 #include "TextCell.h"
 #include "FontCache.h"
 
-SumCell::SumCell(Cell *parent, Configuration **config, CellPointers *cellPointers) :
-  Cell(parent, config, cellPointers),
-  m_base(new TextCell(parent, config, cellPointers)),
-  m_under(new TextCell(parent, config, cellPointers)),
-  m_over(new TextCell(parent, config, cellPointers)),
-  m_paren(new ParenCell(parent, config, cellPointers))
+SumCell::SumCell(Cell *parent, Configuration **config) :
+  Cell(parent, config),
+  m_base(new TextCell(parent, config)),
+  m_under(new TextCell(parent, config)),
+  m_over(new TextCell(parent, config)),
+  m_paren(new ParenCell(parent, config))
 {
-  m_nextToDraw = NULL;
   m_signHeight = 50;
   m_signTop = (2 * m_signHeight) / 5;
   m_signWidth = 30;
@@ -51,9 +50,8 @@ SumCell::SumCell(Cell *parent, Configuration **config, CellPointers *cellPointer
 // cppcheck-suppress uninitMemberVar symbolName=SumCell::m_signWidth
 // cppcheck-suppress uninitMemberVar symbolName=SumCell::m_signWCenter
 SumCell::SumCell(const SumCell &cell):
-  SumCell(cell.m_group, cell.m_configuration, cell.m_cellPointers)
+  SumCell(cell.m_group, cell.m_configuration)
 {
-  m_nextToDraw = NULL;
   CopyCommonData(cell);
   if(cell.m_base)
     SetBase(cell.m_base->CopyList());
@@ -65,31 +63,27 @@ SumCell::SumCell(const SumCell &cell):
 }
 
 SumCell::~SumCell()
+{}
+
+void SumCell::SetOver(OwningCellPtr over)
 {
-  MarkAsDeleted();
+  if (over)
+    m_over = std::move(over);
 }
 
-void SumCell::SetOver(Cell *over)
+void SumCell::SetBase(OwningCellPtr base)
 {
-  if (over == NULL)
+  if (!base)
     return;
-  m_over = std::shared_ptr<Cell>(over);
-}
-
-void SumCell::SetBase(Cell *base)
-{
-  if (base == NULL)
-    return;
-  m_base = std::shared_ptr<Cell>(base);
-  static_cast<ParenCell&>(*m_paren).SetInner(m_base);
+  m_base = base;
+  static_cast<ParenCell*>(m_paren.get())->SetInner(std::move(base));
   m_displayedBase = m_paren;
 }
 
-void SumCell::SetUnder(Cell *under)
+void SumCell::SetUnder(OwningCellPtr under)
 {
-  if (under == NULL)
-    return;
-  m_under = std::shared_ptr<Cell>(under);
+  if (under)
+    m_under = std::move(under);
 }
 
 void SumCell::RecalculateWidths(int fontsize)
@@ -105,8 +99,8 @@ void SumCell::RecalculateWidths(int fontsize)
     m_signWidth = 4.0 * m_signHeight / 5.0;
   m_signWCenter = m_signWidth / 2.0;
   m_under->RecalculateWidthsList(wxMax(MC_MIN_SIZE, fontsize - SUM_DEC));
-  if (m_over == NULL)
-    m_over = std::make_shared<TextCell>(m_group, m_configuration, m_cellPointers);
+  if (!m_over)
+    m_over.reset(new TextCell(m_group, m_configuration));
   m_over->RecalculateWidthsList(wxMax(MC_MIN_SIZE, fontsize - SUM_DEC));
 
   if (false)
@@ -281,11 +275,11 @@ wxString SumCell::ToString()
   Cell *tmp = m_under.get();
   wxString var = tmp->ToString();
   wxString from;
-  tmp = tmp->m_next;
-  if (tmp != NULL)
+  tmp = tmp->m_next.get();
+  if (tmp)
   {
-    tmp = tmp->m_next;
-    if (tmp != NULL)
+    tmp = tmp->m_next.get();
+    if (tmp)
       from = tmp->ListToString();
   }
   wxString to = m_over->ListToString();
@@ -309,11 +303,11 @@ wxString SumCell::ToMatlab()
   Cell *tmp = m_under.get();
   wxString var = tmp->ToMatlab();
   wxString from;
-  tmp = tmp->m_next;
-  if (tmp != NULL)
+  tmp = tmp->m_next.get();
+  if (tmp)
   {
-	tmp = tmp->m_next;
-	if (tmp != NULL)
+    tmp = tmp->m_next.get();
+    if (tmp)
 	  from = tmp->ListToMatlab();
   }
   wxString to = m_over->ListToMatlab();

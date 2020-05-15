@@ -32,32 +32,27 @@
 #include "Cell.h"
 #include "TextCell.h"
 
-class LimitCell : public Cell
+class LimitCell final : public Cell
 {
 public:
-  LimitCell(Cell *parent, Configuration **config, CellPointers *cellPointers);
+  LimitCell(Cell *parent, Configuration **config);
   LimitCell(const LimitCell &cell);
-  Cell *Copy() override {return new LimitCell(*this);}
-
+  OwningCellPtr Copy() override {return OwningCellPtr{new LimitCell(*this)};}
   ~LimitCell();
 
-  //! This class can be derived from wxAccessible which has no copy constructor
-  LimitCell &operator=(const LimitCell&) = delete;
-
-  InnerCellIterator InnerBegin() const override { return InnerCellIterator(&m_base); }
-  InnerCellIterator InnerEnd() const override { return ++InnerCellIterator(&m_close); }
+  InnerCellIterator InnerBegin() const override { return {&m_base, &m_close+1}; }
 
   void RecalculateHeight(int fontsize) override;
 
   void RecalculateWidths(int fontsize) override;
 
-  virtual void Draw(wxPoint point) override;
+  void Draw(wxPoint point) override;
 
-  void SetBase(Cell *base);
+  void SetBase(OwningCellPtr base);
 
-  void SetUnder(Cell *under);
+  void SetUnder(OwningCellPtr under);
 
-  void SetName(Cell *name);
+  void SetName(OwningCellPtr name);
 
   wxString ToString() override;
 
@@ -78,18 +73,18 @@ public:
   Cell *GetNextToDraw() const override {return m_nextToDraw;}
 
 private:
-    Cell *m_nextToDraw;
-protected:
+  CellPtr m_nextToDraw;
+
   // The pointers below point to inner cells and must be kept contiguous.
-  std::shared_ptr<Cell> m_base;
-  std::shared_ptr<Cell> m_under;
-  std::shared_ptr<Cell> m_name;
-  std::shared_ptr<Cell> m_open;
-  std::shared_ptr<Cell> m_comma;
-  std::shared_ptr<Cell> m_close;
-  Cell *m_name_last;
-  Cell *m_base_last;
-  Cell *m_under_last;
+  OwningCellPtr m_base;
+  OwningCellPtr m_under;
+  OwningCellPtr m_name;
+  OwningCellPtr m_open;
+  OwningCellPtr m_comma;
+  OwningCellPtr m_close;
+  CellPtr m_name_last;
+  CellPtr m_base_last;
+  CellPtr m_under_last;
 };
 
 #endif // LIMITCELL_H
