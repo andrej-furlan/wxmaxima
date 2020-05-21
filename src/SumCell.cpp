@@ -188,7 +188,7 @@ void SumCell::Draw(wxPoint point)
 
       if (!style.IsFontOk())
       {
-        style = Style::FromNormalFont();
+        style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
         style.SetFontSize(fontsize1);
       }
 

@@ -651,7 +651,7 @@ Style Configuration::GetStyle(TextStyle textStyle, long fontSize) const
 
   if (!style.IsFontOk())
   {
-    style = Style::FromNormalFont();
+    style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
     style.SetFontSize(fontSize1);
   }
 

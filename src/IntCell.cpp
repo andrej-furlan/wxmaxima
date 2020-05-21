@@ -135,7 +135,7 @@ void IntCell::RecalculateWidths(int fontsize)
                     .FontName(configuration->GetTeXCMEX());
     if (!style.IsFontOk())
     {
-      style = Style::FromNormalFont();
+      style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
       style.SetFontSize(fontsize1);
     }
 
@@ -166,7 +166,7 @@ void IntCell::RecalculateWidths(int fontsize)
 
     if (!style.IsFontOk())
     {
-      style = Style::FromNormalFont();
+      style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
       style.SetFontSize(fontsize1);
     }
 

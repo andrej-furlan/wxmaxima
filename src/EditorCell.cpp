@@ -1071,7 +1071,7 @@ void EditorCell::SetFont()
     style.SetFontName({});
   }
   if (!style.IsFontOk()) {
-    style = Style::FromNormalFont();
+    style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
     style.SetFontSize(m_fontSize);
   }
 

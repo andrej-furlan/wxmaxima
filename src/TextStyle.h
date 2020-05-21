@@ -30,7 +30,6 @@
 
 #include <wx/colour.h>
 #include <wx/config.h>
-#include <wx/log.h>
 #include <wx/font.h>
 #include <wx/settings.h>
 #include <cstdint>
@@ -48,6 +47,7 @@
  */
 class AFontName final
 {
+  using AFN = AFontName;
 public:
   AFontName() = default;
   /*! Constructs a font name by interning the name string
@@ -72,6 +72,18 @@ public:
     return *this;
   }
   const wxString& GetAsString() const { return m_fontName ? *m_fontName : *GetInternedEmpty(); }
+
+  // All constant font names should be collected here, to avoid needless duplication and
+  // lookups.
+  static AFontName LinuxLibertineO() { static auto n = AFN(wxT("Linux Libertine O")); return n; }
+  static AFontName LinuxLibertine()  { static auto n = AFN(wxT("Linux Libertine")); return n; }
+  static AFontName Monaco()          { static auto n = AFN(wxT("Monaco")); return n; }
+  static AFontName Arial()           { static auto n = AFN(wxT("Arial")); return n; }
+  static AFontName CMEX10()          { static auto n = AFN(wxT("jsMath-cmex10")); return n; }
+  static AFontName CMSY10()          { static auto n = AFN(wxT("jsMath-cmsy10")); return n; }
+  static AFontName CMR10()           { static auto n = AFN(wxT("jsMath-cmr10")); return n; }
+  static AFontName CMMI10()          { static auto n = AFN(wxT("jsMath-cmmi10")); return n; }
+  static AFontName CMTI10()          { static auto n = AFN(wxT("jsMath-cmti10")); return n; }
 
 private:
   friend class FontCache;
@@ -104,20 +116,29 @@ public:
   Style() = default;
   Style(const Style &);
   explicit Style(double fontSize) { m.fontSize = fontSize; }
-  explicit Style(const wxString &fontName) { m.fontName = AFontName(fontName); }
+//  explicit Style(const wxString &fontName) { m.fontName = AFontName(fontName); }
 
   Style &operator=(const Style &);
   bool operator==(const Style &o) const = delete;
 
-  //! Read this style from a config source
-  void Read(wxConfigBase *config, const wxString &where);
+  /*! Read this style from a config source.
+   * Only touches the attributes that were successfully read. Remaining attributes
+   * are unchanged.
+   */
+  Style &Read(wxConfigBase *config, const wxString &where);
   //! Write this style to a config source
   void Write(wxConfigBase *config, const wxString &where) const;
 
+  //! Gets a style that represents a given font. The font gets cached.
+  static const Style &FromFont(const wxFont &font);
+  //! Gets a style that represents a stock font. The font is pre-cached.
   static const Style &FromStockFont(wxStockGDI::Item font);
-  static const Style &FromNormalFont() { return FromStockFont(wxStockGDI::FONT_NORMAL); }
+  //! Gets a "factory" default text style for TS_DEFAULT
+  static Style FactoryDefault();
+  //! Gets a "factory" default math style (for Configuration::GetMathFont and GetMathFontSize)
+  static Style FactoryMath();
 
-  constexpr static wxFontFamily Default_Family = wxFONTFAMILY_MODERN;
+  constexpr static wxFontFamily Default_Family = wxFONTFAMILY_DEFAULT;
   constexpr static wxFontEncoding Default_Encoding = wxFONTENCODING_DEFAULT;
   constexpr static wxFontWeight Default_Weight = wxFONTWEIGHT_NORMAL;
   constexpr static wxFontStyle Default_FontStyle = wxFONTSTYLE_NORMAL;
@@ -138,8 +159,10 @@ public:
   bool IsUnderlined() const;
   bool IsStrikethrough() const;
   AFontName GetFontName() const;
+  const wxString &GetNameStr() const;
   double GetFontSize() const;
-  const wxColor &GetColor() const;
+  uint32_t GetRGBColor() const;
+  wxColor GetColor() const { return wxColor(GetRGBColor()); }
 
   using did_change = bool;
   did_change SetFamily(wxFontFamily family);
@@ -153,10 +176,13 @@ public:
   did_change SetUnderlined(bool underlined = true);
   did_change SetStrikethrough(bool strikethrough = true);
   did_change SetFontName(AFontName fontName);
-  did_change SetFontNameFromFont();
   did_change SetFontSize(double size);
+  did_change SetRGBColor(uint32_t rgb);
   did_change SetColor(const wxColor &color);
   did_change SetColor(wxSystemColour sysColour);
+
+  //! Resolves the style to the parameters of the font it represents
+  did_change ResolveToFont();
 
   Style& Family(wxFontFamily family) { return SetFamily(family), *this; }
   Style& Encoding(wxFontEncoding encoding) { return SetEncoding(encoding), *this; }
@@ -170,6 +196,7 @@ public:
   Style& Strikethrough(bool strikethrough = true) { return SetStrikethrough(strikethrough), *this; }
   Style& FontName(class AFontName fontName) { return SetFontName(fontName), *this; }
   Style& FontSize(double size) { return SetFontSize(size), *this; }
+  Style& RGBColor(uint32_t rgb) { return SetRGBColor(rgb), *this; }
   Style& Color(const wxColor &color) { return SetColor(color), *this; }
   Style& Color(uint8_t r, uint8_t g, uint8_t b) { return SetColor({r, g, b}), *this; }
   Style& Color(wxSystemColour sysColour) { return SetColor(sysColour), *this; }
@@ -182,46 +209,56 @@ public:
   bool IsStyleEqualTo(const Style &o) const;
 
   bool IsFontOk() const;
-  const wxFont& GetFont() const { return (m.fontHash && m.font) ? *m.font : LookupFont(); }
+  bool HasFontCached() const { return m.fontHash && m.font; }
+  const wxFont& GetFont() const { return HasFontCached() ? *m.font : LookupFont(); }
   const wxFont& GetFontAt(double fontSize) const;
-  void SetFromFont(const wxFont&);
+
+  //! Sets all font-related properties based on another font
+  did_change SetFromFont(const wxFont&);
+  //! Sets all font-related properties based on another style, including size, font style and weight
+  did_change SetFontFrom(const Style&);
+  //! Sets font-face-only properties based on another style
+  did_change SetFontFaceFrom(const Style&);
+  //! Sets font-face and size only properties based on another style (not attributes like bold, etc.)
+  did_change SetFontFaceAndSizeFrom(const Style&);
 
   static bool IsFractionalFontSizeSupported();
   static double GetFontSize(const wxFont &);
   static void SetFontSize(wxFont &, double fontSize);
 
+  wxString GetDump() const;
+
 private:
   friend struct StyleFontHasher;
   friend class FontCache;
+  Style &FromFontNoCache(const wxFont &);
   void SetFromFontNoCache(const wxFont &);
-  static Style FromFontNoCache(const wxFont &);
 
-  struct Data
+  struct Data // 48 bytes on 64-bit platforms
   {
-    wxFontFamily family = Default_Family;
-    wxFontEncoding encoding = Default_Encoding;
-    int weight = Default_Weight;
-    wxFontStyle fontStyle = Default_FontStyle;
-    class AFontName fontName = Default_FontName();
+    // 8-byte members
+    double fontSize = Default_FontSize;
+    // 8/4-byte members
+    mutable const wxFont *font = nullptr;
+    AFontName fontName = Default_FontName();
+    mutable size_t fontHash = 0;
+    // 4-byte members
+    uint32_t rgbColor = Default_Color().GetRGB();
+    // 2-byte members
+    int16_t family = Default_Family;
+    int16_t encoding = Default_Encoding;
+    int16_t weight = Default_Weight;
+    int16_t fontStyle = Default_FontStyle;
+    // 1-byte members
     bool underlined : 1;
     bool strikethrough : 1;
     bool isNotOK : 1;
-    //! Hash of the font family, encoding, weight, style, and name.
-    mutable size_t attributeHash = 0;
 
-    mutable double fontSize = Default_FontSize;
-    //! Hash of the m_attributeHash and font size
-    mutable size_t fontHash = 0;
-    mutable const wxFont *font = nullptr;
-
-    wxColor color = Default_Color();
     Data() : underlined(false), strikethrough(false), isNotOK(false) {}
     static constexpr enum class NotOK_t {} NotOK = {};
     Data(NotOK_t) : underlined(false), strikethrough(false), isNotOK(true) {}
   } m;
 
-  size_t GetAttributeHash() const;
-  size_t GetSizeHash() const;
   size_t GetFontHash() const;
 
   const wxFont& LookupFont() const;
@@ -291,6 +328,7 @@ enum TextStyle
   TS_CODE_OPERATOR       = 35,
   TS_CODE_LISP           = 36,
   TS_CODE_ENDOFLINE      = 37,
+  TS_MATH                = 38,
   NUMBEROFSTYLES //!< This is not a style, but its value tells us how many styles are defined
 };
 

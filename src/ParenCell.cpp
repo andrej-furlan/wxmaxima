@@ -148,7 +148,7 @@ void ParenCell::SetFont(int fontsize)
   }
 
   if (!style.IsFontOk())
-    style = Style::FromNormalFont();
+    style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
 
   // A fallback if we have been completely unable to set a working font
   if (!dc->GetFont().IsOk())

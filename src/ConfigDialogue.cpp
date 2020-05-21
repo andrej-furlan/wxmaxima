@@ -1303,7 +1303,7 @@ void ConfigDialogue::OnMathBrowse(wxCommandEvent&  WXUNUSED(event))
           .FontSize(m_configuration->GetMathFontSize())
           .FontName(m_configuration->MathFontName());
   if (!style.GetFont().IsOk())
-    style = Style::FromNormalFont();
+    style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
 
   wxFont math = wxGetFontFromUser(this, style.GetFont());
 
@@ -1356,7 +1356,7 @@ void ConfigDialogue::OnChangeFontFamily(wxCommandEvent &event)
   }
 
   if (!style.IsFontOk())
-    style = Style::FromNormalFont();
+    style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
 
   auto userFont = wxGetFontFromUser(this, style.GetFont());
 
@@ -1618,7 +1618,7 @@ void ConfigDialogue::ExamplePanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 
   if (!style.IsFontOk())
   {
-    style = Style::FromNormalFont();
+    style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
     style.SetFontSize(m_style.GetFontSize());
   }
 

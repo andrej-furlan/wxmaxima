@@ -732,7 +732,7 @@ void TextCell::SetFont(int fontsize)
     style.SetFontName({});
   
   if (!style.IsFontOk())
-    style = Style::FromNormalFont();
+    style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
 
   if (m_fontSize < 4)
     m_fontSize = 4;

@@ -38,13 +38,13 @@ class FontCache final
   FontCache(const FontCache &) = delete;
   FontCache &operator=(const FontCache &) = delete;
   std::unordered_map<Style, wxFont, StyleFontHasher, StyleFontEquals> m_cache;
-  //std::map<Style, wxFont, StyleFontLess> m_cache;
   //! Used to store the last few font instances when the cache is disabled
   TempFonts m_temporaryFonts;
   int m_hits = 0;
   int m_misses = 0;
   const bool m_enabled = true;
-  const std::pair<const Style, wxFont> &GetFont2(const Style &style);
+  const std::pair<const Style, wxFont> &GetStyleFont(const Style &style, const wxFont &withFont = {});
+  const std::pair<const Style, wxFont> &GetStyleFontUncached(const Style &style, const wxFont &withFont = {});
 public:
   FontCache();
   ~FontCache();
@@ -65,6 +65,8 @@ public:
 #endif // _WIN32
     return globalCache;
   }
+  static const std::pair<const Style, wxFont> &GetAStyleFont(const Style &style)
+  { return Get().GetStyleFont(style); }
   static const wxFont &GetAFont(const Style &style) { return Get().GetFont(style); }
   static const Style &AddAFont(const wxFont &font) { return Get().AddFont(font); }
 };
