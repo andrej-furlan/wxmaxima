@@ -699,43 +699,15 @@ void TextCell::SetFont(int fontsize)
   Configuration *configuration = (*m_configuration);
   wxDC *dc = configuration->GetDC();
 
-  if ((m_textStyle == TS_TITLE) ||
-      (m_textStyle == TS_SECTION) ||
-      (m_textStyle == TS_SUBSECTION) ||
-      (m_textStyle == TS_SUBSUBSECTION) ||
-      (m_textStyle == TS_HEADING5) || 
-      (m_textStyle == TS_HEADING6))
-  {
-    // Titles have a fixed font size 
-    m_fontSize = configuration->GetFontSize(m_textStyle);
-  }
-  else
-  {
-    // Font within maths has a dynamic font size that might be reduced for example
-    // within fractions, subscripts or superscripts.
-    if (
-      (m_textStyle != TS_MAIN_PROMPT) &&
-      (m_textStyle != TS_OTHER_PROMPT) &&
-      (m_textStyle != TS_ERROR) &&
-      (m_textStyle != TS_WARNING)
-      )
-      m_fontSize = fontsize;
-  }
-
-  auto style = configuration->GetStyle(m_textStyle, fontsize);
+  auto style = configuration->GetStyle(m_textStyle, Configuration::UnscaledStyle, fontsize);
+  m_fontSize = fontsize;
 
   // Use jsMath
   if ((!m_altJsText.IsEmpty()) && configuration->CheckTeXFonts())
     style.SetFontName(m_texFontname);
 
   if (!style.IsFontOk())
-    style.SetFontName({});
-  
-  if (!style.IsFontOk())
-    style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
-
-  if (m_fontSize < 4)
-    m_fontSize = 4;
+    style = configuration->GetDefaultStyleAt(m_fontSize);
   
   // Mark special variables that are printed as ordinary letters as being special.
   if ((!(*m_configuration)->CheckKeepPercent()) &&

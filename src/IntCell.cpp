@@ -133,11 +133,9 @@ void IntCell::RecalculateWidths(int fontsize)
 
     Style style = Style(fontsize1)
                     .FontName(configuration->GetTeXCMEX());
+
     if (!style.IsFontOk())
-    {
-      style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
-      style.SetFontSize(fontsize1);
-    }
+      style = configuration->GetDefaultStyleAt(fontsize1);
 
     dc->SetFont(style.GetFont());
     dc->GetTextExtent(wxT("\u005A"), &m_signWidth, &m_signHeight);
@@ -165,10 +163,8 @@ void IntCell::RecalculateWidths(int fontsize)
       .FontName(configuration->GetSymbolFontName());
 
     if (!style.IsFontOk())
-    {
-      style = Style::FromStockFont(wxStockGDI::FONT_NORMAL);
-      style.SetFontSize(fontsize1);
-    }
+      style = configuration->GetDefaultStyleAt(fontsize1);
+
 
     dc->SetFont(style.GetFont());
     dc->GetTextExtent(INTEGRAL_TOP, &m_charWidth, &m_charHeight);
