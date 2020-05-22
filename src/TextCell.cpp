@@ -1968,11 +1968,6 @@ wxString TextCell::GetSymbolTeX() const
   return wxEmptyString;
 }
 
-void TextCell::SetNextToDraw(Cell *next)
-{
-  m_nextToDraw = next;
-}
-
 // RegExes all TextCells share.
 wxRegEx TextCell::m_unescapeRegEx(wxT("\\\\(.)"));
 wxRegEx TextCell::m_roundingErrorRegEx1(wxT("\\.000000000000[0-9]+$"));
